@@ -31,6 +31,31 @@ test('calendar helpers preserve local dates across month, leap year and week bou
   assert.equal(domain.parseTime('07:05'), 425);
 });
 
+test('appointment clarification keeps row order and asks only unresolved fields', () => {
+  const rows = [
+    { id: 'a', title: '', date: '', start: '', end: '10:00' },
+    { id: 'b', title: 'Có đủ dữ kiện', date, start: '07:30', end: '08:00' },
+    { id: 'c', title: 'Giờ kết thúc không hợp lệ', date, start: '13:00', end: '12:30' }
+  ];
+  const questions = () => Array.from(domain.appointmentQuestions(rows), ({ rowId, field }) => [rowId, field]);
+  assert.deepEqual(questions(), [['a', 'title'], ['a', 'date'], ['a', 'start'], ['c', 'end']]);
+  rows[0] = { ...rows[0], title: 'Đã đặt tên', date };
+  assert.deepEqual(questions(), [['a', 'start'], ['c', 'end']]);
+  assert.equal(domain.appointmentQuestions(rows).at(-1).reason, 'order');
+});
+
+test('appointments crossing midnight require explicit next-day confirmation', () => {
+  const row = { id: 'night', title: ' Hẹn tối ', date: '2026-12-31', start: '23:45', end: '00:30' };
+  assert.equal(domain.appointmentItem(row), null);
+  assert.equal(domain.appointmentItem({ ...row, end: row.start }), null);
+  const overnight = domain.appointmentItem({ ...row, overnight: true });
+  assert.equal(overnight.title, 'Hẹn tối');
+  assert.equal(overnight.start, 1425);
+  assert.equal(overnight.end, 30);
+  assert.equal(overnight.endDate, '2027-01-01');
+  assert.equal(domain.isDayItem(overnight, '2027-01-01'), true);
+});
+
 test('source text preserves ambiguous date and time with its original evidence', () => {
   const [draft] = domain.parseSourceText('Họp nhóm mai 7h');
   assert.equal(draft.date, null);

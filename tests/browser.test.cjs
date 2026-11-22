@@ -134,6 +134,136 @@ test('keyboard selection retains the date across calendar views and restores foc
   assert.equal(await page.locator('button[data-action="date"][data-id="2026-12-15"]').getAttribute('aria-pressed'), 'true');
 });
 
+test('appointment batch asks for one missing field at a time and saves the whole batch together', async t => {
+  const { page } = await open(t);
+  const first = 'Hẹn nhóm thiết kế';
+  const second = 'Hẹn xem lại tài liệu';
+  const agenda = page.locator('#main');
+  await byButton(page.locator('#top'), 'Thêm hẹn').click();
+  const entry = page.getByRole('dialog', { name: 'Thêm hẹn' });
+  await byButton(entry, 'Hẹn mới').click();
+  assert.match(await entry.getByRole('alert').innerText(), /Nhập tên hẹn/i);
+  await entry.getByLabel('Tên hẹn', { exact: true }).fill(first);
+  await entry.getByLabel('Ngày', { exact: true }).fill('2026-11-23');
+  await entry.getByLabel('Bắt đầu', { exact: true }).fill('15:30');
+  await entry.getByLabel('Kết thúc', { exact: true }).fill('16:00');
+  await entry.getByLabel('Địa điểm (tùy chọn)', { exact: true }).fill('Phòng họp Vàng');
+  await entry.getByLabel('Ghi chú (tùy chọn)', { exact: true }).fill('Mang bản in mới nhất.');
+  await byButton(entry, 'Hẹn mới').click();
+  assert.equal(await entry.getByLabel('Tên hẹn', { exact: true }).inputValue(), '');
+  await entry.getByLabel('Tên hẹn', { exact: true }).fill(second);
+  await entry.getByLabel('Ngày', { exact: true }).fill('');
+  await byButton(entry, 'Xong').click();
+
+  const review = page.getByRole('dialog', { name: 'Bổ sung thông tin' });
+  const next = byButton(review, 'Tiếp tục');
+  const progress = review.getByRole('progressbar', { name: 'Tiến độ bổ sung thông tin' });
+  const assertNotPublished = async () => {
+    const calendar = await agenda.innerText();
+    assert.ok(!calendar.includes(first) && !calendar.includes(second));
+  };
+  await assertNotPublished();
+  assert.match(await review.innerText(), /Câu 1\s*\/\s*3/i);
+  assert.equal(await progress.getAttribute('aria-valuemax'), '3');
+  await capture(page, 'appointment-clarification');
+  await review.getByLabel('Ngày', { exact: true }).fill('2026-11-23');
+  await next.click();
+  assert.match(await review.innerText(), /Câu 2\s*\/\s*3/i);
+  await review.getByLabel('Bắt đầu', { exact: true }).fill('16:15');
+  await next.click();
+  assert.match(await review.innerText(), /Câu 3\s*\/\s*3/i);
+  assert.equal(await progress.getAttribute('aria-valuenow'), '2');
+  const end = review.getByLabel('Kết thúc', { exact: true });
+  await end.fill('16:14');
+  await next.click();
+  assert.match(await review.getByRole('alert').innerText(), /sau giờ bắt đầu/i);
+  assert.equal(await end.isVisible(), true);
+  await assertNotPublished();
+  await end.fill('16:50');
+  await next.click();
+  await review.waitFor({ state: 'hidden' });
+
+  assert.match(await agenda.innerText(), new RegExp(first));
+  assert.match(await agenda.innerText(), new RegExp(second));
+  await page.reload();
+  await byButton(agenda, /Hẹn nhóm thiết kế.*Lịch cố định/).first().click();
+  const saved = page.getByRole('dialog', { name: first });
+  assert.match(await saved.innerText(), /Phòng họp Vàng/);
+  assert.match(await saved.innerText(), /Mang bản in mới nhất/);
+});
+
+test('mobile appointment capture and clarification can be closed and resumed after reload', async t => {
+  const { page } = await open(t, { ...iphone, viewport: { width: 360, height: 780 } });
+  const title = 'Hẹn thử trên điện thoại';
+  const top = page.locator('#top');
+  await byButton(top, 'Thêm hẹn').tap();
+  const entry = page.getByRole('dialog', { name: 'Thêm hẹn' });
+  await entry.getByLabel('Tên hẹn', { exact: true }).fill(title);
+  await entry.getByLabel('Ngày', { exact: true }).fill('2026-11-23');
+  await capture(page, 'appointment-mobile');
+  await byButton(entry, 'Đóng').tap();
+  await entry.waitFor({ state: 'hidden' });
+  assert.ok(!(await page.locator('#main').innerText()).includes(title));
+  await page.reload();
+
+  const reopen = byButton(top, /^(?:Tiếp tục thêm hẹn|Thêm hẹn)$/i);
+  await reopen.tap();
+  assert.equal(await entry.getByLabel('Tên hẹn', { exact: true }).inputValue(), title);
+  assert.equal(await entry.getByLabel('Ngày', { exact: true }).inputValue(), '2026-11-23');
+  await byButton(entry, 'Xong').tap();
+  const review = page.getByRole('dialog', { name: 'Bổ sung thông tin' });
+  const next = byButton(review, 'Tiếp tục');
+  await review.getByLabel('Bắt đầu', { exact: true }).fill('18:10');
+  await next.tap();
+  await page.reload();
+
+  await reopen.tap();
+  assert.match(await review.innerText(), /Câu 2\s*\/\s*2/i);
+  assert.ok(!(await page.locator('#main').innerText()).includes(title));
+  await review.getByLabel('Kết thúc', { exact: true }).fill('18:40');
+  await next.tap();
+  await review.waitFor({ state: 'hidden' });
+  assert.match(await page.locator('#main').innerText(), new RegExp(title));
+});
+
+test('a failed calendar write can be retried and a stale draft cannot duplicate it', async t => {
+  const { page } = await open(t);
+  const title = 'Hẹn lưu lại sau sự cố';
+  const top = page.locator('#top');
+  const reopen = byButton(top, /^(?:Tiếp tục thêm hẹn|Thêm hẹn)$/i);
+  await reopen.click();
+  const entry = page.getByRole('dialog', { name: 'Thêm hẹn' });
+  await entry.getByLabel('Tên hẹn', { exact: true }).fill(title);
+  await entry.getByLabel('Ngày', { exact: true }).fill('2026-11-23');
+  await entry.getByLabel('Bắt đầu', { exact: true }).fill('18:10');
+  await entry.getByLabel('Kết thúc', { exact: true }).fill('18:40');
+  await page.evaluate(() => {
+    const write = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key === 'fri-web-v1') throw new DOMException('Test calendar write failure', 'QuotaExceededError');
+      return write.call(this, key, value);
+    };
+  });
+  await byButton(entry, 'Xong').click();
+  const retry = page.getByRole('dialog', { name: 'Lưu hẹn' });
+  assert.match(await retry.innerText(), /chưa ghi được lịch/i);
+  assert.ok(!(await page.locator('#main').innerText()).includes(title));
+  const draft = await page.evaluate(() => localStorage.getItem('fri-appointment-draft-v1'));
+  assert.ok(draft);
+
+  await page.reload();
+  await reopen.click();
+  await byButton(retry, 'Lưu vào lịch').click();
+  const saved = byButton(page.locator('.agenda'), /Hẹn lưu lại sau sự cố.*Lịch cố định/);
+  assert.equal(await saved.count(), 1);
+  await page.evaluate(draft => localStorage.setItem('fri-appointment-draft-v1', draft), draft);
+  await page.reload();
+  await reopen.click();
+  assert.equal(await entry.getByLabel('Tên hẹn', { exact: true }).inputValue(), '');
+  await byButton(entry, 'Đóng').click();
+  assert.equal(await saved.count(), 1);
+});
+
 test('desktop initial view has accessible names and landmark structure', async t => {
   const { page } = await open(t, { viewport: { width: 1280, height: 960 } });
   const result = await new AxeBuilder({ page }).withRules([
@@ -295,13 +425,15 @@ test('a newer edit in another tab invalidates a previously opened plan preview',
   const { page, context } = await open(t);
   await byButton(page, 'Xếp việc').first().click();
   const otherTab = await context.newPage();
+  otherTab.setDefaultTimeout(3500);
   await otherTab.goto(appUrl);
-  await byButton(otherTab.locator('#top'), 'Tạo mục').click();
-  const entryForm = otherTab.getByRole('dialog');
-  await entryForm.getByLabel('Tên mục', { exact: true }).fill('Lịch mới từ tab khác');
+  await byButton(otherTab.locator('#top'), 'Thêm hẹn').click();
+  const entryForm = otherTab.getByRole('dialog', { name: 'Thêm hẹn' });
+  await entryForm.getByLabel('Tên hẹn', { exact: true }).fill('Lịch mới từ tab khác');
+  await entryForm.getByLabel('Ngày', { exact: true }).fill('2026-11-23');
   await entryForm.getByLabel('Bắt đầu', { exact: true }).fill('10:30');
   await entryForm.getByLabel('Kết thúc', { exact: true }).fill('11:00');
-  await byButton(entryForm, 'Tạo mục').click();
+  await byButton(entryForm, 'Xong').click();
   await entryForm.waitFor({ state: 'hidden' });
   const preview = page.getByRole('dialog');
   await byButton(preview, 'Áp dụng kế hoạch').click();

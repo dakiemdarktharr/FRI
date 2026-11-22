@@ -1749,6 +1749,60 @@ dialog::backdrop {
     padding-inline: 6px;
   }
 }
+.appointment-queue {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  max-height: 180px;
+  overflow: auto;
+}
+.appointment-queue li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.appointment-queue li:last-child { border-bottom: 0; }
+.appointment-queue li > div { min-width: 0; flex: 1; }
+.appointment-queue strong, .appointment-question h3 { overflow-wrap: anywhere; }
+.appointment-queue .icon-btn { min-height: 44px; width: 44px; flex: none; }
+.appointment-question {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: color-mix(in srgb, var(--primary) 5%, var(--raised));
+  display: grid;
+  gap: 10px;
+}
+.appointment-question h3 { font-size: 20px; line-height: 1.2; }
+.appointment-question .progress { margin: 0; }
+.appointment-entry label textarea { min-height: 60px; }
+.appointment-notes { white-space: pre-wrap; }
+.appointment-entry .field.check, .appointment-question .field.check { min-height: 44px; }
+.appointment-actions { justify-content: space-between; }
+.appointment-actions .actions { margin: 0; }
+.appointment-pending::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+@media (max-width: 480px) {
+  .appointment-actions > .actions:last-child { flex: 1 0 auto; justify-content: flex-end; }
+  .appointment-question { padding: 12px; }
+}
+@media (max-width: 720px) {
+  .appointment-entry .field input:not([type="checkbox"]),
+  .appointment-entry .field textarea,
+  .appointment-question .field input:not([type="checkbox"]) {
+    font-size: 16px;
+    min-height: 44px;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -2453,10 +2507,38 @@ const FriDomain = (() => {
     return {items, sources:[], candidates:[], revision:1};
   }
 
+  function appointmentQuestions(rows) {
+    return rows.flatMap(row => {
+      const ask = (field, reason) => ({rowId: row.id, field, reason});
+      const questions = [];
+      const start = parseTime(row.start);
+      const end = parseTime(row.end);
+      if (!row.title?.trim()) questions.push(ask('title'));
+      if (!calendarDate(row.date)) questions.push(ask('date'));
+      else if (row.overnight && !calendarDate(addDays(row.date,1))) questions.push(ask('date','overnight-range'));
+      if (start == null) questions.push(ask('start'));
+      if (end == null) questions.push(ask('end'));
+      else if (start != null && end <= start && !row.overnight) questions.push(ask('end','order'));
+      return questions;
+    });
+  }
+
+  function appointmentItem(row) {
+    if (appointmentQuestions([row]).length) return null;
+    const item = {
+      id: row.id, kind: 'fixed', title: row.title.trim(), date: row.date,
+      endDate: row.overnight ? addDays(row.date,1) : row.date, timezone: DEMO_ZONE,
+      start: parseTime(row.start), end: parseTime(row.end),
+      location: (row.location || '').trim(), notes: (row.notes || '').trim()
+    };
+    return calendarDate(item.endDate) && validateItem(item).ok ? item : null;
+  }
+
   return {
     DEMO_DATE, DEMO_ZONE, calendarDate, addDays, startOfWeek, dateLabel, formatTime, parseTime,
     hash, normalizeUrl, parseIcs, parseJsonLd, parseSourceText, demoBatch, demoState,
-    isDayItem, overlaps, travelBlock, validateItem, previewPlacement, plan, commitPlan, snapshot, candidateDiff
+    isDayItem, overlaps, travelBlock, validateItem, previewPlacement, plan, commitPlan, snapshot, candidateDiff,
+    appointmentQuestions, appointmentItem
   };
 })();
 </script>
@@ -3186,6 +3268,7 @@ function handleSourceSubmit(event) {
 
 const D = FriDomain;
 const KEY = 'fri-web-v1';
+const APPOINTMENT_KEY = 'fri-appointment-draft-v1';
 const prefsDefaults = {theme: 'lake', mode: 'light', solid: false, private: true, tint: false, reminders: true};
 const palettes = {
   lake: ['Lake · Sun', '#E9F4FA', '#12608C', '#855307', '#081E35', '#6DCAF5', '#FFD268'],
@@ -3273,6 +3356,8 @@ let restoreFocus = null;
 let undoAction = null;
 let toastTimer;
 let planPreview = null;
+let appointmentBatch = readAppointmentBatch();
+let appointmentStorageError = false;
 
 function persist({bump = false} = {}) {
   if (bump) state.revision += 1;
@@ -3326,7 +3411,8 @@ function navItem(key) {
 function renderChrome() {
   document.querySelector('#rail').innerHTML = `${brand()}<nav class="rail-nav" aria-label="Kế hoạch">${navItem('today')}${navItem('calendar')}</nav><nav class="rail-nav" aria-label="Thu thập"><div class="nav-label">Thu thập</div>${navItem('sources')}${navItem('review')}</nav><div class="rail-end">${navItem('widgets')}${navItem('settings')}<span class="rail-foot"><i class="status-dot${isOnline() ? '' : ' offline'}"></i>${isOnline() ? 'Lưu trên thiết bị' : 'Đang ngoại tuyến'}</span></div>`;
   document.querySelector('#mobile-nav').innerHTML = ['today','calendar','sources','review','widgets'].map(navItem).join('');
-  document.querySelector('#top').innerHTML = `<div class="top-label">${mobile.matches ? brand() : `${icon(pages[page][1])}<span>${pages[page][0]}</span>`}</div><div class="top-actions">${button('Tìm mục', 'search',{icon:'search',iconOnly:true,kind:'ghost'})}${mobile.matches ? button('Cài đặt','page',{id:'settings',icon:'settings',iconOnly:true,kind:'ghost'}) : ''}${button('Tạo mục','item-new',{icon:'plus',iconOnly:mobile.matches})}${button('Thêm nguồn','intake',{icon:'sources',primary:true})}</div>`;
+  document.querySelector('#top').innerHTML = `<div class="top-label">${mobile.matches ? brand() : `${icon(pages[page][1])}<span>${pages[page][0]}</span>`}</div><div class="top-actions">${button('Tìm mục', 'search',{icon:'search',iconOnly:true,kind:'ghost'})}${mobile.matches ? button('Cài đặt','page',{id:'settings',icon:'settings',iconOnly:true,kind:'ghost'}) : ''}${button('Thêm nguồn','intake',{icon:'sources',iconOnly:mobile.matches})}${button('Thêm hẹn','appointment',{icon:'plus',primary:true,kind:hasAppointmentDraft() ? 'appointment-pending' : ''})}</div>`;
+  if (hasAppointmentDraft()) document.querySelector('#top [data-action="appointment"]').title = 'Tiếp tục bản nháp hẹn';
 }
 
 function render({keepFocus = false} = {}) {
@@ -3404,7 +3490,7 @@ function itemLine(item) {
 
 function agenda(date, extra = '') {
   const items = sortedItems(date);
-  return `<div class="agenda ${extra}">${items.length ? items.map(itemLine).join('') : empty('Ngày này chưa có lịch','Thêm một mục hoặc chọn ngày khác.',button('Tạo mục','item-new',{icon:'plus'}))}</div>`;
+  return `<div class="agenda ${extra}">${items.length ? items.map(itemLine).join('') : empty('Ngày này chưa có lịch','Thêm một hẹn hoặc chọn ngày khác.',button('Thêm hẹn','appointment',{icon:'plus',id:date}))}</div>`;
 }
 
 function dayPick(date, {week = true, outside = false} = {}) {
@@ -3497,6 +3583,296 @@ function shiftDate(amount) {
 const option = (value,label,selected) => `<option value="${e(value)}"${value === selected ? ' selected' : ''}>${e(label)}</option>`;
 const input = (name,value = '',attributes = '') => `<input name="${e(name)}" value="${e(value)}" ${attributes}>`;
 
+function readAppointmentBatch() {
+  try {
+    const batch = JSON.parse(localStorage.getItem(APPOINTMENT_KEY));
+    if (batch?.version === 1 && batch.id && Array.isArray(batch.rows) && batch.current?.id && ['entry','review'].includes(batch.phase)) return batch;
+  } catch {
+    // A previously unavailable store can still be used for this session's input.
+  }
+  return null;
+}
+
+function blankAppointment() {
+  return {id:id(),title:'',date:'',start:'',end:'',location:'',notes:'',overnight:false};
+}
+
+function hasAppointmentValues(row) {
+  return Boolean(row && (row.title || row.date || row.start || row.end || row.location || row.notes || row.overnight));
+}
+
+function hasAppointmentDraft() {
+  return Boolean(appointmentBatch?.rows.length || hasAppointmentValues(appointmentBatch?.current));
+}
+
+function writeAppointmentDraft() {
+  try {
+    if (hasAppointmentDraft()) localStorage.setItem(APPOINTMENT_KEY,JSON.stringify(appointmentBatch));
+    else localStorage.removeItem(APPOINTMENT_KEY);
+    appointmentStorageError = false;
+    return true;
+  } catch {
+    appointmentStorageError = true;
+    return false;
+  }
+}
+
+function appointmentSaveStatus(form) {
+  const storageHint = form.querySelector('[data-appointment-storage]');
+  storageHint.hidden = writeAppointmentDraft();
+}
+
+function appointmentEntryValues(form) {
+  const values = Object.fromEntries(new FormData(form));
+  return {...appointmentBatch.current,...values,overnight:values.overnight === 'on'};
+}
+
+function updateAppointmentDraft(event) {
+  const form = event.target.form;
+  if (!appointmentBatch || !form) return;
+  if (form.id === 'appointment-entry-form') {
+    const hadDraft = hasAppointmentDraft();
+    appointmentBatch.current = appointmentEntryValues(form);
+    if (hadDraft !== hasAppointmentDraft()) form.querySelector('[data-appointment-secondary]').innerHTML = appointmentSecondary();
+  } else if (form.id === 'appointment-review-form') {
+    appointmentBatch.answer = {...Object.fromEntries(new FormData(form)),rowId:form.dataset.rowId,field:form.dataset.field};
+  } else return;
+  if (event.target.getAttribute('aria-invalid') === 'true') {
+    event.target.removeAttribute('aria-invalid');
+    form.querySelector('[data-error]').hidden = true;
+  }
+  appointmentSaveStatus(form);
+}
+
+function appointmentQueue(rows) {
+  if (!rows.length) return '';
+  return `<p class="caption">Trong danh sách · ${rows.length} hẹn</p><ul class="appointment-queue" aria-label="Danh sách hẹn nháp">${rows.map(row => {
+    const missing = D.appointmentQuestions([row]).length;
+    return `<li><div><strong>${e(row.title)}</strong><p class="muted">${row.date ? e(dateShort(row.date)) + ' · ' : ''}${missing ? `Còn ${missing} thông tin cần bổ sung` : `${e(row.start)}–${e(row.end)}${row.overnight ? ' (+1 ngày)' : ''}`}</p></div>${button(`Sửa ${row.title}`,'appointment-edit',{id:row.id,icon:'text',iconOnly:true,kind:'ghost'})}${button(`Xóa ${row.title}`,'appointment-remove',{id:row.id,icon:'close',iconOnly:true,kind:'ghost'})}</li>`;
+  }).join('')}</ul>`;
+}
+
+const appointmentLabels = {title:'Tên hẹn',date:'Ngày',start:'Bắt đầu',end:'Kết thúc'};
+const appointmentTypes = {title:'text',date:'date',start:'time',end:'time'};
+const appointmentPrompts = {title:'Cuộc hẹn này tên gì?',date:'Cuộc hẹn diễn ra ngày nào?',start:'Cuộc hẹn bắt đầu lúc mấy giờ?',end:'Cuộc hẹn kết thúc lúc mấy giờ?'};
+const appointmentStorageHint = () => `<p class="error" data-appointment-storage role="status"${appointmentStorageError ? '' : ' hidden'}>Trình duyệt chưa lưu được bản nháp. Hãy giữ tab này mở.</p>`;
+
+function appointmentInput(fieldName,value,attributes = '') {
+  const detail = fieldName === 'title' ? ' maxlength="160" placeholder="Ví dụ: Họp nhóm"' : '';
+  return field(appointmentLabels[fieldName],input(fieldName,value,`type="${appointmentTypes[fieldName]}"${detail} ${attributes}`));
+}
+
+function appointmentOvernight(checked) {
+  return `<label class="field check"><input type="checkbox" name="overnight"${checked ? ' checked' : ''}>Kết thúc vào ngày hôm sau</label>`;
+}
+
+function appointmentSecondary() {
+  return hasAppointmentDraft() ? button('Bỏ bản nháp','appointment-discard',{kind:'ghost'}) : button('Tạo mục khác','item-new',{kind:'ghost'});
+}
+
+function openAppointmentEntry() {
+  const {current,rows} = appointmentBatch;
+  const editing = rows.some(row => row.id === current.id);
+  openDialog('Thêm hẹn',`<form class="form appointment-entry" id="appointment-entry-form" novalidate>
+    <p class="muted">Chọn <strong>Xong</strong> để rà thông tin còn thiếu. Lịch dùng giờ Việt Nam.</p>
+    ${appointmentInput('title',current.title,'required autofocus')}
+    ${appointmentInput('date',current.date)}
+    <div class="form-grid">${appointmentInput('start',current.start)}${appointmentInput('end',current.end)}</div>
+    ${appointmentOvernight(current.overnight)}
+    ${field('Địa điểm (tùy chọn)',input('location',current.location,'maxlength="160"'))}
+    ${field('Ghi chú (tùy chọn)',`<textarea name="notes" maxlength="1500">${e(current.notes)}</textarea>`)}
+    ${appointmentQueue(rows)}
+    <p class="error" data-error role="alert" hidden></p>${appointmentStorageHint()}
+    <div class="actions appointment-actions"><div class="actions" data-appointment-secondary>${appointmentSecondary()}</div><div class="actions"><button class="btn" type="submit" value="next">${editing ? 'Lưu và thêm hẹn' : 'Hẹn mới'}</button><button class="btn primary" type="submit" value="done">Xong</button></div></div>
+  </form>`);
+}
+
+function openAppointment(date) {
+  reconcileAppointmentDraft();
+  if (!appointmentBatch) {
+    const current = blankAppointment();
+    if (validDate(date)) current.date = date;
+    appointmentBatch = {version:1,id:id(),rows:[],current,phase:'entry',answered:0,answer:null};
+  }
+  if (appointmentBatch.phase === 'review') return openAppointmentQuestion();
+  openAppointmentEntry();
+}
+
+function upsertAppointment(row) {
+  const index = appointmentBatch.rows.findIndex(candidate => candidate.id === row.id);
+  if (index < 0) appointmentBatch.rows.push(row);
+  else appointmentBatch.rows[index] = row;
+}
+
+function stageAppointment(form, allowBlank) {
+  const row = appointmentEntryValues(form);
+  if (!allowBlank || hasAppointmentValues(row)) {
+    if (!row.title.trim()) {
+      showFormError(form,'Nhập tên hẹn trước khi tiếp tục.');
+      form.elements.title.setAttribute('aria-invalid','true');
+      form.elements.title.focus();
+      return false;
+    }
+    upsertAppointment({...row,title:row.title.trim()});
+  }
+  appointmentBatch.current = blankAppointment();
+  return true;
+}
+
+function submitAppointmentEntry(form, done) {
+  if (!stageAppointment(form,done && appointmentBatch.rows.length > 0)) return;
+  if (!done) {
+    writeAppointmentDraft();
+    openAppointmentEntry();
+    announce(`Đã lưu ${appointmentBatch.rows.length} hẹn nháp. Nhập hẹn tiếp theo.`);
+    return;
+  }
+  appointmentBatch.phase = 'review';
+  appointmentBatch.answered = 0;
+  writeAppointmentDraft();
+  if (D.appointmentQuestions(appointmentBatch.rows).length) openAppointmentQuestion();
+  else commitAppointments();
+}
+
+function editAppointmentDraft(rowId) {
+  const form = dialogBody.querySelector('#appointment-entry-form');
+  if (!form || !stageAppointment(form,true)) return;
+  const row = appointmentBatch.rows.find(candidate => candidate.id === rowId);
+  if (!row) return;
+  appointmentBatch.current = {...row};
+  writeAppointmentDraft();
+  openAppointmentEntry();
+}
+
+function removeAppointmentDraftRow(rowId) {
+  appointmentBatch.rows = appointmentBatch.rows.filter(row => row.id !== rowId);
+  if (appointmentBatch.current.id === rowId) appointmentBatch.current = blankAppointment();
+  if (appointmentBatch.answer?.rowId === rowId) appointmentBatch.answer = null;
+  writeAppointmentDraft();
+  openAppointmentEntry();
+  announce('Đã bỏ một hẹn nháp.');
+}
+
+function openAppointmentQuestion() {
+  const {rows,answered,answer} = appointmentBatch;
+  const questions = D.appointmentQuestions(rows);
+  if (!questions.length) return openAppointmentRetry();
+  const question = questions[0];
+  const row = rows.find(candidate => candidate.id === question.rowId);
+  const fieldName = question.field;
+  const draftAnswer = answer?.rowId === row.id && answer.field === fieldName ? answer : null;
+  const total = answered + questions.length;
+  const stage = `Câu ${answered + 1}/${total}`;
+  const help = question.reason === 'order' ? 'Giờ kết thúc phải sau giờ bắt đầu, hoặc hãy chọn kết thúc vào ngày hôm sau.' : question.reason === 'overnight-range' ? 'Chọn ngày có thể lưu cuộc hẹn kết thúc vào hôm sau.' : appointmentPrompts[fieldName];
+  const context = [fieldName !== 'date' && row.date ? dateShort(row.date) : null,fieldName === 'end' && row.start ? `Bắt đầu ${row.start}` : null].filter(Boolean).join(' · ');
+  openDialog('Bổ sung thông tin',`<form class="form" id="appointment-review-form" data-row-id="${e(row.id)}" data-field="${fieldName}" novalidate>
+    <div class="appointment-question"><div class="section-title" style="margin:0"><span class="caption">${stage}</span><span class="muted">${rows.length} hẹn nháp</span></div>
+    <div class="progress" role="progressbar" aria-label="Tiến độ bổ sung thông tin" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${answered}"><i style="width:${100 * answered / total}%"></i></div>
+    <h3>${e(row.title || 'Hẹn chưa có tên')}</h3>${context ? `<p class="caption">${e(context)}</p>` : ''}<p class="muted" id="appointment-question-help">${e(help)}</p>
+    ${appointmentInput(fieldName,draftAnswer?.[fieldName] ?? row[fieldName],'required autofocus aria-describedby="appointment-question-help"')}
+    ${fieldName === 'end' ? appointmentOvernight(draftAnswer ? draftAnswer.overnight === 'on' : row.overnight) : ''}
+    <p class="error" data-error role="alert" hidden></p>${appointmentStorageHint()}</div>
+    <div class="actions appointment-actions">${button('Quay lại danh sách','appointment-back')}<button class="btn primary" type="submit">Tiếp tục</button></div>
+  </form>`);
+  announce(`${stage}. ${row.title}. ${help}`);
+}
+
+function answerAppointmentQuestion(form) {
+  const {rowId,field:fieldName} = form.dataset;
+  const row = appointmentBatch.rows.find(candidate => candidate.id === rowId);
+  const question = D.appointmentQuestions(appointmentBatch.rows)[0];
+  if (!row || question?.rowId !== rowId || question.field !== fieldName) return openAppointment();
+  const values = new FormData(form);
+  const updated = {...row,[fieldName]:String(values.get(fieldName) ?? '').trim()};
+  if (fieldName === 'end') updated.overnight = values.has('overnight');
+  const issue = D.appointmentQuestions([updated]).find(candidate => candidate.field === fieldName);
+  if (issue) {
+    showFormError(form,issue.reason === 'order' ? 'Giờ kết thúc phải sau giờ bắt đầu.' : `Nhập ${appointmentLabels[fieldName].toLocaleLowerCase('vi')} hợp lệ.`);
+    form.elements[fieldName].setAttribute('aria-invalid','true');
+    form.elements[fieldName].focus();
+    return;
+  }
+  upsertAppointment(updated);
+  appointmentBatch.answered += 1;
+  appointmentBatch.answer = null;
+  writeAppointmentDraft();
+  if (D.appointmentQuestions(appointmentBatch.rows).length) openAppointmentQuestion();
+  else commitAppointments();
+}
+
+function openAppointmentRetry(message = 'Các hẹn đã đủ thông tin và sẵn sàng đưa lên lịch.') {
+  openDialog('Lưu hẹn',`<div class="form"><p class="notice">${e(message)}</p><div class="actions end">${button('Quay lại danh sách','appointment-back')}${button('Lưu vào lịch','appointment-commit',{primary:true,icon:'check'})}</div></div>`);
+}
+
+function commitAppointments() {
+  const items = appointmentBatch?.rows.map(D.appointmentItem);
+  if (!items?.length) return openAppointment();
+  if (items.some(item => !item)) return openAppointmentRetry('Kiểm tra ngày và giờ trong danh sách hẹn.');
+  const latest = readSaved();
+  if (latest?.revision > state.revision) state = latest;
+  const existingIds = new Set(state.items.map(item => item.id));
+  const additions = items.filter(item => !existingIds.has(item.id));
+  const previousState = state;
+  const previousDate = selectedDate;
+  const previousView = calendarView;
+  state = {...state,items:state.items.concat(additions),lastAppointmentBatchId:appointmentBatch.id};
+  selectedDate = items[0].date;
+  calendarView = 'day';
+  persist({bump:additions.length > 0});
+  if (storageError) {
+    state = previousState;
+    selectedDate = previousDate;
+    calendarView = previousView;
+    return openAppointmentRetry('Trình duyệt chưa ghi được lịch. Bản nháp vẫn mở để bạn thử lại.');
+  }
+  clearAppointmentDraft();
+  go('calendar');
+  notify(`Đã thêm ${items.length} hẹn vào lịch.`,additions.length ? () => undoAppointments(additions) : undefined);
+}
+
+function undoAppointments(items) {
+  const latest = readSaved();
+  if (latest?.revision > state.revision) state = latest;
+  const ids = new Set(items.map(item => item.id));
+  const previous = state;
+  state = {...state,items:state.items.filter(item => !ids.has(item.id))};
+  persist({bump:true});
+  if (storageError) {
+    state = previous;
+    return notify('Trình duyệt chưa hoàn tác được.');
+  }
+  render();
+  notify(`Đã hoàn tác thêm ${items.length} hẹn.`);
+}
+
+function clearAppointmentDraft() {
+  appointmentBatch = null;
+  writeAppointmentDraft();
+}
+
+function reconcileAppointmentDraft() {
+  if (appointmentBatch && appointmentBatch.id === state.lastAppointmentBatchId) clearAppointmentDraft();
+}
+
+function changeAppointmentStage(action, rowId) {
+  switch (action) {
+    case 'appointment': return openAppointment(rowId);
+    case 'appointment-edit': return editAppointmentDraft(rowId);
+    case 'appointment-remove': return removeAppointmentDraftRow(rowId);
+    case 'appointment-back':
+      appointmentBatch.phase = 'entry';
+      writeAppointmentDraft();
+      return openAppointmentEntry();
+    case 'appointment-commit': return commitAppointments();
+    case 'appointment-discard': return openDialog('Bỏ bản nháp',`<div class="form"><p>Bỏ các hẹn đang nhập? Lịch đã lưu vẫn giữ nguyên.</p><div class="actions end">${button('Giữ bản nháp','appointment')}${button('Bỏ bản nháp','appointment-discard-confirm',{primary:true})}</div></div>`);
+    case 'appointment-discard-confirm':
+      clearAppointmentDraft();
+      closeDialog();
+      renderChrome();
+      return notify('Đã bỏ bản nháp.');
+  }
+}
+
 function itemForm(item, kind = item?.kind || 'fixed', draft = {}) {
   const data = {title:'',date:selectedDate,location:'',effort:60,duration:30,buffer:5,...item,...draft,kind};
   const flex = kind === 'task';
@@ -3510,6 +3886,7 @@ function itemForm(item, kind = item?.kind || 'fixed', draft = {}) {
   const title = field('Tên mục',input('title',data.title,'required maxlength="160" autofocus placeholder="Ví dụ: Duyệt slide với nhóm"'));
   const day = field(deadline ? 'Ngày nộp' : trip ? 'Ngày cần có mặt' : 'Ngày',input('date',data.date,'type="date" required'));
   const place = trip ? '' : field('Địa điểm',input('location',data.location,'maxlength="160" placeholder="Không bắt buộc"'));
+  const notes = item?.notes !== undefined ? field('Ghi chú (tùy chọn)',`<textarea name="notes" maxlength="1500">${e(data.notes)}</textarea>`) : '';
   const allDay = (kind === 'fixed' || kind === 'context') ? `<label class="field check"><input type="checkbox" name="allDay"${data.allDay === true || data.allDay === 'on' ? ' checked' : ''}>Cả ngày</label>` : '';
   const start = (timed || deadline) ? field(deadline ? 'Giờ nộp' : flex ? 'Bắt đầu (tùy chọn)' : 'Bắt đầu',input('start',typeof data.start === 'string' ? data.start : clock(data.start),'type="time"')) : '';
   const end = timed ? field(flex ? 'Kết thúc (tùy chọn)' : 'Kết thúc',input('end',typeof data.end === 'string' ? data.end : clock(data.end),'type="time"')) : '';
@@ -3518,7 +3895,7 @@ function itemForm(item, kind = item?.kind || 'fixed', draft = {}) {
   const tripFields = trip ? `<div class="form-grid">${field('Điểm xuất phát',input('origin',data.origin,'required maxlength="160"'))}${field('Điểm đến',input('destination',data.destination,'required maxlength="160"'))}${field('Giờ cần có mặt',input('arriveBy',typeof data.arriveBy === 'string' ? data.arriveBy : clock(data.arriveBy),'type="time" required'))}${field('Giờ hẹn',input('appointmentAt',typeof data.appointmentAt === 'string' ? data.appointmentAt : clock(data.appointmentAt),'type="time"'))}${field('Số phút đi',input('duration',data.duration,'type="number" min="1" max="1440" required'))}${field('Số phút đệm',input('buffer',data.buffer,'type="number" min="0" max="1439" required'))}</div><p class="help">Fri tính giờ rời đi từ giờ có mặt trừ thời gian đi và đệm.</p>` : '';
   const parent = child ? field('Buổi cha',`<select name="parentId" required><option value="">Chọn buổi cố định</option>${parents.map(candidate => option(candidate.id,`${candidate.title} · ${dateShort(candidate.date)} ${time(candidate.start)}`,data.parentId)).join('')}</select>`) : '';
   const zone = item?.timezone && item.timezone !== D.DEMO_ZONE ? `<p class="help">Giờ hiển thị theo Việt Nam. Múi giờ gốc: ${e(item.timezone)}.</p>` : '';
-  return `<form class="form" id="item-form" data-item-id="${e(item?.id || '')}">${title}<div class="form-grid">${typeField}${day}</div>${allDay}${start || end ? `<div class="form-grid">${start}${end}</div>` : ''}${endDay}${parent}${place}${taskFields}${tripFields}${zone}<p class="error" data-error role="alert" hidden></p><div class="actions end">${button('Hủy','close-dialog')}<button type="submit" class="btn primary">${item ? 'Lưu thay đổi' : 'Tạo mục'}</button></div></form>`;
+  return `<form class="form" id="item-form" data-item-id="${e(item?.id || '')}">${title}<div class="form-grid">${typeField}${day}</div>${allDay}${start || end ? `<div class="form-grid">${start}${end}</div>` : ''}${endDay}${parent}${place}${notes}${taskFields}${tripFields}${zone}<p class="error" data-error role="alert" hidden></p><div class="actions end">${button('Hủy','close-dialog')}<button type="submit" class="btn primary">${item ? 'Lưu thay đổi' : 'Tạo mục'}</button></div></form>`;
 }
 
 function openItemForm(itemId, kind) {
@@ -3540,6 +3917,7 @@ function saveItem(form) {
   const data = Object.fromEntries(new FormData(form));
   const existing = state.items.find(item => item.id === form.dataset.itemId);
   const draft = {...existing,id:existing?.id ?? id(),title:data.title.trim(),kind:data.kind,date:data.date,endDate:data.endDate || data.date,location:data.location?.trim() || '',start:formMinute(data.start),end:formMinute(data.end),allDay: data.allDay === 'on',timezone:D.DEMO_ZONE};
+  if (data.notes !== undefined) draft.notes = data.notes.trim();
   if (draft.allDay) draft.start = draft.end = null;
   if (draft.kind === 'task') {
     draft.effort = Number(data.effort);
@@ -3589,12 +3967,13 @@ function openItem(itemId) {
   const [label,glyph] = kinds[item.kind] || kinds.fixed;
   const checks = D.plan(state.items,item.date).conflicts.filter(problem => problem.itemIds.includes(item.id));
   const routes = item.kind === 'trip' && Number.isFinite(item.leaveAt) ? `<div class="form-grid"><div class="notice"><span class="caption">Rời đi</span><div class="big-time">${time(item.leaveAt)}</div><span class="muted">${e(item.origin || 'Chưa rõ điểm xuất phát')}${item.leaveDate !== item.date ? ` · ${dateShort(item.leaveDate)}` : ''}</span></div><div class="notice"><span class="caption">Có mặt</span><div class="big-time">${time(item.arriveBy)}</div><span class="muted">${e(item.destination || 'Chưa rõ điểm đến')}</span></div></div><p class="muted">Đến dự kiến ${time(item.arrivalAt)} · ${item.duration} phút đi + ${item.buffer} phút đệm${Number.isFinite(item.appointmentAt) ? ` · Hẹn ${time(item.appointmentAt)}` : ''}</p><p class="help">${state.prefs.reminders ? 'Mốc nhắc có trong bản xem trước Web.' : 'Xem trước nhắc rời đi đang tắt.'}</p>` : '';
-  const description = item.kind === 'task' && !Number.isFinite(item.start) ? `Chờ xếp · ${e(item.effort)} phút` : timeRange(item);
+  const description = item.kind === 'task' && !Number.isFinite(item.start) ? `Chờ xếp · ${item.effort} phút` : timeRange(item);
+  const overnight = item.endDate > item.date ? ` · đến ${dateShort(item.endDate)}` : '';
   const action = item.kind === 'task' && !Number.isFinite(item.start) ? button('Xếp việc','plan-item',{id:item.id,icon:'spark',primary:true}) : item.kind === 'task' && !item.done && !item.locked ? button('Tìm khung khác','plan-item',{id:item.id,icon:'spark'}) : '';
   const tracking = ['fixed','task','child','deadline'].includes(item.kind) ? button(item.done ? 'Đánh dấu chưa xong' : 'Đánh dấu đã xong','toggle-done',{id:item.id,icon:'check'}) : '';
   const lock = item.kind === 'task' && Number.isFinite(item.start) ? button(item.locked ? 'Mở khóa phiên' : 'Khóa phiên','toggle-lock',{id:item.id,icon:'lock'}) : '';
   const changes = checks.map(problem => `<p class="notice warn">${e(problem.message)}</p>`).join('');
-  openDialog(item.title,`<div class="form"><div class="actions"><span class="event-icon kind-${e(item.kind)}">${icon(glyph)}</span>${badge(label)}${item.done ? badge('Đã xong','good') : ''}${item.locked ? badge('Đã khóa') : ''}</div><p><strong>${e(fullDay(item.date))} · ${e(description)}</strong></p>${item.location && item.kind !== 'trip' ? `<p class="muted">${icon('pin')} ${e(item.location)}</p>` : ''}${routes}${item.reason ? `<p class="notice">${e(item.reason)}</p>` : ''}${changes}<div class="actions">${action}${tracking}${lock}</div><div class="divider"></div><div class="actions end">${button('Xóa mục','delete-item',{id:item.id,kind:'danger'})}${button('Sửa','item-edit',{id:item.id,primary:true})}</div></div>`);
+  openDialog(item.title,`<div class="form"><div class="actions"><span class="event-icon kind-${e(item.kind)}">${icon(glyph)}</span>${badge(label)}${item.done ? badge('Đã xong','good') : ''}${item.locked ? badge('Đã khóa') : ''}</div><p><strong>${e(fullDay(item.date))} · ${e(description + overnight)}</strong></p>${item.location && item.kind !== 'trip' ? `<p class="muted">${icon('pin')} ${e(item.location)}</p>` : ''}${item.notes ? `<p class="notice appointment-notes">${e(item.notes)}</p>` : ''}${routes}${item.reason ? `<p class="notice">${e(item.reason)}</p>` : ''}${changes}<div class="actions">${action}${tracking}${lock}</div><div class="divider"></div><div class="actions end">${button('Xóa mục','delete-item',{id:item.id,kind:'danger'})}${button('Sửa','item-edit',{id:item.id,primary:true})}</div></div>`);
 }
 
 function toggleItem(itemId, property) {
@@ -3725,6 +4104,7 @@ function resetData(mode) {
   state.demo = mode === 'demo';
   state.prefs = previousPrefs;
   state.revision = revision;
+  clearAppointmentDraft();
   selectedDate = state.demo ? D.DEMO_DATE : realDate();
   persist();
   go('today');
@@ -3761,17 +4141,20 @@ function dateDialog() {
 }
 
 function launch() {
+  reconcileAppointmentDraft();
   document.querySelector('#close-dialog').innerHTML = icon('close');
   document.querySelector('#close-dialog').addEventListener('click',closeDialog);
   drawer.addEventListener('close',() => {
     if (drawer.open) return;
     if (location.hash.startsWith('#calendar/item/')) history.replaceState(null,'','#calendar');
+    renderChrome();
     focusAction(restoreFocus);
   });
   document.addEventListener('click', event => {
     const node = event.target.closest('button[data-action]');
     if (!node || node.disabled) return;
     const {action,id:itemId} = node.dataset;
+    if (action === 'appointment' || action.startsWith('appointment-')) return changeAppointmentStage(action,itemId);
     switch (action) {
       case 'page': return go(itemId);
       case 'date': return setSelectedDate(itemId);
@@ -3804,6 +4187,14 @@ function launch() {
     }
   });
   document.addEventListener('submit', event => {
+    if (event.target.id === 'appointment-entry-form') {
+      event.preventDefault();
+      return submitAppointmentEntry(event.target,event.submitter?.value === 'done');
+    }
+    if (event.target.id === 'appointment-review-form') {
+      event.preventDefault();
+      return answerAppointmentQuestion(event.target);
+    }
     if (event.target.id === 'date-form') {
       event.preventDefault();
       const date = new FormData(event.target).get('date');
@@ -3817,6 +4208,7 @@ function launch() {
   });
   document.addEventListener('change', event => {
     const node = event.target;
+    if (node.form?.id.startsWith('appointment-')) return updateAppointmentDraft(event);
     if (node.dataset.pref) {
       state.prefs[node.dataset.pref] = node.checked;
       persist();
@@ -3830,7 +4222,10 @@ function launch() {
       dialogBody.querySelector('[data-item-kind]').focus();
     }
   });
-  document.addEventListener('input', event => { if (event.target.matches('[data-search]')) updateSearch(event.target.value); });
+  document.addEventListener('input', event => {
+    if (event.target.matches('[data-search]')) updateSearch(event.target.value);
+    else updateAppointmentDraft(event);
+  });
   document.addEventListener('keydown', event => {
     if (event.key === 'k' && (event.metaKey || event.ctrlKey)) {
       event.preventDefault();
@@ -3844,6 +4239,15 @@ function launch() {
     }
   });
   window.addEventListener('storage',event => {
+    if (event.key === APPOINTMENT_KEY) {
+      appointmentBatch = readAppointmentBatch();
+      if (drawer.open && dialogBody.querySelector('[id^="appointment-"]')) {
+        if (appointmentBatch) openAppointment();
+        else closeDialog();
+      }
+      renderChrome();
+      return;
+    }
     if (event.key !== KEY) return;
     const latest = readSaved();
     if (latest?.revision > state.revision) {

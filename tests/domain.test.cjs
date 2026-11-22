@@ -57,11 +57,13 @@ test('appointments crossing midnight require explicit next-day confirmation', ()
 });
 
 test('source text preserves ambiguous date and time with its original evidence', () => {
-  const [draft] = domain.parseSourceText('Họp nhóm mai 7h');
-  assert.equal(draft.date, null);
-  assert.equal(draft.start, null);
-  assert.ok(draft.uncertain.length >= 2);
-  assert.equal(draft.evidence, 'Họp nhóm mai 7h');
+  for (const evidence of ['Họp nhóm mai 7h', 'Team meeting tomorrow at 7']) {
+    const [draft] = domain.parseSourceText(evidence);
+    assert.equal(draft.date, null);
+    assert.equal(draft.start, null);
+    assert.ok(draft.uncertain.length >= 2);
+    assert.equal(draft.evidence, evidence);
+  }
 });
 
 test('ICS keeps all-day dates distinct from instants and preserves evidence', () => {
@@ -88,7 +90,7 @@ test('ICS treats ambiguous and nonexistent DST wall times as pending clarificati
   for (const draft of [fall, spring]) {
     assert.equal(draft.temporal, 'floating');
     assert.equal(draft.instant, null);
-    assert.match(draft.uncertain.join(' '), /đổi giờ mùa hè/);
+    assert.match(draft.uncertain.join(' '), /clocks change/i);
   }
 });
 

@@ -1,34 +1,36 @@
 # Fri
 
-Fri là lịch cá nhân cho desktop và mobile. Bạn có thể nhập nhanh nhiều cuộc hẹn, bổ sung thông tin còn thiếu rồi đưa cả lượt lên lịch. Fri cũng nhận ảnh, văn bản và liên kết, và giúp xếp việc quanh lịch hẹn, hạn nộp và thời gian di chuyển.
+Fri is a personal calendar for appointments, flexible work, deadlines, and travel. The web app is a single HTML file with an English interface and a beige, near-black brown, and rosewood glass theme.
 
-## Chạy ứng dụng
+## Run
 
-Mở `index.html` trong trình duyệt hiện đại. HTML, CSS, JavaScript và ảnh dữ liệu mẫu nằm trong cùng tệp. Ứng dụng dùng `localStorage` trên trình duyệt hiện tại. Để sử dụng một địa chỉ lưu trữ ổn định và thử nguồn công khai, chạy từ thư mục repo:
+Open `index.html` directly in a modern browser. The app and sample assets are self-contained. For a stable storage origin and to try public calendar sources, run this command from the repository root:
 
 ```powershell
 python -m http.server 8000 --bind 127.0.0.1
 ```
 
-Mở [Fri trên máy](http://127.0.0.1:8000/). Lịch minh họa bắt đầu ở thứ Hai 23/11/2026, múi giờ `Asia/Ho_Chi_Minh`. Chọn **Cài đặt → Quản lý dữ liệu → Lịch trống** để dùng lịch của bạn.
+Open [Fri on localhost](http://127.0.0.1:8000/). The demo day is Monday, November 23, 2026 in `Asia/Ho_Chi_Minh`. Use **Settings → Manage data → Empty calendar** to start with your own calendar.
 
-## Thêm nhiều hẹn
+## Calendar and widgets
 
-1. Chọn **Thêm hẹn**, nhập tên rồi điền ngày, giờ và thông tin đã biết. Địa điểm và ghi chú có thể để trống.
-2. Chọn **Hẹn mới** để nhập tiếp. Khi đã nhập hết, chọn **Xong**. Bản nháp có thể mở lại qua **Thêm hẹn** sau khi đóng hoặc tải lại trang.
-3. Trả lời từng thẻ còn thiếu. Fri hỏi ngày, giờ bắt đầu và giờ kết thúc theo thứ tự, bỏ qua trường đã đủ. Với hẹn qua nửa đêm, chọn **Kết thúc vào ngày hôm sau**.
-4. Sau câu cuối, toàn bộ lượt xuất hiện trên lịch. Nếu mọi hẹn đã đủ thông tin từ đầu, **Xong** lưu ngay. Fri mở ngày của hẹn đầu tiên và cho hoàn tác cả lượt.
+- **Day** opens first. Activities appear as posts with a time tile, title, and a check box for each trackable item. Hover for 300 ms to preview details or open the post by clicking, tapping, or pressing Enter.
+- **Month** and **Year** use rounded square tiles. The month tiles bobble when the pointer enters and show a cursor-following agenda preview after 500 ms. Pick a month or day to go one level deeper. Use the arrow keys to navigate days in Month.
+- The progress ring tracks appointments, flexible tasks, nested activities, and deadlines. The day-level check unlocks when every trackable activity is complete. Reopening an activity clears the day-level completion. Travel and on-site context appear in the feed and progress is unchanged by them.
+- The square **widget** shows progress and the next activity. Open it to expand the upcoming stack, then select an item to open its details. **Widgets** includes a lock screen preview and system tint. Native widgets and background notifications belong to later platform releases.
+- **Settings** includes alternate palettes, light and dark appearances, and reduced transparency. The app uses the Apple system font where available and platform fallbacks elsewhere. The calendar respects reduced motion.
 
-## Các luồng khác
+The motion treatments are implemented with CSS and the Web Animations API. [Motion references for bobble](https://motion.dev/examples/react-bobble-hover), [cursor-following previews](https://motion.dev/examples/vue-cursor-hover-follow), [stagger](https://motion.dev/examples/vue-staggered-grid), [post expansion](https://motion.dev/examples/js-app-store-layout), and the [widget stack](https://motion.dev/examples/vue-notifications-stack).
 
-1. Chọn **Thêm nguồn → Dùng dữ liệu mẫu**. Hai ảnh tổng hợp, một lịch ICS và một link yêu cầu đăng nhập đi qua cùng hàng đợi. Mở **Nguồn** để thử lại từng mục hoặc dán nội dung thay thế.
-2. Trong **Cần duyệt**, xem ảnh và câu gốc “mai 7h”. Điền ngày, giờ đã biết rồi xác nhận, hoặc để mục lại để duyệt sau. Những mục đủ dữ kiện có thể xác nhận theo nhóm. Khi ICS đổi giờ, xem dữ liệu trước và sau, rồi chọn cách xử lý cùng với các chỉnh sửa cá nhân.
-3. Mở **Lịch** và chuyển giữa **Ngày**, **Tuần**, **Tháng** và **Danh sách**. Chọn **Xếp việc** để xem khung giờ đề xuất và lý do, rồi áp dụng hoặc quay lại. Sửa, khóa, đánh dấu hoàn thành và hoàn tác có thể thực hiện ngay trong lịch.
-4. Trong **Cài đặt**, thử 10 bảng màu, chế độ Sáng/Tối/Theo hệ thống và tùy chọn giảm trong suốt. **Widget** dùng dữ liệu cùng revision với lịch, có bản xem trước iPhone nhỏ/vừa, màn hình khóa và macOS. Chạm một thẻ để mở mục lịch tương ứng.
+## Add appointments and sources
 
-## Kiểm thử
+Choose **Add appointment** and enter a name. Use **New appointment** to add another, then choose **Done**. Fri asks for any missing or invalid date, start time, or end time one card at a time. The full batch goes on the calendar after the final answer. Closing or reloading keeps the draft.
 
-Ứng dụng không cần cài gói. Bộ kiểm thử dùng Node.js 24 và Playwright, tự mở máy chủ HTTP cục bộ khi chạy.
+Use **Add sources** to stage images, text, and calendar links. The sample batch includes two images, an ICS calendar, and a login-required source. Public ICS and JSON-LD depend on the source’s browser access policy. Uploaded images have a local preview and go through manual review. **Plan tasks** previews schedule changes, explains issues, and applies a validated revision before exporting generated sessions as ICS.
+
+## Verify
+
+The app has no install step. The test suite uses Node.js 24, Playwright, and a local HTTP server started by the tests.
 
 ```powershell
 npm ci --prefix tests
@@ -39,16 +41,6 @@ npm run test:browser --prefix tests
 Remove-Item Env:FRI_BROWSER
 ```
 
-`npm run test:domain --prefix tests` chạy riêng các phép kiểm ngày giờ, trùng lịch, khung có mặt, hoạt động con, thiếu thời gian, revision và bản xem trước nhắc. Bộ kiểm thử trình duyệt bao gồm thao tác nhập nguồn, duyệt, lưu lại, đổi giao diện, xếp việc và điều hướng trên desktop/mobile.
+Run `npm run test:domain --prefix tests` for calendar and scheduling logic alone. [GitHub Actions](.github/workflows/web.yml) also runs both browser engines. [Architecture and technology](docs/technology.md) covers the implemented stack, data contracts, and platform roadmap.
 
-Đã chạy thành công **14 kiểm thử logic, 15 kiểm thử Chromium và 15 kiểm thử WebKit** trên Windows. Luồng thêm hẹn được kiểm tra với lượt gồm cả mục đầy đủ và mục thiếu, giờ kết thúc sai, hẹn qua nửa đêm, tải lại giữa các bước và thử ghi lịch lại sau lỗi lưu trữ. Các bài hồi quy bao phủ nhập nguồn lỗi một phần, ảnh ngoại tuyến, cập nhật ICS giữ chỉnh sửa, revision từ tab khác, hoàn tác, xuất ICS, bàn phím, màn hình 360 px và đường dẫn widget.
-
-## Phạm vi Web V1
-
-- Nhập tệp ICS, nội dung dán và link ICS hoặc trang có sự kiện JSON-LD nếu máy chủ nguồn cho phép trình duyệt đọc. Ảnh người dùng chọn có xem trước cục bộ và đi qua bước nhập tay. Ảnh mẫu dùng câu trích xuất dựng sẵn.
-- Bộ xếp việc dùng một ngày, một khung liên tục mỗi việc, theo giờ Việt Nam. Kế hoạch có kiểm tra revision trước khi áp dụng, giữ giờ nghỉ và phiên khóa. Tệp ICS xuất từ các phiên Fri đã xếp qua kiểm tra lại xung đột.
-- Kết nối OAuth, OCR, đọc trang cần đăng nhập, mở rộng chuỗi ICS lặp, đồng bộ thiết bị và nhắc nền thuộc các mốc sau. Widget là bản xem trước Web. Kiểm thử trên thiết bị iOS và macOS thật thuộc mốc WidgetKit.
-
-[Tài liệu kiến trúc và công nghệ](docs/technology.md) ghi stack hiện hành, hợp đồng dữ liệu, thiết kế đồng bộ và xác thực, lộ trình từng nền tảng và tiêu chí triển khai. [Quy trình kiểm thử Web trên GitHub Actions](.github/workflows/web.yml) chạy bộ logic và hai engine trình duyệt.
-
-Thiết kế lấy Lake · Sun làm mặc định, dùng vật liệu kính cho vùng điều hướng và nền rõ hơn ở lịch, biểu mẫu và bằng chứng. Thẻ widget ưu tiên việc sắp tới, giờ rời đi và tiến độ. [Apple HIG — Materials](https://developer.apple.com/design/human-interface-guidelines/materials) · [Apple HIG — Widgets](https://developer.apple.com/design/human-interface-guidelines/widgets)
+Verified on Windows with 14 domain cases and 18 browser cases each in Chromium and WebKit. Coverage includes the preview delays, square tile layout, keyboard and 360 px touch navigation, completion persistence, widget navigation, and the appointment, sources, and planner workflows.

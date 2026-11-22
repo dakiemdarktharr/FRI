@@ -1,6 +1,6 @@
 # Fri
 
-Fri is a personal calendar for appointments, flexible work, deadlines, and travel. The web app is a single HTML file with an English interface and a beige, near-black brown, and rosewood glass theme.
+Fri is a personal calendar for appointments, flexible work, deadlines, and travel. The web app is a single HTML file with an English interface, a flat beige background, near-black brown text, and solid `#955251` accents. Translucent surfaces, bright edges, and shadows give the panes their gloss.
 
 ## Run
 
@@ -43,4 +43,4 @@ Remove-Item Env:FRI_BROWSER
 
 Run `npm run test:domain --prefix tests` for calendar and scheduling logic alone. [GitHub Actions](.github/workflows/web.yml) also runs both browser engines. [Architecture and technology](docs/technology.md) covers the implemented stack, data contracts, and platform roadmap.
 
-Verified on Windows with 14 domain cases and 18 browser cases each in Chromium and WebKit. Coverage includes the preview delays, square tile layout, keyboard and 360 px touch navigation, completion persistence, widget navigation, and the appointment, sources, and planner workflows.
+Verified on Windows with 14 domain cases and 19 browser cases each in Chromium and WebKit. Coverage includes the solid palette, preview delays, square tile layout, keyboard and 360 px touch navigation, completion persistence, widget navigation, and the appointment, sources, and planner workflows.

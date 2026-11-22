@@ -381,6 +381,45 @@ test('desktop initial view has accessible names and landmark structure', async t
   assert.deepEqual(result.violations.map(({ id, nodes }) => ({ id, nodes: nodes.map(node => node.target) })), []);
 });
 
+test('default colors are solid beige and rosewood with no gradients in the interface', async t => {
+  const { page } = await open(t);
+  const colors = await page.evaluate(() => {
+    const body = getComputedStyle(document.body);
+    const heading = getComputedStyle(document.querySelector('.calendar-heading h1'));
+    const appointment = getComputedStyle(document.querySelector('#top [data-action="appointment"]'));
+    return {
+      background: body.backgroundColor, image: body.backgroundImage,
+      accent: appointment.backgroundColor, text: heading.color
+    };
+  });
+  assert.equal(colors.background, 'rgb(241, 227, 212)');
+  assert.equal(colors.image, 'none');
+  assert.equal(colors.accent, 'rgb(149, 82, 81)');
+  assert.equal(colors.text, 'rgb(45, 33, 30)');
+  assert.doesNotMatch((await page.locator('style').allTextContents()).join('\n'), /\b(?:linear|radial|conic)-gradient\s*\(/i);
+
+  const surfaces = 'body, #top, .activity-post, .day-ring, .month-tile, .year-tile, .fri-widget, .widget-face, .widget-stack-row';
+  async function assertSolidSurfaces() {
+    const gradients = await page.locator(surfaces).evaluateAll(elements => elements.flatMap(element =>
+      [null, '::before', '::after'].flatMap(pseudo => {
+        const { backgroundImage } = getComputedStyle(element, pseudo);
+        return /gradient\(/i.test(backgroundImage) ? [{ element: element.className || element.tagName, pseudo, backgroundImage }] : [];
+      })
+    ));
+    assert.deepEqual(gradients, []);
+    assert.equal(await page.locator('linearGradient, radialGradient').count(), 0);
+  }
+
+  await assertSolidSurfaces();
+  await view(page, 'Month').click();
+  await assertSolidSurfaces();
+  await view(page, 'Year').click();
+  await assertSolidSurfaces();
+  await byButton(page, 'Widgets').first().click();
+  await view(page, 'Show upcoming activities').click();
+  await assertSolidSurfaces();
+});
+
 test('palette and light/dark changes take effect and persist after a reload', async t => {
   const { page } = await open(t, { colorScheme: 'light' });
   const initial = await appearance(page);

@@ -3499,6 +3499,16 @@ h1.calendar-title {
   }
 }
 
+/* Flat fills and bright edges keep WebKit's repeated cards out of the blur pass. */
+:root:not(.has-optical-backdrop) :is(.glass-surface,.card,.rail,.mobile-nav,dialog) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root:not(.has-optical-backdrop) dialog::backdrop {
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
 .activity-time {
   width: 100%;
   min-height: 52px;
@@ -5056,7 +5066,7 @@ const isOnline = () => navigator.onLine;
 const e = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const icon = name => `<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">${icons[name] || icons.fri}</svg>`;
 const brand = () => `<span class="brand"><span class="logo">${icon('fri')}</span>Fri</span>`;
-const button = (label, action, options = {}) => `<button type="button" class="${options.iconOnly ? 'icon-btn' : 'btn'}${options.primary ? ' primary' : ''}${options.kind ? ` ${e(options.kind)}` : ''}" data-action="${e(action)}"${options.id != null ? ` data-id="${e(options.id)}"` : ''}${options.disabled ? ' disabled' : ''}${options.iconOnly ? ` aria-label="${e(label)}" title="${e(label)}"` : ''}>${options.icon ? icon(options.icon) : ''}${options.iconOnly ? '' : e(label)}</button>`;
+const button = (label, action, options = {}) => `<button type="button" class="${options.iconOnly ? 'icon-btn' : 'btn'}${options.primary ? ' primary' : ''}${options.kind ? ` ${e(options.kind)}` : ''}" data-action="${e(action)}"${options.id != null ? ` data-id="${e(options.id)}"` : ''}${options.disabled ? ' disabled' : ''}${options.iconOnly || options.shortLabel ? ` aria-label="${e(label)}" title="${e(label)}"` : ''}>${options.icon ? icon(options.icon) : ''}${options.iconOnly ? '' : e(options.shortLabel || label)}</button>`;
 const intro = (label, title, description, actions = '') => `<header class="intro"><div><div class="eyebrow">${e(label)}</div><h1>${e(title)}</h1>${description ? `<p>${e(description)}</p>` : ''}</div>${actions ? `<div class="actions intro-actions">${actions}</div>` : ''}</header>`;
 const empty = (title, description, action = '') => `<div class="empty">${icon('calendar')}<strong>${e(title)}</strong><p>${e(description)}</p>${action}</div>`;
 const field = (label, markup) => `<label class="field"><span>${e(label)}</span>${markup}</label>`;
@@ -5296,7 +5306,7 @@ function navItem(key) {
 function renderChrome() {
   document.querySelector('#rail').innerHTML = `${brand()}<nav class="rail-nav" aria-label="Plan">${navItem('today')}${navItem('calendar')}</nav><nav class="rail-nav" aria-label="Collect"><div class="nav-label">Collect</div>${navItem('sources')}${navItem('review')}</nav><div class="rail-end">${navItem('widgets')}${navItem('settings')}<span class="rail-foot"><i class="status-dot${isOnline() ? '' : ' offline'}"></i>${isOnline() ? 'Stored on this device' : 'Offline'}</span></div>`;
   document.querySelector('#mobile-nav').innerHTML = ['today','calendar','sources','review','widgets'].map(navItem).join('');
-  document.querySelector('#top').innerHTML = `<div class="top-label">${mobile.matches ? brand() : `${icon(pages[page][1])}<span>${pages[page][0]}</span>`}</div><div class="top-actions">${button('Search', 'search',{icon:'search',iconOnly:true,kind:'ghost'})}${mobile.matches ? button('Settings','page',{id:'settings',icon:'settings',iconOnly:true,kind:'ghost'}) : ''}${button('Add sources','intake',{icon:'sources',iconOnly:mobile.matches})}${button('Add appointment','appointment',{icon:'plus',primary:true,kind:hasAppointmentDraft() ? 'appointment-pending' : ''})}</div>`;
+  document.querySelector('#top').innerHTML = `<div class="top-label">${mobile.matches ? brand() : `${icon(pages[page][1])}<span>${pages[page][0]}</span>`}</div><div class="top-actions">${button('Search', 'search',{icon:'search',iconOnly:true,kind:'ghost'})}${mobile.matches ? button('Settings','page',{id:'settings',icon:'settings',iconOnly:true,kind:'ghost'}) : ''}${button('Add sources','intake',{icon:'sources',iconOnly:mobile.matches})}${button('Add appointment','appointment',{icon:'plus',primary:true,shortLabel:mobile.matches ? 'Add' : undefined,kind:hasAppointmentDraft() ? 'appointment-pending' : ''})}</div>`;
   if (hasAppointmentDraft()) document.querySelector('#top [data-action="appointment"]').title = 'Continue draft appointments';
 }
 

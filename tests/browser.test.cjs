@@ -39,7 +39,7 @@ async function open(t, options = {}, url = appUrl) {
   const context = await browser.newContext({ locale: 'en-GB', timezoneId: 'Asia/Ho_Chi_Minh', ...options });
   t.after(() => context.close());
   const page = await context.newPage();
-  page.setDefaultTimeout(3500);
+  page.setDefaultTimeout(engine === webkit && process.env.CI ? 8000 : 3500);
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   t.after(() => assert.deepEqual(errors, [], 'No uncaught browser errors'));

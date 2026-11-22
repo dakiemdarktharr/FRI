@@ -1,5 +1,5 @@
 'use strict';
-const {app, BrowserWindow, ipcMain, Menu, dialog, shell, protocol, nativeTheme, session} = require('electron');
+const {app, BrowserWindow, ipcMain, Menu, dialog, shell, protocol, nativeTheme, session, screen} = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -82,8 +82,9 @@ autoUpdater.on('update-available',async info=>{
 });
 
 function createWindow(){
+  const workArea=screen.getPrimaryDisplay().workAreaSize;
   win=new BrowserWindow({
-    width:1440,height:980,minWidth:860,minHeight:640,show:false,frame:false,roundedCorners:true,
+    width:Math.min(1440,Math.max(860,workArea.width-80)),height:Math.min(980,Math.max(640,workArea.height-80)),minWidth:860,minHeight:640,show:false,frame:false,roundedCorners:true,
     title:'FRI',autoHideMenuBar:true,backgroundColor:material==='solid'?'#151515':'#00000000',
     ...(supportsAcrylic?{backgroundMaterial:'acrylic'}:{}),
     ...(isMac?{vibrancy:'under-window',visualEffectState:'active'}:{}),

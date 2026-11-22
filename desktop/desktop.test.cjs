@@ -4,6 +4,14 @@ const fs=require('node:fs');
 const path=require('node:path');
 const {_electron:electron,chromium}=require('../tests/node_modules/playwright');
 const results=path.join(__dirname,'test-results');fs.mkdirSync(results,{recursive:true});
+async function windowState(app,property,expected){
+  for(let i=0;i<60;i++){
+    const actual=await app.evaluate(({BrowserWindow},property)=>BrowserWindow.getAllWindows()[0][property](),property);
+    if(actual===expected)return;
+    await new Promise(resolve=>setTimeout(resolve,100));
+  }
+  assert.fail(`Native ${property} did not become ${expected}`);
+}
 
 test('native window, isolated IPC, real commands and persistent calendar',async()=>{
   const data=fs.mkdtempSync(path.join(results,'profile-'));
@@ -30,10 +38,11 @@ test('native window, isolated IPC, real commands and persistent calendar',async(
     await p.locator('[data-action=search]').click();await p.locator('#search-input').fill('Native deadline');await p.locator('[data-action=search-result]').click();await p.locator('[data-action=close-modal]').first().click();
     await p.locator('[data-action=sidebar]').first().click();assert.equal(await p.locator('.sidebar-collapsed').count(),1);
     await p.locator('[data-action=sidebar]').first().click();
-    await p.locator('[data-window=maximize]').click();assert.equal(await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].isMaximized()),true);
-    await p.locator('[data-window=maximize]').click();assert.equal(await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].isMaximized()),false);
-    await p.locator('[data-window=minimize]').click();assert.equal(await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].isMinimized()),true);
+    await p.locator('[data-window=maximize]').click();await windowState(app,'isMaximized',true);
+    await p.locator('[data-window=maximize]').click();await windowState(app,'isMaximized',false);
+    await p.locator('[data-window=minimize]').click();await windowState(app,'isMinimized',true);
     await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].restore());
+    await windowState(app,'isMinimized',false);
     await p.screenshot({path:path.join(results,'native-content.png')});
     assert.deepEqual(errors,[]);
     await app.close();app=await electron.launch(options);p=await app.firstWindow();await p.locator('.task').first().waitFor();

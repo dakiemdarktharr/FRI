@@ -74,9 +74,11 @@ jobs:
       - run: docker run -d --name fri-test -p 127.0.0.1:8080:8080 fri-web:test
       - name: Check the served interface
         run: |
-          curl --retry 10 --retry-connrefused --retry-delay 1 -fsS http://127.0.0.1:8080/ -o /tmp/fri.html
+          curl --retry 10 --retry-all-errors --retry-connrefused --retry-delay 1 -fsS http://127.0.0.1:8080/ -o /tmp/fri.html
           grep -q 'data-menu="new"' /tmp/fri.html
           grep -q 'One-time deadline' /tmp/fri.html
           test "$(docker inspect --format='{{.Config.User}}' fri-test)" != 'root'
       - if: always()
-        run: docker rm -f fri-test || true
+        run: |
+          docker logs fri-test || true
+          docker rm -f fri-test || true

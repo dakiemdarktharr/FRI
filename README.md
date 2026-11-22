@@ -1,8 +1,39 @@
 # Fri
 
-Fri is a personal calendar for appointments, flexible work, deadlines, and travel. The web app is a single HTML file with an English interface, a flat beige background, near-black brown text, and solid `#955251` accents. Translucent surfaces, bright edges, and shadows give the panes their gloss.
+Fri is a personal calendar that makes room for appointments, focused work, and the everyday things that matter.
 
-## Run
+**Latest interface preview:** open [FRI-liquid-glass.html](FRI-liquid-glass.html). This separate, self-contained HTML explores the new sidebar/main-space layout, smoked Liquid Glass, beige typography, marsala accents, multiple day tabs, and a duration-sized appointment mosaic. The sidebar runs a slow beige/marsala ShaderGradient. Day, the bird companion, sits beside Up Next and the widget gallery.
+
+The earlier working V1 remains in [index.html](index.html), with sources, scheduling logic, calendar export, and its existing data model. The new preview has its own local data and is intended for visual approval before native app integration.
+
+## Try the new interface
+
+Double-click `FRI-liquid-glass.html`, or open `/FRI-liquid-glass.html` on the local server described below. The file embeds its assets and renderer and works offline. Start on today, open another day with **+** beside the tabs, and close a day with its **×**. Use **Your way** for layout, editing and bulk deletion. **Settings** changes sidebar background, uploaded image, accent, motion, transparency and text size.
+
+**Add → name and details → Add another → Done** gathers a batch. Day asks for missing time and duration one card at a time, then checks overlap before placing the appointments on the calendar. Complete the individual tasks to unlock the day ring. Delete offers Undo. `N` opens a new appointment, `/` searches, and Escape closes a dialog.
+
+Up Next uses the local calendar. Weather, Maps, Spotify and Health show clearly labeled sample content. Day's conversation is a local interaction demo; voice entry and spoken playback depend on browser capabilities. Accounts, connected services, native desktop transparency, installers and updates belong to the later app phase.
+
+Design decisions, source research, the ten wireframe regions and native handoff notes are in [Liquid Glass research](docs/liquid-glass-research.md).
+
+To rebuild or test the preview:
+
+```powershell
+npm ci --prefix preview
+npm run build --prefix preview
+npm ci --prefix tests
+npm exec --prefix tests -- playwright install chromium webkit
+npm test --prefix preview
+$env:FRI_BROWSER = 'webkit'
+npm test --prefix preview
+Remove-Item Env:FRI_BROWSER
+```
+
+Verified on Windows: **8 scenario tests in Chromium and 8 in WebKit**, covering offline loading, duration/area ordering and equal gutters, batch review, overlap, editing/deletion/undo, completion gating, tabs and calendar navigation, hover timing, search, settings/image persistence, widgets, Day and accessibility semantics. Separate visual checks passed at 320/360/390 px. Shader pixels change with motion enabled and remain stable under Reduce Motion; loading makes zero external requests. Automated contrast checks reported no violations but left translucent regions for manual review; this is not a claim of full accessibility conformance.
+
+Authoring files and dependency lockfile live in `preview/`. The output includes [third-party notices](preview/THIRD-PARTY-NOTICES.txt). The reusable `moving_gradient_bg` skill is installed locally with canonical ID `moving-gradient-bg`.
+
+## Run the earlier V1
 
 Open `index.html` directly in a modern browser. The app and sample assets are self-contained. For a stable storage origin and to try public calendar sources, run this command from the repository root:
 

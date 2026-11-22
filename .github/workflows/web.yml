@@ -34,3 +34,6 @@ jobs:
       - if: matrix.browser == 'chromium'
         run: npm run test:domain --prefix tests
       - run: npm run test:browser --prefix tests
+      - run: npm ci --prefix preview
+      - run: npm run build --prefix preview
+      - run: npm test --prefix preview

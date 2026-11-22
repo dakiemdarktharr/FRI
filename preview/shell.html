@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>FRI · A little room for your day</title><style>/*__CSS__*/</style></head>
+<body>
+<div class="desktop" aria-hidden="true"><svg viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice"><rect width="1600" height="1000" fill="#F1E3D4"/><path d="M0 820C330 500 200 100 700 0H1600V1000H0" fill="#d5b9a6"/><path d="M600 1000C230 630 600 130 1170 0H1600V1000" fill="#955251"/><path d="M800 1000C510 660 940 100 1600 190V1000" fill="#b77e71"/><path d="M1100 1000C760 590 1400 410 1600 500V1000" fill="#2D211E"/><path d="M1260 1000C1070 760 1430 590 1600 660V1000" fill="#d5b9a6"/></svg></div>
+<svg class="filter-defs" aria-hidden="true"><defs><filter id="liquid-lens" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feImage id="lens-map" result="map"/><feGaussianBlur in="SourceGraphic" stdDeviation="0.7" result="soft"/><feDisplacementMap in="soft" in2="map" scale="32" xChannelSelector="R" yChannelSelector="G"/></filter></defs></svg>
+<div class="app-window" id="app">
+  <aside class="sidebar" id="sidebar" aria-label="Navigation">
+    <div id="shader" aria-hidden="true"></div><div class="sidebar-tint" aria-hidden="true"></div>
+    <div class="sidebar-content">
+      <div class="brand-row"><span class="wordmark">fri<span>•</span></span><span class="brand-caption">A LITTLE ROOM<br>FOR YOUR DAY</span><button class="icon-button mobile-close" data-action="sidebar" aria-label="Close sidebar" data-icon="close"></button></div>
+      <div class="day-switch"><button class="icon-button" data-action="prev" aria-label="Previous day" data-icon="left"></button><button class="today-button" data-action="today">Today <span id="today-small"></span></button><button class="icon-button" data-action="next" aria-label="Next day" data-icon="right"></button></div>
+      <button class="search-button" data-action="search"><span data-icon="search"></span><span>Find an appointment</span><kbd>/</kbd></button>
+      <div class="nav-group"><p class="section-label">YOUR SPACE</p><button class="nav-item active" data-action="view" data-view="day"><span data-icon="grid"></span><span>My day</span><span class="count" id="side-count">7</span></button><button class="nav-item" data-action="view" data-view="month"><span data-icon="calendar"></span><span>Calendar</span></button><button class="nav-item" data-action="view" data-view="year"><span data-icon="layers"></span><span>The bigger picture</span></button></div>
+      <div class="nav-group"><p class="section-label">COLLECTIONS <button class="tiny-button" data-action="collection" aria-label="Add collection" data-icon="plus"></button></p><div id="collections"></div></div>
+      <div class="nav-group links"><p class="section-label">QUICK LINKS</p><button class="nav-item" data-action="link" data-link="https://calendar.google.com"><span data-icon="link"></span><span>Google Calendar</span><span data-icon="external"></span></button><button class="nav-item" data-action="link" data-link="https://open.spotify.com"><span data-icon="music"></span><span>A little focus music</span><span data-icon="external"></span></button></div>
+      <div class="sidebar-bottom"><div class="sidebar-note"><span class="status-dot"></span> YOUR DAY, AT YOUR PACE.</div><div class="account-bar"><button class="profile" data-action="profile" aria-label="Profile"><span class="avatar">A</span><span><strong>Alex Morgan</strong><small>Personal space</small></span></button><button class="icon-button" data-action="settings" aria-label="Settings" data-icon="settings"></button></div></div>
+    </div>
+  </aside>
+  <main class="main-space" id="main" aria-label="Calendar workspace">
+    <div class="main-material" aria-hidden="true"></div>
+    <header class="tab-bar"><button class="icon-button mobile-menu" data-action="sidebar" aria-label="Open sidebar" data-icon="menu"></button><div class="tabs" id="tabs" role="navigation" aria-label="Open days"></div><button class="new-tab icon-button" data-action="new-tab" aria-label="Open another day" data-icon="plus"></button><span class="local-label"><span class="status-dot"></span> Just for you</span></header>
+    <div class="workspace-scroll" id="workspace-scroll"><div class="workspace-inner">
+      <section class="day-heading" aria-label="Day overview"><button class="date-card" data-action="view" data-view="month" aria-label="Open month calendar"><span class="eyebrow" id="date-kicker">MAKE SPACE FOR WHAT MATTERS</span><h1 id="weekday">Sunday</h1><span class="date-bottom"><span id="full-date"></span><span data-icon="calendar"></span></span></button><div class="heading-actions"><button class="add-button glass-button" data-action="add"><span data-icon="plus"></span> Add <span class="shortcut">N</span></button><button class="more-button glass-button" data-action="more" aria-label="Layout and appointment actions"><span data-icon="more"></span><span>Your way</span></button></div><div class="progress-area"><button id="day-complete" class="day-complete" data-action="finish" aria-label="Finish this day"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-track" cx="60" cy="60" r="52"/><circle id="ring-fill" class="ring-fill" cx="60" cy="60" r="52"/></svg><span class="ring-center"><span data-icon="check"></span><span id="progress-number">2 of 7</span></span></button><span id="progress-caption">A little closer.</span></div></section>
+      <div class="section-bar"><div><h2 id="content-title">The shape of your day</h2><p id="content-subtitle">A little focus. A little breathing room.</p></div><button id="filter-button" class="subtle-button" data-action="filter"><span data-icon="sliders"></span><span>All plans</span></button></div>
+      <div class="content-layout"><section id="calendar-content" aria-label="Appointments"></section><aside class="widget-rail" aria-label="Widgets"><div id="widgets"></div><button class="add-widget" data-action="widgets"><span data-icon="plus"></span> Add a widget</button><section class="day-companion"><button class="day-character" data-action="day" aria-label="Talk to Day"><img src="__DAY_IMAGE__" alt="Day, your bird companion"/><span class="companion-shadow"></span></button><div class="companion-name">Meet Day <span class="status-dot"></span></div><p>A small companion.<br>A little less on your mind.</p><button class="ask-day" data-action="day"><span>What's on your mind?</span><span data-icon="mic"></span></button></section></aside></div>
+      <footer class="workspace-footer"><span>A day well spent is a day that's yours.</span><span id="footer-info">FRI / PERSONAL SPACE</span></footer>
+    </div></div>
+  </main>
+</div>
+<dialog id="modal" aria-labelledby="modal-title"><div id="modal-content"></div></dialog>
+<div class="hover-preview" id="hover-preview" role="tooltip" hidden></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<template id="day-asset"><img src="__DAY_IMAGE__" alt="Day"/></template>
+<script>/*__APP__*/</script><script>/*__GRADIENT__*/</script>
+</body></html>

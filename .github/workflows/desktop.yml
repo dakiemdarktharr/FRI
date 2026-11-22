@@ -1,0 +1,82 @@
+name: Desktop and container verification
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing release tag to receive verified installers (leave empty for build only)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2025, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24'
+      - run: npm ci --prefix preview
+      - run: npm run build --prefix preview
+      - run: npm ci --prefix tests
+      - run: npm exec --prefix tests -- playwright install chromium
+      - run: npm ci --prefix desktop
+      - run: node desktop/node_modules/electron/install.js
+      - run: npm run prepare:ui --prefix desktop
+      - run: npm test --prefix desktop
+      - run: npm audit --omit=dev --prefix desktop --audit-level=moderate
+      - run: npm run dist --prefix desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: FRI-${{ runner.os }}
+          retention-days: 14
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+            dist/*.blockmap
+            dist/latest*.yml
+      - name: Upload installers to the requested release
+        if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+          test "${RELEASE_TAG#v}" = "$(node -p "require('./desktop/package.json').version")"
+          shopt -s nullglob
+          files=(dist/*.exe dist/*.dmg dist/*.zip dist/*.blockmap dist/latest*.yml)
+          gh release upload "$RELEASE_TAG" "${files[@]}" --clobber
+  container:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - run: docker build -t fri-web:test .
+      - run: docker run -d --name fri-test -p 127.0.0.1:8080:8080 fri-web:test
+      - name: Check the served interface
+        run: |
+          curl --retry 10 --retry-connrefused --retry-delay 1 -fsS http://127.0.0.1:8080/ -o /tmp/fri.html
+          grep -q 'data-menu="new"' /tmp/fri.html
+          grep -q 'One-time deadline' /tmp/fri.html
+          test "$(docker inspect --format='{{.Config.User}}' fri-test)" != 'root'
+      - if: always()
+        run: docker rm -f fri-test || true

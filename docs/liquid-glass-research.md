@@ -1,5 +1,7 @@
 # Liquid Glass design review
 
+> Historical design record. The 2026-11-22 desktop revision supersedes the palette and handoff status below: black-and-white UI, native Windows Acrylic/macOS vibrancy, a custom menu bar, Search beside the logo, and New → deadline/schedule. Red-marked decorative content was removed. [Desktop ground truth](desktop.md) is the current delivery record.
+
 Date: 2026-11-22. Deliverable: `FRI-liquid-glass.html`, a separate English UI prototype for design approval. `index.html` remains the earlier V1 app. These files use different local storage keys.
 
 ## Decisions from the user

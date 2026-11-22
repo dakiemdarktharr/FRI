@@ -1,20 +1,39 @@
-# Fri
+# FRI
 
 Fri is a personal calendar that makes room for appointments, focused work, and the everyday things that matter.
 
-**Latest interface preview:** open [FRI-liquid-glass.html](FRI-liquid-glass.html). This separate, self-contained HTML explores the new sidebar/main-space layout, smoked Liquid Glass, beige typography, marsala accents, multiple day tabs, and a duration-sized appointment mosaic. The sidebar runs a slow beige/marsala ShaderGradient. Day, the bird companion, sits beside Up Next and the widget gallery.
+**Desktop installers:** [GitHub Releases](https://github.com/dakiemdarktharr/FRI/releases). **Single-file interface:** [FRI-liquid-glass.html](FRI-liquid-glass.html). The current design is black and white, with a slow monochrome sidebar, multiple day tabs, a duration-sized appointment mosaic and Day beside Up Next.
 
-The earlier working V1 remains in [index.html](index.html), with sources, scheduling logic, calendar export, and its existing data model. The new preview has its own local data and is intended for visual approval before native app integration.
+The Electron desktop app uses native Windows Acrylic or macOS vibrancy to reveal blurred wallpaper and applications behind main space. HTML uses a sample background. Acrylic/vibrancy is real native transparency and blur; it is not Apple's native Liquid Glass refraction renderer. The earlier V1 remains in [index.html](index.html), with its separate sources, planner and data model.
 
 ## Try the new interface
 
-Double-click `FRI-liquid-glass.html`, or open `/FRI-liquid-glass.html` on the local server described below. The file embeds its assets and renderer and works offline. Start on today, open another day with **+** beside the tabs, and close a day with its **×**. Use **Your way** for layout, editing and bulk deletion. **Settings** changes sidebar background, uploaded image, accent, motion, transparency and text size.
+Double-click `FRI-liquid-glass.html`, or launch the desktop app. Start on today, open another day with **+** beside the tabs, and close a day with its **×**. Search is the magnifying glass beside the logo. **New** offers **One-time deadline** (due date/time) or **Schedule** (one appointment with start/duration). Recurrence is not implemented. Use **…** for layout, editing and bulk deletion. **Settings** changes sidebar background, uploaded image, motion, transparency and text size. The palette is intentionally monochrome for the next design review.
 
-**Add → name and details → Add another → Done** gathers a batch. Day asks for missing time and duration one card at a time, then checks overlap before placing the appointments on the calendar. Complete the individual tasks to unlock the day ring. Delete offers Undo. `N` opens a new appointment, `/` searches, and Escape closes a dialog.
+**Add → name and details → Add another → Done** gathers a batch. Missing information is requested one card at a time; schedules are checked for overlap. Deadlines do not require duration. Complete individual tasks to unlock the day ring. Delete offers Undo. `N` opens New, `/` or `Ctrl/⌘ F` searches, `Ctrl/⌘ B` toggles the sidebar, and Escape closes a menu/dialog. File/Edit/View/Help provide backup/restore, editing, day/month/year views, shortcuts and updates. Window controls operate the real desktop window.
 
-Up Next uses the local calendar. Weather, Maps, Spotify and Health show clearly labeled sample content. Day's conversation is a local interaction demo; voice entry and spoken playback depend on browser capabilities. Accounts, connected services, native desktop transparency, installers and updates belong to the later app phase.
+Up Next uses the local calendar. Weather, Maps, Spotify and Health contain labeled sample content. Day is a local demo; spoken playback depends on platform support, and the native preview does not request microphone access. Accounts, connected services, native OS widgets and background reminders are not implemented. Calendar backups transfer tasks between browser and app; preferences and drafts remain local.
 
-Design decisions, source research, the ten wireframe regions and native handoff notes are in [Liquid Glass research](docs/liquid-glass-research.md).
+Current implementation, packaging and limitations are in [desktop ground truth](docs/desktop.md). [Liquid Glass research](docs/liquid-glass-research.md) preserves the earlier beige/marsala design history.
+
+## Desktop and Docker
+
+Use Node.js 24+:
+
+```powershell
+npm ci --prefix preview
+npm run build --prefix preview
+npm ci --prefix desktop
+node desktop/node_modules/electron/install.js
+npm start --prefix desktop
+npm run dist --prefix desktop
+```
+
+Windows produces `dist/FRI-0.2.0-win-x64.exe`. Its assisted per-user installer replaces the old application in the registered folder and keeps calendar data in a separate user-data directory. Help → Check for updates downloads newer GitHub releases and offers restart/install. Old files are removed during installation, after the download succeeds.
+
+Initial packages are unsigned. macOS DMG/ZIP builds come from the macOS CI runner; automatic installation there awaits Apple signing/notarization. Replacing FRI in Applications preserves its user Library data. Windows glass needs Windows 11 22H2+; older systems use a solid fallback.
+
+`docker compose up --build -d` serves the browser interface at [localhost:8080](http://127.0.0.1:8080). The container runs non-root nginx and does not provide desktop transparency. Stop with `docker compose down`.
 
 To rebuild or test the preview:
 
@@ -29,7 +48,7 @@ npm test --prefix preview
 Remove-Item Env:FRI_BROWSER
 ```
 
-Verified on Windows: **8 scenario tests in Chromium and 8 in WebKit**, covering offline loading, duration/area ordering and equal gutters, batch review, overlap, editing/deletion/undo, completion gating, tabs and calendar navigation, hover timing, search, settings/image persistence, widgets, Day and accessibility semantics. Separate visual checks passed at 320/360/390 px. Shader pixels change with motion enabled and remain stable under Reduce Motion; loading makes zero external requests. Automated contrast checks reported no violations but left translucent regions for manual review; this is not a claim of full accessibility conformance.
+Verified on Windows: **8 scenario tests in Chromium and 8 in WebKit**, covering offline loading, mosaic geometry, batch review, overlap, editing/deletion/undo, completion, tabs, hover timing, settings, widgets and accessibility semantics. `npm test --prefix desktop` adds native isolation/IPC, window controls, deadline persistence after restart, monochrome menus, narrow layouts and invalid-backup rejection. Native foreground inspection confirmed blurred applications behind main space. `npm audit --prefix desktop` reports zero vulnerabilities with the current lockfile. Translucent contrast depends on the backdrop; this is not a claim of full accessibility conformance.
 
 Authoring files and dependency lockfile live in `preview/`. The output includes [third-party notices](preview/THIRD-PARTY-NOTICES.txt). The reusable `moving_gradient_bg` skill is installed locally with canonical ID `moving-gradient-bg`.
 

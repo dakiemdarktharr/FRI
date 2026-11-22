@@ -1,0 +1,20 @@
+const assert=require('node:assert/strict');
+const {_electron}=require('../tests/node_modules/playwright');
+const [exe,profile,mode,version]=process.argv.slice(2);
+(async()=>{
+  const env={...process.env,FRI_TEST_MODE:'1',FRI_TEST_USER_DATA:profile};delete env.ELECTRON_RUN_AS_NODE;
+  const app=await _electron.launch({executablePath:exe,args:[],env});
+  try{
+    const p=await app.firstWindow();await p.locator('.task').first().waitFor();
+    assert.equal(await p.evaluate(()=>window.friDesktop.version),version);
+    if(mode==='seed'){
+      await p.locator('[data-menu=new]').click();await p.locator('[data-command=deadline]').click();
+      await p.locator('[name=title]').fill('Installer upgrade retained this deadline');await p.locator('[name=time]').fill('23:59');
+      await p.getByRole('button',{name:'Done',exact:true}).click();await p.locator('#modal').waitFor({state:'hidden'});
+      await p.locator('[data-action=settings]').click();await p.locator('#text-setting').check();await p.getByRole('button',{name:'Done',exact:true}).click();
+    }
+    const s=await p.evaluate(()=>FRI_PREVIEW.getState());
+    assert.equal(s.tasks.length,8);assert(s.tasks.some(t=>t.title==='Installer upgrade retained this deadline'));assert.equal(s.settings.large,true);
+    console.log(JSON.stringify({version,mode,appointments:s.tasks.length,deadlinePreserved:true,settingsPreserved:true,origin:await p.evaluate(()=>location.origin)}));
+  }finally{await app.close();}
+})().catch(e=>{console.error(e);process.exit(1)});

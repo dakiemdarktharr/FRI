@@ -1,5 +1,10 @@
 # Fri · Kiến trúc và công nghệ
 
+## Current desktop implementation — 2026-11-22
+
+The current desktop uses Electron 45.4.1, electron-builder 26.18.0 and electron-updater 6.8.11 around the reviewed `preview/` UI. This preserves its existing HTML and WebGL renderer while providing native Acrylic/vibrancy, menus and installers. Tauri/SQLite references below remain proposals. See [desktop ground truth](desktop.md) for implemented storage, update behavior and verified limits. The user's latest palette is black and white.
+
+
 Tài liệu kỹ thuật của Fri, cập nhật ngày 22/11/2026. Cột **Có trong Web** ghi hành vi có mã trong repository. **Đã chốt** ghi yêu cầu sản phẩm hoặc ràng buộc của bản bàn giao. **Đề xuất** ghi công nghệ hoặc thiết kế cần kiểm chứng ở mốc triển khai tương ứng. Kết quả chạy kiểm thử nằm trong [README](../README.md).
 
 ## Phạm vi và stack

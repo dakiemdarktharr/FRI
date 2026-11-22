@@ -1,0 +1,94 @@
+{
+  "name": "fri-desktop",
+  "productName": "FRI",
+  "version": "0.2.0",
+  "description": "A local calendar with a native glass workspace.",
+  "author": "FRI contributors",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.cjs",
+  "scripts": {
+    "prepare:ui": "node prepare.cjs",
+    "start": "npm run prepare:ui && electron .",
+    "test": "node --test desktop.test.cjs",
+    "pack": "npm run prepare:ui && electron-builder --dir",
+    "dist": "npm run prepare:ui && electron-builder --publish never"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.11"
+  },
+  "devDependencies": {
+    "electron": "45.4.1",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "com.fri.calendar",
+    "productName": "FRI",
+    "directories": {
+      "output": "../dist",
+      "buildResources": "resources"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "ui/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "artifactName": "FRI-${version}-${os}-${arch}.${ext}",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "dakiemdarktharr",
+        "repo": "FRI",
+        "releaseType": "release"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "resources/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true,
+      "shortcutName": "FRI"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.productivity",
+      "icon": "resources/icon.png",
+      "hardenedRuntime": true
+    }
+  },
+  "overrides": {
+    "minimatch": "11.0.1"
+  }
+}

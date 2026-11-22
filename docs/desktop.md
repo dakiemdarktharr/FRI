@@ -48,7 +48,13 @@ Local Windows build 26200 verification: 8 preview scenarios pass in Chromium and
 
 Windows installer upgrade verified at 20:59 ICT on 2026-11-22: installed a 0.1.9 test build, added a deadline and changed text size, then installed 0.2.0 into the same isolated folder. Both installers exited 0; all 8 appointments and the text preference survived; an obsolete application file was removed; exactly one 0.2.0 entry remained in Windows uninstall registration. The test then uninstalled its own application and retained its test profile. Receipt: `D:/FRI-work/installer-check-2/receipt.json`.
 
-Reproduce with `desktop/verify-upgrade.ps1 -Before <old.exe> -After <new.exe>`. It refuses to replace an existing FRI installation and confines its cleanup to the explicitly checked test path. This verifies actual NSIS replacement and data retention; it is separate from an end-to-end live download/update test against two published production releases.
+Reproduce with `desktop/verify-upgrade.ps1 -Before <old.exe> -After <new.exe>`. It refuses to replace an existing FRI installation and confines its cleanup to the explicitly checked test path.
+
+Live GitHub update also verified: an isolated installed 0.1.9 fixture checked the public 0.2.0 release through electron-updater, downloaded the release EXE, verified its SHA-512, then ran the real NSIS update path. The installed app reported 0.2.0 afterward with all 8 appointments and the larger-text preference intact. One initial connection reset left the old installation usable; retry succeeded. `desktop/verify-live-update.cjs` automates this opt-in test. Receipt: `D:/FRI-work/live-update-check/live-update-receipt.json`. Dialog responses and unattended installation are automated only by the test; the shipped app asks before download and restart/install. The initial 0.1.9 fixture was local, not a public release.
+
+Release: [FRI 0.2.0](https://github.com/dakiemdarktharr/FRI/releases/tag/v0.2.0), built from `ad05924eea1436cb56954d28eb45a6910b830794`. All Windows and macOS assets plus the standalone HTML are uploaded. [Desktop/container run](https://github.com/dakiemdarktharr/FRI/actions/runs/45030877785) passed Windows and macOS native scenarios, both package builds and Docker HTTP checks. [Web run](https://github.com/dakiemdarktharr/FRI/actions/runs/45030877023) passed Chromium/WebKit preview and earlier V1 regressions. The macOS runner executed the arm64 app; x64 was packaged but was not executed on Intel hardware. Physical Mac appearance and signed/notarized macOS updates remain unverified.
+
+Native backup export was additionally observed through Electron's `will-download` event, saved successfully as JSON and restored through the app's confirmation dialog. Playwright's page-level download event alone did not report that native download, so the native session receipt was used for verification.
 
 ## Primary references
 

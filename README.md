@@ -78,9 +78,9 @@ Choose **Add appointment** and enter a name. Use **New appointment** to add anot
 
 Use **Add sources** to stage images, text, and calendar links. The sample batch includes two images, an ICS calendar, and a login-required source. Public ICS and JSON-LD depend on the source’s browser access policy. Uploaded images have a local preview and go through manual review. **Plan tasks** previews schedule changes, explains issues, and applies a validated revision before exporting generated sessions as ICS.
 
-## Verify
+## Verify the earlier V1
 
-The app has no install step. The test suite uses Node.js 24, Playwright, and a local HTTP server started by the tests.
+The earlier V1 HTML has no install step. Its test suite uses Node.js 24, Playwright, and a local HTTP server started by the tests.
 
 ```powershell
 npm ci --prefix tests

@@ -39,7 +39,30 @@
     <div class="ocean" aria-hidden="true"><video id="surf" src="__SURF__" muted playsinline loop preload="auto" tabindex="-1"></video><canvas id="sea"></canvas><div class="sea-fallback"></div></div>
     <div class="hero-copy">
       <h1 id="hero-title" tabindex="-1" aria-label="Fri. Make time for your life."><span id="hero-word" aria-hidden="true">Fri.</span><span id="hero-mark" class="pole" aria-hidden="true" hidden>__POLE__</span></h1>
-      <a class="pill light download" href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.5.0"><span class="os-icon" aria-hidden="true">↓</span><span class="download-label">Download Fri</span></a>
+      <div class="download-panel" id="downloads" role="group" aria-label="Download Fri" tabindex="-1">
+        <div class="download-platform">
+          <strong>Windows</strong>
+          <span class="download-note">Unsigned installer</span>
+          <div class="platform-links">
+            <a href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.5.0/FRI-0.5.0-win-x64.exe" aria-label="Download for Windows x64">x64 .exe</a>
+          </div>
+        </div>
+        <div class="download-platform">
+          <strong>macOS</strong>
+          <span class="download-note">Development builds</span>
+          <div class="platform-links">
+            <a href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.5.0/FRI-0.5.0-mac-arm64.dmg" aria-label="Download for macOS Apple silicon">Apple silicon</a>
+            <a href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.5.0/FRI-0.5.0-mac-x64.dmg" aria-label="Download for macOS Intel">Intel</a>
+          </div>
+        </div>
+        <div class="download-platform">
+          <strong>Linux</strong>
+          <span class="download-note">Open in a browser</span>
+          <div class="platform-links">
+            <a href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.5.0/FRI-liquid-glass.html" aria-label="Download for Linux, browser app in HTML format">Web app .html</a>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
   <section class="demo-section section-pad" id="demo" aria-labelledby="demo-title">
@@ -59,7 +82,7 @@
 <section id="pricing-page" hidden aria-labelledby="pricing-title">
   <h1 id="pricing-title" tabindex="-1">A little space.<br>Yours to shape.</h1>
   <div class="pricing-grid">
-    <article class="plan-card free-plan"><div class="plan-label">Free</div><div class="plan-price">$0</div><h2>Find your everyday rhythm.</h2><ul><li>Appointments and one-time deadlines</li><li>A clear view of your day</li><li>Desktop widgets and daily progress</li><li>Essential appearance controls</li><li>Your calendar stays on your device</li></ul><a class="pill dark download" href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.5.0"><span class="os-icon" aria-hidden="true">↓</span><span class="download-label">Download Fri</span></a></article>
+    <article class="plan-card free-plan"><div class="plan-label">Free</div><div class="plan-price">$0</div><h2>Find your everyday rhythm.</h2><ul><li>Appointments and one-time deadlines</li><li>A clear view of your day</li><li>Desktop widgets and daily progress</li><li>Essential appearance controls</li><li>Your calendar stays on your device</li></ul><a class="pill dark download-jump" href="/#downloads"><span class="os-icon" aria-hidden="true">↓</span><span class="download-label">Download Fri</span></a></article>
     <article class="plan-card premium-plan"><div class="plan-label">Premium <span>Coming soon</span></div><div class="plan-price premium-price">₫50,000<span>/ month</span></div><h2>Your space.<br>Your kind of day.</h2><ul><li>Everything in Free</li><li>Bring your own background images</li><li>Fine-tune glass, motion and effects</li><li>Find time together with linked availability</li><li>Share free time, not private calendar details</li></ul><button class="pill light" disabled>Coming soon · no payments yet</button></article>
   </div>
 </section>
@@ -69,7 +92,7 @@
   <div id="footer-gallery" aria-hidden="true"></div>
   <div class="footer-top footer-safe"><span class="brand"><span class="pole">__POLE__</span><span>fri.</span></span></div>
   <h2 class="footer-safe">Less noise.<br>More life.</h2>
-  <a class="pill light download footer-safe" href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.5.0"><span class="os-icon" aria-hidden="true">↓</span><span class="download-label">Download Fri</span></a>
+  <a class="pill light download-jump footer-safe" href="/#downloads"><span class="os-icon" aria-hidden="true">↓</span><span class="download-label">Download Fri</span></a>
   <figure class="quote footer-safe"><blockquote>“Your time is limited, so don’t waste it living someone else’s life.”</blockquote><figcaption><a href="https://news.stanford.edu/stories/2005/06/steve-jobs-2005-graduates-stay-hungry-stay-foolish" target="_blank" rel="noopener noreferrer">Steve Jobs · Stanford, 2005</a></figcaption></figure>
 </footer>
 </div>

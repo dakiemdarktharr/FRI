@@ -36,7 +36,11 @@
     document.body.classList.toggle('pricing-view',pricing);$('.topbar .nav-link[data-route]').setAttribute('aria-current',pricing?'page':'false');
     $('.topbar .brand').setAttribute('href',location.protocol==='file:'?'#home':'/');document.title=pricing?'Pricing â€” Fri.':'Fri. â€” Less noise. More life.';
     if(push){const dest=location.protocol==='file:'?(pricing?'#pricing':'#home'):(pricing?'/pricing/':'/');history.pushState({route},'',dest)}
-    scrollTo(0,0);if(!pricing)resizeSea();measureFooter();footerReveal();(pricing?$('#pricing-title'):$('#hero-title')).focus({preventScroll:true});evidence.route=route;
+    scrollTo(0,0);if(!pricing)resizeSea();measureFooter();footerReveal();
+    const downloads=!pricing&&location.hash==='#downloads'?$('#downloads'):null;
+    if(downloads){downloads.focus({preventScroll:true});downloads.scrollIntoView({block:'nearest'})}
+    else (pricing?$('#pricing-title'):$('#hero-title')).focus({preventScroll:true});
+    evidence.route=route;
   }
   async function navigate(route,push=true){
     if(routeBusy||route===activeRoute)return;routeBusy=true;const curtains=$('#curtains');curtains.classList.add('active');requestAnimationFrame(()=>curtains.classList.add('closed'));

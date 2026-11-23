@@ -1,0 +1,22 @@
+{
+  "format": "fri-backup",
+  "schema": 1,
+  "state": {
+    "version": 1,
+    "active": "2026-11-23",
+    "tabs": ["2026-11-23"],
+    "settings": {},
+    "tasks": [{
+      "id": "invalid-zero-duration",
+      "title": "QA invalid schedule must not replace calendar",
+      "date": "2026-11-23",
+      "time": "12:00",
+      "duration": 0,
+      "kind": "schedule",
+      "category": "Personal",
+      "location": "",
+      "notes": "Deliberately invalid QA backup",
+      "done": false
+    }]
+  }
+}

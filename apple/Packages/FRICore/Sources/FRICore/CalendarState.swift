@@ -111,6 +111,7 @@ public struct Appointment: Codable, Identifiable, Equatable, Sendable {
               title.utf16.count <= 160, category.utf16.count <= 35,
               location.utf16.count <= 200, notes.utf16.count <= 2000,
               (0...1440).contains(duration), !isDeadline || duration == 0,
+              draft || isDeadline || duration > 0,
               (draft && date.isEmpty) || CalendarClock.date(date) != nil,
               (draft && time.isEmpty) || (endMinute ?? 1441) <= 1440
         else { throw CalendarError.invalidAppointment }
@@ -204,7 +205,8 @@ public struct CalendarBackup: Codable, Sendable {
               let object = try? JSONSerialization.jsonObject(with: data), validKeys(object),
               let backup = try? JSONDecoder().decode(Self.self, from: data),
               backup.format == "fri-backup", backup.schema == 1 else { throw CalendarError.invalidBackup }
-        try backup.state.validate()
+        do { try backup.state.validate() }
+        catch { throw CalendarError.invalidBackup }
         return backup.state
     }
 

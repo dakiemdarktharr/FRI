@@ -7,6 +7,7 @@ These files contain synthetic plans only. They are used for native file-picker a
 - `import-text.pdf`: selectable text, `QA PDF import 2026-11-25 10:00`.
 - `import-image.png`: raster text, `QA image import 2026-11-25 10:30`.
 - `import-scan.pdf`: image-only PDF, `QA scanned import 2026-11-25 11:00`; requires OCR rather than PDF text extraction.
+- `invalid-zero-duration-backup.json`: deliberately invalid completed-calendar entry (a schedule with no duration). Select it through Restore Backup; the app must report an invalid backup, show no replacement confirmation and leave the current calendar unchanged. Zero duration remains valid for a deadline or an unfinished draft.
 
 The PDF/image fixtures can be regenerated on macOS from the repository root:
 

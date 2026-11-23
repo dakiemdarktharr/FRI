@@ -91,6 +91,37 @@ private func withStore(_ action: (CalendarStore, URL) async throws -> Void) asyn
     }
 }
 
+@Test func invalidRestorePreservesCalendarAndRecoverySnapshot() async throws {
+    try await withStore { store, directory in
+        let original = task("Keep the original", time: "09:00", duration: 30)
+        try store.update { $0.tasks = [original] }
+        var replacement = CalendarState()
+        replacement.tasks = [task("Current calendar", time: "11:00", duration: 45)]
+        _ = try store.restore(replacement)
+        let file = directory.appending(path: "calendar.v1.aesgcm")
+        let recovery = directory.appending(path: "pre-restore.v1.aesgcm")
+        let bytes = try Data(contentsOf: file)
+        let recoveryBytes = try Data(contentsOf: recovery)
+        var incomplete = task("Unreviewed schedule", time: "12:00", duration: 0)
+        incomplete.kind = "schedule"
+        try incomplete.validate(draft: true)
+        #expect(throws: CalendarError.self) { try incomplete.validate() }
+        var invalidState = CalendarState()
+        invalidState.tasks = [incomplete]
+        // Bypass export's validation to represent a file from outside the app.
+        let invalidData = try JSONEncoder().encode(CalendarBackup(format: "fri-backup", schema: 1, state: invalidState))
+        let readError = #expect(throws: CalendarError.self) { try CalendarBackup.read(invalidData) }
+        if case .invalidBackup? = readError {} else { Issue.record("Invalid file must report a backup error") }
+        for invalid in [incomplete, task("Crosses midnight", time: "23:50", duration: 20)] {
+            replacement.tasks = [invalid]
+            #expect(throws: CalendarError.self) { try store.restore(replacement) }
+            #expect(try Data(contentsOf: file) == bytes)
+            #expect(try Data(contentsOf: recovery) == recoveryBytes)
+        }
+        #expect(try store.read().state.tasks.first?.title == "Current calendar")
+    }
+}
+
 @Test func encryptedRestoreAndDamagedFileFailClosed() async throws {
     try await withStore { store, directory in
         let original = task("Original secret", time: "10:00", duration: 30)

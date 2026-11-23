@@ -18,8 +18,8 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 
 | Gate | Status / evidence |
 |---|---|
-| Native macOS debug build | PASS with sidebar photo interoperability, `/tmp/fri-sidebar-photo-mac-final.log`; this is compilation evidence, not a new full-app Mac runtime pass |
-| Native iOS build after current edits | PASS, sidebar photo picker/backup workflow on iPad 2026-11-23 20:07 UTC and final build/run 20:09 UTC. Earlier iPhone/iPad Day/Spotify/Weather/calendar/widget UI passes are recorded below |
+| Native macOS debug build | PASS with window-material lifetime correction, `/tmp/fri-window-backdrop-mac.log`; separate AppKit lifecycle checks below passed, but this is not a new full-app Mac UI pass |
+| Native iOS build after current edits | PASS, iPad build/run 2026-11-23 20:13 UTC after moving the backdrop into the shared design module. Photo picker workflow 20:07 UTC and earlier iPhone/iPad UI passes are recorded below |
 | Core data regression | Current full run: 35 core tests and 8 AppKit design/placement tests passed; 1 opt-in network test skipped. Live network passed separately earlier. Includes imported-draft recovery, invalid-restore preservation, cross-platform caches and photo backup compatibility; `/tmp/fri-sidebar-photo-core-full.log` |
 | Mac create/edit/delete/undo | PASS via CUA with isolated synthetic store: create 10:00/60 min, edit Unicode title, delete 11:00/30 min appointment, Cmd-Z restores it |
 | Mac search and bulk actions | PASS: title/place/notes/category search, no-result feedback, Enter opens detail on correct date, Escape, two-item delete/Cancel/Undo, Finish day and reopening a completed item |
@@ -43,6 +43,15 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 ## Current runtime isolation
 
 The native debug Mac run uses `FRI_SYNTHETIC_PREVIEW=1` and UUID-scoped `FRI_TEST_STORE_ID`. It does not touch the installed Electron application's calendar. Preview mode is excluded from Release. The fixed synthetic key must never be used for customer calendar data.
+
+## Window material lifetime — 2026-11-23 20:13 UTC
+
+- Reproduced a real Mac defect: the previous conditional `NSVisualEffectView` asynchronously set the host window transparent, but removing the view when Liquid glass was disabled did not restore that window. Reinstating the previous implementation temporarily caused four failed assertions in the actual `NSHostingView` test (three disable transitions plus view removal), `/tmp/fri-window-backdrop-before.log`. The fixed implementation was restored immediately after that experiment.
+- Moved `FRIWindowBackdrop` into the shared design module and kept the material view attached while toggling its active/hidden state. Its AppKit subclass applies window changes on attachment, captures original opacity/background, and restores them on disable, reparenting or dismantling. Removed the queued mutation so a stale update cannot arrive after removal. Existing colors and iOS solid rendering remain unchanged.
+- Three new tests exercise actual `NSWindow`/`NSVisualEffectView` attachment and SwiftUI hosting: toggle repeatedly, move between windows, detach, preserve an initially transparent window and recapture its changed baseline. Windows are never ordered onto the user's screen. All 11 design tests (these three, typography, seven placement cases) passed in `/tmp/fri-window-backdrop-final.log`; this is AppKit/SwiftUI integration evidence, not a screenshot or human interaction pass.
+- The environment-derived Reduce Transparency and Increase Contrast conditions use the same corrected disabling path. Their values are read-only in this SDK, so attempts to inject them in a unit test did not compile; those attempted injections were removed. No system accessibility settings were changed and their end-to-end runtime verification remains pending.
+- Mac Xcode Debug build passed (`/tmp/fri-window-backdrop-mac.log`); iPad build/install/launch passed (`build_run_sim_2026-11-23T20-13-45-779Z_pid22065_577405ed.log`). Core storage was unchanged, so the preceding core regression result remains the latest relevant data check.
+- Apple lifecycle references: [viewDidMoveToWindow](https://developer.apple.com/documentation/appkit/nsview/viewdidmovetowindow()), [dismantleNSView](https://developer.apple.com/documentation/swiftui/nsviewrepresentable/dismantlensview(_:coordinator:)), [NSWindow.isOpaque](https://developer.apple.com/documentation/appkit/nswindow/isopaque).
 
 ## Sidebar photo interoperability — 2026-11-23 20:07 UTC
 

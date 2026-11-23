@@ -1,51 +1,6 @@
 import SwiftUI
 import FRIDesign
 import ImageIO
-#if os(macOS)
-import AppKit
-#endif
-
-struct FRIWindowBackdrop: View {
-    let enabled: Bool
-    @Environment(\.accessibilityReduceTransparency) private var reduce
-    @Environment(\.colorSchemeContrast) private var contrast
-
-    var body: some View {
-        #if os(macOS)
-        ZStack {
-            FRIColors.workspace
-            if enabled && !reduce && contrast != .increased {
-                FRIMacMaterial(enabled: true).opacity(0.25)
-            }
-        }
-        #else
-        Rectangle().fill(FRIColors.workspace)
-        #endif
-    }
-}
-
-#if os(macOS)
-private struct FRIMacMaterial: NSViewRepresentable {
-    let enabled: Bool
-
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let effect = NSVisualEffectView()
-        effect.blendingMode = .behindWindow
-        effect.material = .underWindowBackground
-        return effect
-    }
-
-    func updateNSView(_ view: NSVisualEffectView, context: Context) {
-        view.state = enabled ? .active : .inactive
-        view.isHidden = !enabled
-        DispatchQueue.main.async { [weak view] in
-            view?.window?.isOpaque = !enabled
-            view?.window?.backgroundColor = enabled ? .clear : .windowBackgroundColor
-        }
-    }
-}
-#endif
-
 struct FRIBackdropArtwork: View {
     let mode: String
     let image: Data?

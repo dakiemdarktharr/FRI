@@ -18,7 +18,7 @@ States are `idle`, `checking`, `current`, `available`, `downloading`, `ready`, `
 
 ## Reference study
 
-The requested [WWW repository](https://github.com/dakiemdarktharr/WWW) separates its update control into `src/DesktopGate.tsx` (startup/30-minute checks and progress), `src/TitleBar.tsx` (conditional pill), and narrow preload IPC. Its main process obtains trusted release metadata, validates version/platform artifacts, streams bounded downloads while verifying SHA-256, and delegates replacement to OS-specific staged helpers. Its helper code includes recovery/rollback behavior and preserves profiles outside application directories. `src/UpdatePatches.tsx` is a release-history view, not the update engine.
+The requested [WWW repository at `6a29944`](https://github.com/dakiemdarktharr/WWW/tree/6a2994438d1d22faeb2253cef5ce657326e4030f) separates its update control into `src/DesktopGate.tsx` (startup/30-minute checks and progress), `src/TitleBar.tsx` (conditional pill), and narrow preload IPC. Its main process obtains trusted release metadata, validates version/platform artifacts, streams bounded downloads while verifying SHA-256, and delegates replacement to OS-specific staged helpers. Its helper code includes recovery/rollback behavior and preserves profiles outside application directories. `src/UpdatePatches.tsx` is a release-history view, not the update engine.
 
 Fri adopts the control/state/privilege separation. It retains its existing `electron-updater` and NSIS packaging rather than copying WWW's custom replacement helpers. Fri therefore does not claim WWW's staged rollback mechanism or unsigned macOS in-place updates. Failed downloads keep the current application; the published previous installer remains available for manual recovery.
 

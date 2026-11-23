@@ -1,6 +1,6 @@
-# Day — proactive calendar assistant (experiment)
+# Day — proactive calendar assistant
 
-Branch: `experiment/day-openai-luna`. This is an implementation for testing, not a deployed contest submission.
+Integrated into `main` for desktop 0.6.0; the original `experiment/day-openai-luna` branch is retained. This desktop release is not a hosted AI contest submission. See [release verification](release-verification-0.6.0.md) for current checks and distribution limits.
 
 ## Selected behavior
 
@@ -121,6 +121,6 @@ Before a contest release: measure real usefulness versus local ranking on consen
 ### Verified on 23 November 2026
 
 - Preview suite: 13/13 passed. Final rebuilt Day browser tests: 4/4 passed.
-- Desktop suite: 50/51 passed, including Day provider/policy tests and native Day IPC/apply/restart integration. The existing widget resize test failed `635 !== 632`; the same failure reproduced on clean `origin/main` at `54584c6`, isolated at `D:\ChatGPT\momo\.baseline-fri-day`. It remains outside this change.
+- Initial Day branch: desktop suite 50/51 passed, including Day provider/policy tests and native Day IPC/apply/restart integration. The existing widget resize test failed `635 !== 632`; the same failure reproduced on clean `origin/main` at `54584c6`, isolated at `D:\ChatGPT\momo\.baseline-fri-day`. Release integration then fixed fractional-DPI widget geometry: the full desktop suite passed 62/62, with 5/5 native checks also passing against the packaged Windows executable.
 - The generated standalone app contains the current shared Day core; desktop CSP assets were regenerated. The key file is ignored.
 - After the user saved the OpenAI key, `node check-day.cjs` made one real Responses API request with synthetic cards using `gpt-6-luna` and `reasoning.effort: max`. The structured output passed validation in 6,892 ms. No personal calendar was sent. This verifies connectivity and output format, not recommendation quality or production reliability.

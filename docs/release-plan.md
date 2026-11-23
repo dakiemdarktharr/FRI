@@ -39,3 +39,5 @@ Website revision 2 implemented and verified: 16 interaction checks, axe zero fin
 Desktop work in progress: encrypted native store, selector and responsive widget, Windows icon adapter, opt-in weather and isolated Spotify player. These changes are not yet release-verified.
 
 Desktop checkpoint: encrypted restart and widget state passed; 9 real Windows desktop icons moved and restored; native weather and Spotify isolation checked; Windows local OCR reads the synthetic fixture. Public-source adapter, private free-time comparison and basic slot planner added. Installer/CI/release checks remain in progress.
+
+Final packaging checkpoint: the installed upgrade 0.2.0 -> 0.3.0 preserved eight task records and settings, removed an obsolete application file and left one uninstall entry. Packaged local OCR, public HTTPS import, denied renderer networking and native widget lifecycle passed. Windows Acrylic was visually verified over a separate checkerboard window. Widget Spotify/Maps launchers and local activity were added before the final rebuild.

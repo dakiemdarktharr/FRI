@@ -133,7 +133,7 @@ if(!app.requestSingleInstanceLock()){app.quit();}else{
     ipcMain.handle('fri:save-state',async(e,base,next)=>{trusted(e);const result=await store.commit(base,next);changed();return result});
     ipcMain.handle('fri:widget',e=>{trusted(e);return widgets.select()});
     ipcMain.handle('fri:service',async(e,action,input)=>{trusted(e);return services.call(action,input)});
-    widgets=createWidgets({store,getMain:()=>win,onChange:changed});
+    widgets=createWidgets({store,getMain:()=>win,onChange:changed,onService:action=>{const settings=store.read().state.settings;return services.call(action,action==='spotify'?settings.spotifyUrl:settings.mapsRegion)}});
     nativeMenu();createWindow();widgets.restore();
     app.on('activate',()=>{if(!win)createWindow()});
   });

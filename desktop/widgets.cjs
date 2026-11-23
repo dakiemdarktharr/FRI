@@ -2,7 +2,7 @@
 const {BrowserWindow,ipcMain,screen,Menu,Tray,nativeImage}=require('electron');
 const path=require('node:path'),{execFile}=require('node:child_process'),{relocateIcons}=require('./widget-layout.cjs');
 const {windowsDesktop}=require('./windows-desktop.cjs');
-function createWidgets({store,getMain,onChange}){
+function createWidgets({store,getMain,onChange,onService}){
  const windows=new Map();let shuttingDown=false,overlay=null,selectionDisplay=null,tray=null,native=null,notice='',moveTimer;
  const fs=require('node:fs'),journal=path.join(require('electron').app.getPath('userData'),'desktop-icon-positions.json');
  const shifted=new Map();let iconCount=null;
@@ -41,7 +41,7 @@ function createWidgets({store,getMain,onChange}){
  ipcMain.handle('widget:done',async(e,id)=>{trusted(e);const base=store.read().state,next=structuredClone(base),task=next?.tasks.find(t=>t.id===id);if(!task)throw Error('Appointment no longer exists');task.done=true;await store.commit(base,next);onChange();broadcast();return read()});
  ipcMain.handle('widget:create',async(e,b)=>{trusted(e,true);if(!b||!['x','y','width','height'].every(k=>Number.isFinite(b[k])))throw Error('Invalid widget area');const area=selectionDisplay.bounds;overlay.close();const w=make({x:area.x+b.x,y:area.y+b.y,width:b.width,height:b.height});await saveBounds();return {created:true}});
  ipcMain.handle('widget:cancel',e=>{trusted(e,true);overlay.close();getMain()?.show()});
- ipcMain.handle('widget:action',(e,action)=>{const w=trusted(e);if(action==='remove')w.close();else if(action==='open'){getMain()?.show();getMain()?.focus()}else throw Error('Unknown widget action')});
+ ipcMain.handle('widget:action',(e,action)=>{const w=trusted(e);if(action==='remove')w.close();else if(action==='open'){getMain()?.show();getMain()?.focus()}else if(action==='spotify'||action==='maps')return onService(action);else throw Error('Unknown widget action')});
  return {select,broadcast,restore(){for(const b of store.read().state?.settings?.desktopWidgets||[])if(b&&['x','y','width','height'].every(k=>Number.isFinite(b[k])))make(b,b.id)},cleanup(){shuttingDown=true;clearTimeout(moveTimer);restoreIcons();tray?.destroy()},count:()=>windows.size};
 }
 module.exports={createWidgets};

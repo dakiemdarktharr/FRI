@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#955251">
+<meta name="description" content="Less noise. More life. Meet Fri, a little space for your day.">
+<title>Fri. — Less noise. More life.</title>
+<style>/*__STYLE__*/</style>
+</head>
+<body class="intro-active">
+<a href="#main" class="skip-link">Skip to content</a>
+<div id="intro" role="region" aria-label="From noise to calm">
+  <div id="loader">
+    <div class="loading-brand"><span class="pole">__POLE__</span><span>fri.</span></div>
+    <div class="loading-bottom"><span>LOADING YOUR DAY</span><span id="load-value">0%</span><div class="load-track"><i id="load-progress"></i></div></div>
+  </div>
+  <div id="noise" aria-hidden="true"></div>
+  <button class="intro-skip" id="skip-intro">Skip intro <span>↗</span></button>
+  <div id="quiet-backdrop"></div>
+  <div id="quiet" role="dialog" aria-modal="true" aria-labelledby="quiet-title" hidden>
+    <span class="pole">__POLE__</span>
+    <h2 id="quiet-title">Everything wants<br>your attention.<br><em>Your life deserves it.</em></h2>
+    <button class="pill dark" id="enter">Make room <span>↗</span></button>
+  </div>
+</div>
+<div id="site">
+<header class="topbar">
+  <a href="#home" class="brand" aria-label="Fri home"><span class="pole">__POLE__</span><span>fri.</span></a>
+  <nav aria-label="Main navigation">
+    <button class="nav-link" data-dialog="pricing">Pricing</button>
+    <a class="nav-link" href="#what">Service</a>
+    <button class="signup" data-dialog="signup">Sign up <span>↗</span></button>
+  </nav>
+</header>
+<main id="main">
+  <section class="hero" id="home" aria-labelledby="hero-title">
+    <div class="ocean" aria-hidden="true"><img id="ocean-image" src="__OCEAN__" alt=""><canvas id="sea"></canvas></div>
+    <div class="hero-copy">
+      <h1 id="hero-title">Fri.</h1>
+      <a class="pill light download" href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.2.0"><span class="os-icon" aria-hidden="true">↓</span><span class="download-label">Download Fri</span><span>↗</span></a>
+    </div>
+    <div class="hero-app-wrap" aria-hidden="true"><div id="hero-app" class="app-window miniature"></div></div>
+    <div class="hero-bottom"><a href="#demo" class="icon-button" aria-label="Explore the Fri demo">↓</a><button class="sea-control icon-button" aria-label="Pause ocean motion" aria-pressed="false">Ⅱ</button></div>
+  </section>
+  <section class="demo-section section-pad" id="demo" aria-labelledby="demo-title">
+    <div class="section-heading"><span class="eyebrow">01 / THE DEMO</span><h2 id="demo-title">A day.<br>Coming together.</h2><div class="heading-controls"><button id="replay-demo" class="icon-button" aria-label="Replay demo">↻</button><button id="pause-demo" class="icon-button" aria-label="Pause demo" aria-pressed="false">Ⅱ</button></div></div>
+    <div class="demo-stage"><div id="live-app" class="app-window"></div></div>
+    <div class="demo-steps" role="group" aria-label="Demo chapters"><button data-step="0" class="active" aria-pressed="true"><span>01</span> Add it.</button><button data-step="1" aria-pressed="false"><span>02</span> Clear it up.</button><button data-step="2" aria-pressed="false"><span>03</span> Live your day.</button></div>
+    <p id="demo-status" class="sr-only" aria-live="polite"></p>
+  </section>
+  <section id="what" class="what-section section-pad" aria-labelledby="what-title">
+    <div class="section-heading"><span class="eyebrow">02 / WHAT IT DOES</span><h2 id="what-title">Space for<br>what matters.</h2></div>
+    <div class="feature-grid">
+      <article class="feature feature-capture"><div class="feature-art capture-art" aria-hidden="true"><div class="floating-note">Coffee with Jamie <span>↗</span></div><div class="floating-note">The thing due Friday <span>↗</span></div><div class="floating-note">A little time to think <span>↗</span></div><span class="collector">＋</span></div><h3>Get it out<br>of your head.</h3><span class="feature-number">01</span></article>
+      <article class="feature feature-clarity"><div class="feature-art clarity-art" aria-hidden="true"><span class="mini-question">What time works?</span><div class="time-picks"><span>9:00</span><span class="selected">10:30 <i>✓</i></span><span>14:00</span></div></div><h3>Give every plan<br>a place.</h3><span class="feature-number">02</span></article>
+      <article class="feature feature-focus"><div class="feature-art focus-art" aria-hidden="true"><div class="focus-ring"><span>✓</span></div></div><h3>One thing<br>at a time.</h3><span class="feature-number">03</span></article>
+    </div>
+  </section>
+  <section class="how-section section-pad" id="how" aria-labelledby="how-title">
+    <div class="section-heading"><span class="eyebrow">03 / HOW FRI WORKS</span><h2 id="how-title">Less to manage.<br>More to live.</h2></div>
+    <div class="how-list">
+      <button data-demo-jump="0"><span class="how-number">01</span><span>Name your plans.</span><span class="how-icon">＋</span></button>
+      <button data-demo-jump="1"><span class="how-number">02</span><span>Fill in the gaps.</span><span class="how-icon">↗</span></button>
+      <button data-demo-jump="2"><span class="how-number">03</span><span>Find your flow.</span><span class="how-icon">✓</span></button>
+    </div>
+  </section>
+</main>
+<footer id="footer">
+  <div class="footer-top"><span class="brand"><span class="pole">__POLE__</span><span>fri.</span></span><a href="#home" class="icon-button" aria-label="Back to top">↑</a></div>
+  <h2>Less noise.<br>More life.</h2>
+  <a class="pill light download" href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.2.0"><span class="os-icon" aria-hidden="true">↓</span><span class="download-label">Download Fri</span><span>↗</span></a>
+  <figure class="quote"><blockquote>“Our life is frittered away by detail.”</blockquote><figcaption><a href="https://www.gutenberg.org/cache/epub/205/pg205-images.html" target="_blank" rel="noopener noreferrer">Henry David Thoreau · Walden, 1854 ↗</a></figcaption></figure>
+  <div class="footer-bottom"><span>© 2026 Fri.</span><button id="replay-intro">Replay the beginning ↻</button><a href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.2.0" target="_blank" rel="noopener noreferrer">Release notes ↗</a></div>
+</footer>
+</div>
+<dialog id="info-dialog" aria-labelledby="dialog-title"><button class="dialog-close icon-button" aria-label="Close dialog">×</button><span class="pole">__POLE__</span><h2 id="dialog-title"></h2><div id="dialog-content"></div></dialog>
+<noscript><style>#intro{display:none}#site{display:block}.intro-active{overflow:auto}</style><div class="noscript-message">Enable JavaScript to watch the intro and demo. <a href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.2.0">Download Fri</a></div></noscript>
+<script>/*__SCRIPT__*/</script>
+</body>
+</html>

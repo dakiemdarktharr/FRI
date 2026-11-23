@@ -2,6 +2,8 @@
 
 Fri is a personal calendar that makes room for appointments, focused work, and the everyday things that matter.
 
+**Website design preview:** open [FRI-website.html](FRI-website.html) for the overload-to-calm intro, animated ocean, staged app demo and platform-aware installer links. It is a self-contained design review. [Website notes and verification](website/README.md) describe its scope; Pricing and Sign up are preview states.
+
 **Desktop installers:** [GitHub Releases](https://github.com/dakiemdarktharr/FRI/releases). **Single-file interface:** [FRI-liquid-glass.html](FRI-liquid-glass.html). The current design is black and white, with a slow monochrome sidebar, multiple day tabs, a duration-sized appointment mosaic and Day beside Up Next.
 
 The Electron desktop app uses native Windows Acrylic or macOS vibrancy to reveal blurred wallpaper and applications behind main space. HTML uses a sample background. Acrylic/vibrancy is real native transparency and blur; it is not Apple's native Liquid Glass refraction renderer. The earlier V1 remains in [index.html](index.html), with its separate sources, planner and data model.

@@ -18,8 +18,8 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 
 | Gate | Status / evidence |
 |---|---|
-| Native macOS debug build | PASS with window-material lifetime correction, `/tmp/fri-window-backdrop-mac.log`; separate AppKit lifecycle checks below passed, but this is not a new full-app Mac UI pass |
-| Native iOS build after current edits | PASS, iPad build/run including WidgetKit target 2026-11-23 20:18 UTC after adding prepared midnight entries. Photo picker workflow 20:07 UTC and earlier iPhone/iPad UI passes are recorded below |
+| Native macOS debug build | PASS with rolling reminder reconciliation, `/tmp/fri-reminder-rolling-mac.log`; this is not a new full-app Mac UI or notification delivery pass |
+| Native iOS build after current edits | PASS, iPad build/run 2026-11-23 20:24 UTC after rolling reminder reconciliation. WidgetKit timeline, photo picker and earlier iPhone/iPad UI evidence are recorded below |
 | Core data regression | Current full run: 35 core tests and 8 AppKit design/placement tests passed; 1 opt-in network test skipped. Live network passed separately earlier. Includes imported-draft recovery, invalid-restore preservation, cross-platform caches and photo backup compatibility; `/tmp/fri-sidebar-photo-core-full.log` |
 | Mac create/edit/delete/undo | PASS via CUA with isolated synthetic store: create 10:00/60 min, edit Unicode title, delete 11:00/30 min appointment, Cmd-Z restores it |
 | Mac search and bulk actions | PASS: title/place/notes/category search, no-result feedback, Enter opens detail on correct date, Escape, two-item delete/Cancel/Undo, Finish day and reopening a completed item |
@@ -35,7 +35,7 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 | Export/restore file dialogs and Undo | PASS through native Mac file panels: restore exported three-appointment backup, collection removed; Cmd-Z restored collection and calendar |
 | Desktop/native backup format | PASS using shipping desktop export/restore handlers and Swift encrypted restore/reopen/export. Desktop 0.5 restores appointments only; native preserves compatible full state. Mac and iOS invalid-backup picker rejection PASS; iOS restore, export/read-back and cancel checks PASS with synthetic data |
 | Shared availability | iPhone/iPad system Files export/compare/cancel, empty result, invalid/oversized rejection and appointment retention PASS. Actual exported JSON from each matches desktop output and parser, with only free intervals. Mac file-picker runtime remains pending |
-| Reminders | Five-minute lead and midnight/DST regression PASS; system permission/delivery/cancellation runtime pending |
+| Reminders | Five-minute lead, midnight/DST and rolling 48-item queue logic PASS; system permission/delivery/cancellation, dismissed-alert deduplication and lifecycle timer runtime pending |
 | Services | Live Weather/Maps success, reopen persistence and disconnect PASS; Spotify link save/canonicalize/disconnect and manual activity bounds/persistence/clear PASS. Weather city choice/refresh/disconnect on iOS Simulator PASS; transport-level offline/late-cancel checks PASS. Automatic stale-cache refresh observed on Mac and active iOS; full offline UI, aged-cache resume/long-running timer, Map cancellation and authenticated/full Spotify playback pending; embedded episode display/reload/disconnect passed on both platforms, Mac playback progress observed |
 | iOS responsive/UI workflows | PASS for deadline/collection persistence, text import, larger-text editor/restore and six widget previews. See latest result bundles below. Broader matrix pending; Simulator only |
 | Signed upgrade and release artifacts | Pending signing; no claim of notarization, App Store, TestFlight or physical-device validation |
@@ -43,6 +43,16 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 ## Current runtime isolation
 
 The native debug Mac run uses `FRI_SYNTHETIC_PREVIEW=1` and UUID-scoped `FRI_TEST_STORE_ID`. It does not touch the installed Electron application's calendar. Preview mode is excluded from Release. The fixed synthetic key must never be used for customer calendar data.
+
+## Rolling reminder queue — 2026-11-23 20:24 UTC
+
+- Confirmed the prior cache compared entire appointment arrays and reconciliation ran only on data changes. With more than 48 future appointments, notifications beyond the initial cap would not be added merely because earlier appointments elapsed. Opening an unchanged calendar also skipped reconciliation.
+- Replaced that cache with `ReminderSchedule`, which projects the current bounded queue and compares notification identifiers/start instants. The existing minute maintenance loop now checks reminders as well as weather/store changes, and opening/resuming checks again. The Mac loop continues while the app remains running with its main window closed; iOS suspends the loop outside the active phase and re-evaluates on return. No background entitlement or new execution guarantee was added.
+- Unchanged start instants do not trigger reconciliation when an imminent appointment's fallback fire date advances. Completion, rescheduling, timezone changes and a newly eligible appointment do. Failed adds invalidate the cached result with a 60-second retry backoff; an explicit toggle can retry, and disabling reminders can clear the queue during backoff. Existing pending/delivered requests with the same appointment-start metadata remain reused by the adapter.
+- Preserved serialized cancellation: a newer batch waits for the older task to finish and a canceled task checks cancellation after fetching the system queue, before deleting requests. Expired appointments are skipped before adding a request, and an immediate fire date is brought forward if asynchronous queue reads consumed its original delay.
+- Four targeted tests passed in `/tmp/fri-reminder-rolling-core.log`: a 50-appointment unchanged calendar advances from IDs 0–47 to 1–48 to 2–49; completion/disable; title-only edits; time and timezone changes; explicit retry; failure backoff; plus prior midnight/five-minute/DST cases. These exercise queue planning/cache behavior, not `UNUserNotificationCenter` delivery.
+- Mac Debug build passed (`/tmp/fri-reminder-rolling-mac.log`); final iPad build/install/launch passed (`build_run_sim_2026-11-23T20-24-57-563Z_pid22065_78ebfed7.log`). No notification authorization or host system settings were changed during these tests.
+- Remaining notification gates: actual authorization/delivery/cancellation, the minute timer under foreground/background transitions, and repeat suppression after a user dismisses an already-delivered alert then reopens the app. When iOS is suspended or either app is quit, this change cannot replenish the queue; only already-scheduled notifications are handled by the OS. Reference: [Apple local notification lifecycle](https://developer.apple.com/documentation/usernotifications/scheduling-a-notification-locally-from-your-app).
 
 ## Prepared widget date rollover — 2026-11-23 20:18 UTC
 

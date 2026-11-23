@@ -18,10 +18,10 @@ struct FRIApp: App {
         }
         .onChange(of: scenePhase, initial: true) { _, phase in
             #if os(iOS)
-            calendar.setWeatherUpdatesEnabled(phase == .active)
+            calendar.setPeriodicUpdatesEnabled(phase == .active)
             #else
             // AppKit panels remain useful when the main calendar is not frontmost.
-            if phase == .active { calendar.setWeatherUpdatesEnabled(true) }
+            if phase == .active { calendar.setPeriodicUpdatesEnabled(true) }
             #endif
         }
         #if os(macOS)
@@ -72,7 +72,7 @@ final class FRICalendarSession {
     private var store: CalendarStore?
     @ObservationIgnored let spotifyPlayer = FRISpotifyPlayer()
     @ObservationIgnored private let automaticWeather = WeatherAutoRefresh()
-    @ObservationIgnored private var weatherTimer: Task<Void, Never>?
+    @ObservationIgnored private var periodicUpdates: Task<Void, Never>?
     @ObservationIgnored private var weatherUpdatesEnabled = false
     #if os(macOS)
     @ObservationIgnored var revealCalendar: (() -> Void)?
@@ -85,7 +85,7 @@ final class FRICalendarSession {
     #endif
     private var observedWrite: Date?
     private var undoState: CalendarUndo?
-    private var lastReminderTasks: [Appointment]?
+    private var reminderSchedule = ReminderSchedule()
     var canUndo: Bool { undoState != nil }
     var message: String?
     var panel: Panel?
@@ -155,7 +155,6 @@ final class FRICalendarSession {
         if !ready { cursor = CalendarClock.date(loaded.state.active) ?? .now }
         if loaded.state != state || !ready {
             state = loaded.state
-            reconcileReminders()
         }
         spotifyPlayer.largeText = state.settings["large"]?.bool == true
         if let playing = spotifyPlayer.resourceURL,
@@ -163,6 +162,7 @@ final class FRICalendarSession {
             spotifyPlayer.close()
         }
         ready = true
+        reconcileReminders()
         refreshWeatherAutomatically()
         #if os(macOS)
         if desktopWidgets == nil { desktopWidgets = FRIDesktopWidgetManager(calendar: self) }
@@ -186,21 +186,23 @@ final class FRICalendarSession {
         if store?.modificationDate != observedWrite { open() }
     }
 
-    func setWeatherUpdatesEnabled(_ enabled: Bool) {
+    func setPeriodicUpdatesEnabled(_ enabled: Bool) {
         weatherUpdatesEnabled = enabled
         if !enabled {
-            weatherTimer?.cancel()
-            weatherTimer = nil
+            periodicUpdates?.cancel()
+            periodicUpdates = nil
             automaticWeather.cancel()
             return
         }
+        reconcileReminders()
         refreshWeatherAutomatically()
-        guard weatherTimer == nil else { return }
-        weatherTimer = Task { [weak self] in
+        guard periodicUpdates == nil else { return }
+        periodicUpdates = Task { [weak self] in
             while !Task.isCancelled {
                 do { try await Task.sleep(for: .seconds(60)) } catch { return }
                 guard let self, !Task.isCancelled else { return }
                 self.refreshIfChanged()
+                self.reconcileReminders()
                 self.refreshWeatherAutomatically()
             }
         }
@@ -418,23 +420,23 @@ final class FRICalendarSession {
                 return
             }
         }
-        lastReminderTasks = nil
         updateSetting("reminders", .bool(enabled))
+        reconcileReminders(force: true)
     }
 
     private var reminderUpdate: Task<Void, Never>?
 
-    private func reconcileReminders() {
+    private func reconcileReminders(force: Bool = false) {
+        guard ready else { return }
         let tasks = state.settings["reminders"]?.bool == true ? state.tasks : []
-        guard tasks != lastReminderTasks else { return }
-        lastReminderTasks = tasks
+        guard let plans = reminderSchedule.update(for: tasks, force: force) else { return }
         let previous = reminderUpdate
         reminderUpdate = Task {
             await previous?.value
             guard !Task.isCancelled else { return }
-            let failure = await FRIAppointmentsNotification.reconcile(tasks)
+            let failure = await FRIAppointmentsNotification.reconcile(plans)
             if !Task.isCancelled, let failure {
-                lastReminderTasks = nil
+                reminderSchedule.retryAfterFailure()
                 message = failure
             }
         }
@@ -443,11 +445,11 @@ final class FRICalendarSession {
 }
 
 private enum FRIAppointmentsNotification {
-    static func reconcile(_ tasks: [Appointment]) async -> String? {
+    static func reconcile(_ plans: [ReminderPlan]) async -> String? {
         let center = UNUserNotificationCenter.current()
         let pending = await center.pendingNotificationRequests()
         let delivered = await center.deliveredNotifications()
-        let plans = ReminderPlan.upcoming(tasks)
+        guard !Task.isCancelled else { return nil }
         let wanted = Set(plans.map(\.identifier))
         center.removePendingNotificationRequests(withIdentifiers: pending.map(\.identifier).filter {
             $0.hasPrefix("fri.appointment.") && !wanted.contains($0)
@@ -457,6 +459,7 @@ private enum FRIAppointmentsNotification {
         })
         for plan in plans {
             guard !Task.isCancelled else { return nil }
+            guard plan.startsAt > .now else { continue }
             let existing = pending.first { $0.identifier == plan.identifier }
                 ?? delivered.first { $0.request.identifier == plan.identifier }?.request
             if let stamp = existing?.content.userInfo["appointmentStart"] as? Double,
@@ -466,8 +469,9 @@ private enum FRIAppointmentsNotification {
             content.body = "You have an appointment soon. Open FRI to view it."
             content.sound = .default
             content.userInfo = ["appointmentStart": plan.startsAt.timeIntervalSince1970]
+            let fireDate = max(plan.firesAt, Date.now.addingTimeInterval(1))
             let trigger = UNCalendarNotificationTrigger(
-                dateMatching: CalendarClock.local.dateComponents([.year, .month, .day, .hour, .minute, .second], from: plan.firesAt),
+                dateMatching: CalendarClock.local.dateComponents([.year, .month, .day, .hour, .minute, .second], from: fireDate),
                 repeats: false
             )
             do { try await center.add(UNNotificationRequest(identifier: plan.identifier, content: content, trigger: trigger)) }

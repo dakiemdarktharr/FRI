@@ -1,6 +1,8 @@
 # FRI on Apple — Codex handoff
 
-Research date: 2026-11-23. This is an implementation and acceptance specification, not a claim that native Apple targets already exist. Windows 0.4.0 is the reference; inspect its final release verification before starting. Day development is deferred. Preserve shipped calendar behavior and the approved monochrome app. Marketing uses white/marsala; Premium is **50,000 VND/month, coming soon**, without a payment backend.
+Research date: 2026-11-23. The native project and local verification now live on the Apple implementation branch. See the [current receipt](verification/RELEASE.md).
+
+Original Windows handoff. This is an implementation and acceptance specification, not a claim that native Apple targets already exist. Windows 0.4.0 is the reference; inspect its final release verification before starting. Day development is deferred. Preserve shipped calendar behavior and the approved monochrome app. Marketing uses white/marsala; Premium is **50,000 VND/month, coming soon**, without a payment backend.
 
 Read in order:
 

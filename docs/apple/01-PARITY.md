@@ -1,6 +1,6 @@
 # Feature parity ledger
 
-Native Apple implementation is pending for every row. Compare the released Windows artifact as well as source/tests. Record implementation path, test and observed result against each row before claiming parity.
+This is the original parity target. See the [native verification ledger](verification/RELEASE.md) for the implementation and observed result of each row. Compare the released Windows artifact as well as source and tests when closing the remaining rows.
 
 | Behavior | Windows reference | Apple requirement |
 |---|---|---|

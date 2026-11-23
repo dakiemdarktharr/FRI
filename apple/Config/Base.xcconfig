@@ -1,0 +1,5 @@
+FRI_BUNDLE_PREFIX = com.fri.calendar.native
+FRI_APP_GROUP = group.com.fri.calendar.native
+FRI_KEYCHAIN_GROUP = $(DEVELOPMENT_TEAM).$(FRI_BUNDLE_PREFIX).shared
+CODE_SIGN_STYLE = Automatic
+#include? "Local.xcconfig"

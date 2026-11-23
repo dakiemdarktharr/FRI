@@ -10,7 +10,7 @@
   "scripts": {
     "prepare:ui": "node prepare.cjs",
     "start": "npm run prepare:ui && electron .",
-    "test": "node --test desktop.test.cjs core.test.cjs planning.test.cjs widget.test.cjs",
+    "test": "node --test --test-concurrency=1 desktop.test.cjs core.test.cjs planning.test.cjs widget.test.cjs",
     "pack": "npm run prepare:ui && electron-builder --dir",
     "dist": "npm run prepare:ui && electron-builder --publish never"
   },

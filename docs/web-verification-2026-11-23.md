@@ -12,4 +12,6 @@ Bundled Windows WebKit does not decode this MP4 in the test environment: it disp
 
 The source quote is Steve Jobs's 2005 Stanford commencement address: https://news.stanford.edu/stories/2005/06/steve-jobs-2005-graduates-stay-hungry-stay-foolish . Motion references informed independently written effects; no paid example source was copied.
 
-No analytics, signup backend, payment collection or calendar uploads are enabled. Premium is labelled Coming soon. Download links currently point to the existing v0.2.0 release until the new desktop artifacts are verified.
+No analytics, signup backend, payment collection or calendar uploads are enabled. Premium is labelled Coming soon. Download links are prepared for v0.3.0 and are published only after its release assets are available. The macOS choices are labelled development builds.
+
+Additional visual review: 25 ordered curtain frames, 10 scramble frames through the 300 ms transition and 15 demo states were captured in test-results/motion-review. All three contact sheets were inspected. Curtain closure covers the route swap and opens onto Pricing; the scramble resolves into the complete mission line; the demo enters, clarifies, saves and completes a plan. Linux CI download assertions now distinguish the supported Windows direct EXE target from the release/architecture chooser.

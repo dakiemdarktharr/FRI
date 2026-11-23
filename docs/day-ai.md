@@ -122,4 +122,5 @@ Before a contest release: measure real usefulness versus local ranking on consen
 
 - Preview suite: 13/13 passed. Final rebuilt Day browser tests: 4/4 passed.
 - Desktop suite: 50/51 passed, including Day provider/policy tests and native Day IPC/apply/restart integration. The existing widget resize test failed `635 !== 632`; the same failure reproduced on clean `origin/main` at `54584c6`, isolated at `D:\ChatGPT\momo\.baseline-fri-day`. It remains outside this change.
-- The generated standalone app contains the current shared Day core; desktop CSP assets were regenerated. The key file is ignored. No real provider inference was verified at this checkpoint because the OpenAI key was not configured.
+- The generated standalone app contains the current shared Day core; desktop CSP assets were regenerated. The key file is ignored.
+- After the user saved the OpenAI key, `node check-day.cjs` made one real Responses API request with synthetic cards using `gpt-6-luna` and `reasoning.effort: max`. The structured output passed validation in 6,892 ms. No personal calendar was sent. This verifies connectivity and output format, not recommendation quality or production reliability.

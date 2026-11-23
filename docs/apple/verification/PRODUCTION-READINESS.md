@@ -18,7 +18,7 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 
 | Gate | Status / evidence |
 |---|---|
-| Native macOS debug build | PASS with foreground notification delegate, `/tmp/fri-notification-foreground-mac.log`; Mac notification delivery remains unverified |
+| Native macOS debug build | PASS with toolbar hit-area changes, `/tmp/fri-toolbar-mac-final.log`; Mac notification delivery remains unverified |
 | Native iOS build after current edits | PASS, iPad system-notification UI tests 2026-11-23 20:33–20:37 UTC, foreground and background. WidgetKit timeline, photo picker and earlier iPhone/iPad UI evidence are recorded below |
 | Core data regression | Current full run: 35 core tests and 8 AppKit design/placement tests passed; 1 opt-in network test skipped. Live network passed separately earlier. Includes imported-draft recovery, invalid-restore preservation, cross-platform caches and photo backup compatibility; `/tmp/fri-sidebar-photo-core-full.log` |
 | Mac create/edit/delete/undo | PASS via CUA with isolated synthetic store: create 10:00/60 min, edit Unicode title, delete 11:00/30 min appointment, Cmd-Z restores it |
@@ -29,7 +29,7 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 | App and widget real shared store | Pending developer team, App Group and Keychain entitlements; synthetic store is not equivalent |
 | Signed standalone Mac widget | Small/Large presets and Done PASS on local ad-hoc signed sandbox; free drag/grip resize PASS by direct user confirmation |
 | Widget timeline/midnight/lock/long text | Mac long-title/larger-text Small, Medium, Large and Done observed; normal Quit/relaunch retained widget identity and Large frame. Prepared WidgetKit midnight-entry logic passed five targeted tests; actual system-scheduled midnight/lock runtime remains pending |
-| Mac all views, keyboard, accessibility | Pending full matrix; duplicate View menu and low-contrast toolbar found during current visual pass |
+| Mac all views, keyboard, accessibility | Pending full matrix. Current source uses the standard View command group; the earlier duplicate-menu finding is no longer present in source. Toolbar icons now have explicit cream/control colors and 44-point hit areas, verified on Simulator; a fresh Mac UI check is still pending |
 | Full visual equivalence to 0.5 | In progress; first native cream/marsala render observed. Sidebar artwork, card variants, service rail, Day and some layout details remain |
 | Imports | Mac ICS, CSV, text PDF, scanned PDF and PNG file-picker → review → save PASS; iOS pasted text / missing-date clarification PASS. Public calendar URL and EventKit runtime pending |
 | Export/restore file dialogs and Undo | PASS through native Mac file panels: restore exported three-appointment backup, collection removed; Cmd-Z restored collection and calendar |
@@ -43,6 +43,14 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 ## Current runtime isolation
 
 The native debug Mac run uses `FRI_SYNTHETIC_PREVIEW=1` and UUID-scoped `FRI_TEST_STORE_ID`. It does not touch the installed Electron application's calendar. Preview mode is excluded from Release. The fixed synthetic key must never be used for customer calendar data.
+
+## Toolbar appearance and hit areas — 2026-11-23 20:52–21:00 UTC
+
+- Reproduced an undersized Search target in the actual iPad UI: its accessible frame was only 16.5 points wide. Before-fix failure: `test_sim_2026-11-23T20-52-55-272Z_pid22065_fd3bdee4.xcresult`. Search, Calendar actions, Sidebar and compact navigation now size their labels to 44 × 44 points and define a rectangular hit shape. Their cream icons on `#403635` controls follow shipping `preview/brand.css`; the actions glyph uses the desktop-style ellipsis. Sidebar search retains its circular background but now sizes the label itself. Mac help text explains icon actions.
+- The regression taps at 15% of each button's width/height, outside the glyph, and verifies Search, the task planner, sidebar hide/show, sidebar Search and portrait Settings. Final iPad mini run PASS: one test, zero failures/skips, 32.620 seconds, `test_sim_2026-11-23T21-00-00-685Z_pid22065_3fa0a066.xcresult`. iPhone Simulator PASS for its compact landscape/portrait routes: one test, zero failures/skips, 27.519 seconds, `test_sim_2026-11-23T20-58-35-379Z_pid22065_d324d787.xcresult`. The later iPad-only assertion adds sidebar Search; the iPhone branch and production code are unchanged.
+- Intermediate post-fix failures were test assumptions: Settings uses a CollectionView, and the iPhone's landscape safe-area width keeps the workspace compact despite the full screen exceeding 800 points. Corrected the screen assertion and exercised whichever navigation layout is actually shown, requiring a working Sidebar route whenever the compact menu is absent. Failure bundles: `...20-53-52-410Z_pid22065_abe80f1f.xcresult`, `...20-57-04-809Z_pid22065_54c54bed.xcresult`.
+- Reviewed portrait/landscape captures under `/tmp/fri-toolbar-ipad-final/` and `/tmp/fri-toolbar-iphone-final/`: toolbar controls are visible and separated; no full-page equivalence claim is made. macOS Debug build PASS with no warning/error diagnostics, `/tmp/fri-toolbar-mac-final.log`. No project membership or signing configuration changed. The skill runtime could not execute because dotnet is unavailable; used MobileBuildMCP for Simulator and official xcodebuild for Mac. [Apple contentShape hit-testing behavior](https://developer.apple.com/documentation/swiftui/view/contentshape(_:eofill:)).
+- Mac QA still returns `cgWindowNotFound`; requested the user's window/unlock status while continuing independent work. This is not a Mac interaction pass. The moving sidebar still differs from desktop's ShaderGradient plane, and full keyboard, VoiceOver, visual and release gates remain open. Production status remains IN PROGRESS.
 
 ## Pending reminder cancellation — 2026-11-23 20:41–20:48 UTC
 

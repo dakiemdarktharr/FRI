@@ -210,9 +210,11 @@ struct FRIWorkspaceView: View {
                         Text("fri").font(.system(size: 48, weight: .semibold)).tracking(-4)
                         Text(".").font(.system(size: 48, weight: .semibold)).foregroundStyle(FRIColors.marsala)
                         Spacer()
-                        Button("Search appointments", systemImage: "magnifyingglass") { calendar.panel = .search }
-                            .labelStyle(.iconOnly).frame(width: 40, height: 40)
-                            .background(FRIColors.control, in: Circle())
+                        Button { calendar.panel = .search } label: {
+                            Label("Search appointments", systemImage: "magnifyingglass").labelStyle(.iconOnly)
+                                .frame(width: 44, height: 44)
+                                .background(FRIColors.control, in: Circle()).contentShape(Rectangle())
+                        }.help("Search appointments")
                     }.padding(.bottom, 8)
                     dayButtons.frame(maxWidth: .infinity).padding(5)
                         .background(FRIColors.control, in: RoundedRectangle(cornerRadius: 18))
@@ -303,10 +305,21 @@ struct FRIWorkspaceView: View {
             .accessibilityIdentifier("fri.new")
     }
 
+    private func toolbarIcon(_ title: String, systemImage: String) -> some View {
+        Label(title, systemImage: systemImage)
+            .labelStyle(.iconOnly)
+            .frame(width: 44, height: 44)
+            .foregroundStyle(FRIColors.cream)
+            .background(FRIColors.control, in: RoundedRectangle(cornerRadius: 12))
+            .contentShape(Rectangle())
+    }
+
     private func toolbar(wide: Bool) -> some View {
         HStack(spacing: 10) {
             if wide {
-                Button("Sidebar", systemImage: "sidebar.left") { showSidebar.toggle() }.labelStyle(.iconOnly)
+                Button { showSidebar.toggle() } label: {
+                    toolbarIcon("Sidebar", systemImage: "sidebar.left")
+                }.help(showSidebar ? "Hide sidebar" : "Show sidebar")
                 Spacer()
             } else {
                 Menu {
@@ -314,13 +327,17 @@ struct FRIWorkspaceView: View {
                     Button("Settings", systemImage: "gearshape") { calendar.panel = .appearance }
                     Button("Services", systemImage: "square.grid.2x2") { calendar.panel = .services }
                 } label: {
-                    Image("FRIMark").resizable().frame(width: 33, height: 33).accessibilityLabel("FRI navigation")
+                    Image("FRIMark").resizable().frame(width: 33, height: 33)
+                        .frame(width: 44, height: 44)
+                        .background(FRIColors.control, in: RoundedRectangle(cornerRadius: 12))
+                        .contentShape(Rectangle()).accessibilityLabel("FRI navigation")
                 }
                 .accessibilityIdentifier("fri.navigation.menu")
                 Spacer(minLength: 0)
             }
-            Button("Search", systemImage: "magnifyingglass") { calendar.panel = .search }.labelStyle(.iconOnly)
-                .accessibilityIdentifier("fri.search")
+            Button { calendar.panel = .search } label: {
+                toolbarIcon("Search", systemImage: "magnifyingglass")
+            }.accessibilityIdentifier("fri.search").help("Search appointments")
             Menu {
                 Button("Import plans", systemImage: "tray.and.arrow.down") { calendar.panel = .importPlans }
                 Button("Find time for a task", systemImage: "clock") { calendar.panel = .planner }
@@ -332,8 +349,8 @@ struct FRIWorkspaceView: View {
                 Button("Export backup", systemImage: "arrow.up.document") { calendar.fileAction = .exportBackup }
                 Button("Restore backup", systemImage: "arrow.down.document") { calendar.fileAction = .restoreBackup }
                 if calendar.canUndo { Button("Undo", systemImage: "arrow.uturn.left") { calendar.undo() } }
-            } label: { Label("Calendar actions", systemImage: "ellipsis.circle").labelStyle(.iconOnly) }
-                .accessibilityIdentifier("fri.actions")
+            } label: { toolbarIcon("Calendar actions", systemImage: "ellipsis") }
+                .accessibilityIdentifier("fri.actions").help("Calendar actions")
             if !wide {
                 newMenu.buttonStyle(.borderedProminent).tint(FRIColors.marsala).foregroundStyle(FRIColors.cream)
             }

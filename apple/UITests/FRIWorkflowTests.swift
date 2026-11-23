@@ -3,6 +3,53 @@ import XCTest
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
     #if os(iOS)
+    func testToolbarHitAreasAndNavigation() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        func cornerTap(_ button: XCUIElement) {
+            XCTAssertTrue(button.waitForExistence(timeout: 8))
+            XCTAssertGreaterThanOrEqual(button.frame.width, 44)
+            XCTAssertGreaterThanOrEqual(button.frame.height, 44)
+            button.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.15)).tap()
+        }
+        let before = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        before.name = "Toolbar-landscape"; before.lifetime = .keepAlways; add(before)
+        cornerTap(app.buttons["fri.search"])
+        XCTAssertTrue(app.textFields["Search appointments"].waitForExistence(timeout: 8))
+        app.buttons["Close"].firstMatch.tap()
+        cornerTap(app.buttons["fri.actions"])
+        app.buttons["Find time for a task"].tap()
+        XCTAssertTrue(app.textFields["fri.planner.title"].waitForExistence(timeout: 8))
+        app.buttons["Close"].firstMatch.tap()
+        // Landscape iPhone safe-area insets can keep the workspace compact even
+        // when the full screen is wider than the sidebar breakpoint.
+        if app.buttons["fri.navigation.menu"].exists {
+            cornerTap(app.buttons["fri.navigation.menu"])
+            app.buttons["fri.navigation.day"].tap()
+        } else {
+            cornerTap(app.buttons["Sidebar"])
+            XCTAssertFalse(app.buttons["fri.sidebar.settings"].exists)
+            cornerTap(app.buttons["Sidebar"])
+            XCTAssertTrue(app.buttons["fri.sidebar.settings"].waitForExistence(timeout: 8))
+            cornerTap(app.buttons["Search appointments"])
+            XCTAssertTrue(app.textFields["Search appointments"].waitForExistence(timeout: 8))
+            app.buttons["Close"].firstMatch.tap()
+        }
+        XCUIDevice.shared.orientation = .portrait
+        cornerTap(app.buttons["fri.navigation.menu"])
+        app.buttons["Settings"].tap()
+        XCTAssertTrue(app.buttons["fri.settings.sidebar"].waitForExistence(timeout: 8))
+        app.buttons["Close"].firstMatch.tap()
+        let after = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        after.name = "Toolbar-portrait"; after.lifetime = .keepAlways; add(after)
+    }
+
     func testLocalReminderDeliveryAndDisable() throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["FRI_NOTIFICATION_TESTS"] == "1",
                           "Opt in on a dedicated Simulator: this test allows FRI notifications and waits for a real local delivery.")

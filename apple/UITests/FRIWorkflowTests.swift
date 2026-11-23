@@ -8,6 +8,9 @@ final class FRIWorkflowTests: XCTestCase {
                           "Opt in on a dedicated Simulator: this test allows FRI notifications and waits for a real local delivery.")
         continueAfterFailure = false
         let foreground = ProcessInfo.processInfo.environment["FRI_NOTIFICATION_FOREGROUND"] == "1"
+        let cancellation = ProcessInfo.processInfo.environment["FRI_NOTIFICATION_CANCEL"] ?? ""
+        XCTAssertTrue(["", "disable", "complete"].contains(cancellation))
+        XCTAssertTrue(cancellation.isEmpty || !foreground, "Pending cancellation requires a future delivery time")
         let app = XCUIApplication()
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
@@ -41,9 +44,47 @@ final class FRIWorkflowTests: XCTestCase {
         let save = app.buttons["fri.editor.submit"]
         reveal(save, in: app, form: "fri.editor.form"); save.tap()
         XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 8))
-        if !foreground { XCUIDevice.shared.press(.home) }
         let body = "You have an appointment soon. Open FRI to view it."
         let notice = springboard.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", body)).firstMatch
+        if !cancellation.isEmpty {
+            let delivery = try XCTUnwrap(Calendar.current.dateInterval(of: .minute, for: start)?.start).addingTimeInterval(-300)
+            XCTAssertGreaterThan(delivery.timeIntervalSinceNow, 10, "The cancellation must happen before the reminder is due")
+            if cancellation == "disable" {
+                settings()
+                reveal(reminders, in: app, form: "fri.settings.form")
+                reminders.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+                expectation(for: NSPredicate(format: "value == '0'"), evaluatedWith: reminders)
+                waitForExpectations(timeout: 8)
+                app.buttons["Close"].firstMatch.tap()
+            } else {
+                let done = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "fri.done.")).firstMatch
+                reveal(done, in: app, form: "fri.calendar.content"); done.tap()
+                XCTAssertEqual(done.label, "Mark as pending")
+            }
+            XCTAssertGreaterThan(delivery.timeIntervalSinceNow, 0)
+            XCUIDevice.shared.press(.home)
+            XCTAssertFalse(notice.waitForExistence(timeout: max(1, delivery.timeIntervalSinceNow + 20)),
+                           "The canceled appointment must not notify at its original delivery time")
+            XCTAssertGreaterThan(Date.now, delivery)
+            let top = springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.01))
+            let bottom = springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.8))
+            top.press(forDuration: 0.1, thenDragTo: bottom)
+            XCTAssertFalse(notice.exists)
+            let canceled = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            canceled.name = "Pending-reminder-canceled-" + cancellation; canceled.lifetime = .keepAlways; add(canceled)
+            app.activate()
+            XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 8))
+            settings()
+            reveal(reminders, in: app, form: "fri.settings.form")
+            if cancellation == "complete" {
+                XCTAssertEqual(reminders.value as? String, "1", "Completing one task must not disable all reminders")
+                reminders.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+            }
+            expectation(for: NSPredicate(format: "value == '0'"), evaluatedWith: reminders)
+            waitForExpectations(timeout: 8)
+            return
+        }
+        if !foreground { XCUIDevice.shared.press(.home) }
         XCTAssertTrue(notice.waitForExistence(timeout: foreground ? 20 : 140), "A real scheduled notification must appear in the tested app state")
         XCTAssertFalse(notice.label.contains("Private reminder QA"))
         if !foreground {

@@ -8,7 +8,7 @@ test('opaque Fri surfaces retain translucent workspace and readable widget detai
  const assertOpaque=rows=>rows.forEach(r=>{assert.match(r.color,/^rgb\(/,r.selector);assert.equal(r.opacity,'1',r.selector)});
  assertOpaque(await surfaces(['.task','.task-open','.task-toggle','.date-card','.widget','.next-open','.new-button','.more-button']));
  const caption=await p.locator('.widget-caption').first().evaluate(el=>getComputedStyle(el).color);assert.equal(caption,'rgb(98, 84, 78)');
- const material=await p.locator('.main-material').evaluate(el=>getComputedStyle(el).backgroundColor);assert.match(material,/^rgba\(/);
+ const material=await p.locator('.main-material').evaluate(el=>({color:getComputedStyle(el).backgroundColor,solid:matchMedia('(prefers-reduced-transparency: reduce)').matches||document.documentElement.classList.contains('solid-glass')||document.documentElement.dataset.material==='solid'}));if(material.solid)assert.equal(material.color,'rgb(221, 212, 204)');else assert.match(material.color,/^rgba\(/);
  await p.evaluate(()=>FRI_COMMAND('widgets'));await p.waitForFunction(()=>getComputedStyle(document.querySelector('#modal')).opacity==='1');assertOpaque(await surfaces(['#modal','.menu-option']));assert.equal((await surfaces(['#modal']))[0].filter,'none');
  }finally{await app.close()}
 });

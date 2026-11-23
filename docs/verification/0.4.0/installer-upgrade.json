@@ -1,14 +1,14 @@
 {
-    "date":  "2026-11-23T13:24:17.4035016+07:00",
-    "from":  "0.3.0",
-    "to":  "0.4.0",
-    "installPath":  "D:\\FRI-work\\upgrade-040-verified\\FRI",
-    "oldFilesRemoved":  true,
-    "registryEntries":  1,
-    "calendarPreserved":  true,
-    "settingsPreserved":  true,
-    "installerExitCodes":  [
-                               0,
-                               0
-                           ]
+  "date": "2026-11-23T14:03:59.7410516+07:00",
+  "from": "0.3.0",
+  "to": "0.4.0",
+  "installPath": "D:\\FRI-work\\upgrade-040-final-autoplay\\FRI",
+  "oldFilesRemoved": true,
+  "registryEntries": 1,
+  "calendarPreserved": true,
+  "settingsPreserved": true,
+  "installerExitCodes": [
+    0,
+    0
+  ]
 }

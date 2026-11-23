@@ -38,6 +38,7 @@ npm test --prefix preview
 npm test --prefix tests
 node website/build.mjs
 node website/verify-v2.cjs
+node website/verify-responsive.cjs
 npm run dist --prefix desktop
 ```
 

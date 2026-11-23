@@ -1,6 +1,6 @@
 # FRI 0.4.0 verification
 
-Date: 2026-11-23 (Asia/Saigon). Windows 11 build 26200, x64. Publication receipts are added after release.
+Date: 2026-11-23 (Asia/Saigon). Windows 11 build 26200, x64.
 
 ## Changes
 
@@ -13,7 +13,7 @@ Date: 2026-11-23 (Asia/Saigon). Windows 11 build 26200, x64. Publication receipt
 
 ## Observed checks
 
-Installer 0.3.0→0.4.0 installed/upgraded with exit 0, preserved an explicitly seeded deadline and large-text setting, removed an obsolete application file and left exactly one 0.4.0 uninstall registration. Isolated installation removed afterwards. Receipt: D:/FRI-work/upgrade-040-verified/receipt.json. The initial test harness incorrectly assumed seven demo events in a fresh 0.3 profile; corrected it to compare a captured before/after task snapshot.
+Installer 0.3.0→0.4.0 installed/upgraded with exit 0, preserved an explicitly seeded deadline and large-text setting, removed an obsolete application file and left exactly one 0.4.0 uninstall registration. Isolated installation removed afterwards. Final rebuild receipt: D:/FRI-work/upgrade-040-final-autoplay/receipt.json, 14:03:59 +07:00. The initial test harness incorrectly assumed seven demo events in a fresh 0.3 profile; corrected it to compare a captured before/after task snapshot.
 
 Actual pointer input on packaged Windows app: create rectangle; move from (399,220) to (649,150); resize 362×431→432×481; Done reveals next task; menu removes widget. Captured with synthetic tasks/plain demo desktop in website/assets/widget-walkthrough.mp4. Recording uses capture-friendly OS material; native lens is separately verified because its own capture exclusion omits that panel from screen recordings.
 
@@ -57,3 +57,13 @@ At the user's request, the normal packaged EXE was opened without test mode on t
 The website widget video now autoplays muted and loops when visible; leaving the viewport pauses decoding. Reduced-motion and the accessible animation toggle still work. Chromium confirmed playback time advanced without invoking Play.
 
 Linux WebKit CI exposed an expiring Undo notification under slow rendering. Actionable Undo now remains available until another notification or action replaces it; informational notifications still dismiss.
+
+## Final build receipts
+
+Tested source: `ad31d45cd89c48c4deef4047400ef1bbee59f243`. Subsequent release-receipt edits change documentation only.
+
+- [Desktop CI](https://github.com/dakiemdarktharr/FRI/actions/runs/45128402869): Windows, macOS and Docker jobs passed. Mac DMG/ZIP assets are unsigned Electron development previews, not native Xcode/WidgetKit builds.
+- [Web CI](https://github.com/dakiemdarktharr/FRI/actions/runs/45128399242): Chromium and Linux WebKit passed, including autoplay without invoking Play, six viewport widths, FAQ and pricing. This resolves the Linux playback check left pending by the Windows WebKit codec limitation.
+- Final local Windows EXE: 14 packaged tests passed after rebuild; the final installer upgrade receipt above was rerun against the same artifact.
+- `FRI-0.4.0-win-x64.exe`: 125,483,150 bytes; SHA-256 `22ec9f5cd2fa61402d3d360e0a986ba2a6f83fe0ef7d9072c11e4d9790bed43e`.
+- Download alone does not remove an installed application. Running the new installer replaces old application files while retaining user data.

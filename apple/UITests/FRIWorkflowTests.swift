@@ -3,6 +3,97 @@ import XCTest
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
     #if os(iOS)
+    func testPlannerValidationAndReviewHandoff() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        XCUIDevice.shared.orientation = .portrait
+        defer { XCUIDevice.shared.orientation = .portrait }
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        app.buttons["fri.new"].tap(); app.buttons["Schedule"].tap()
+        let editorTitle = app.textFields["fri.editor.title"]
+        XCTAssertTrue(editorTitle.waitForExistence(timeout: 8))
+        editorTitle.tap(); editorTitle.typeText("Unrelated saved draft")
+        app.buttons["Close"].firstMatch.tap()
+        app.buttons["fri.actions"].tap(); app.buttons["Find time for a task"].tap()
+        let find = app.buttons["fri.planner.find"]
+        XCTAssertTrue(find.waitForExistence(timeout: 8))
+        find.tap()
+        XCTAssertTrue(app.staticTexts["fri.planner.result"].label.contains("Enter a task name"))
+        let title = app.textFields["fri.planner.title"]
+        title.tap(); title.typeText("Write the project report\n")
+        let deadline = app.textFields["fri.planner.deadline"]
+        func replace(_ field: XCUIElement, with value: String) {
+            reveal(field, in: app, form: "fri.planner.form")
+            field.tap()
+            field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: (field.value as? String ?? "").count) + value + "\n")
+        }
+        replace(deadline, with: "09:00")
+        reveal(find, in: app, form: "fri.planner.form"); find.tap()
+        XCTAssertTrue(app.staticTexts["fri.planner.result"].label.contains("after 09:00"))
+        replace(deadline, with: "09:30")
+        reveal(find, in: app, form: "fri.planner.form"); find.tap()
+        XCTAssertEqual(app.staticTexts["fri.planner.result"].label, "You need 30 more free minutes.")
+        replace(app.textFields["fri.planner.duration"], with: "30")
+        reveal(find, in: app, form: "fri.planner.form"); find.tap()
+        let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Write the project report")).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 8), "A complete proposal must save through the review flow, not open a blank editor")
+        reveal(card, in: app, form: "fri.calendar.content")
+        XCTAssertTrue(card.label.contains("09:00"))
+        XCTAssertTrue(card.label.contains("30 min"))
+        let savedShot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        savedShot.name = "Planner-saved-proposal"; savedShot.lifetime = .keepAlways; add(savedShot)
+        app.terminate(); app.launch()
+        XCTAssertTrue(card.waitForExistence(timeout: 15))
+        app.buttons["fri.new"].tap(); app.buttons["Resume drafts"].tap()
+        let unrelated = app.buttons["Unrelated saved draft"]
+        reveal(unrelated, in: app, form: "fri.editor.form")
+        XCTAssertTrue(unrelated.exists)
+        XCTAssertFalse(app.buttons["Write the project report"].exists)
+    }
+
+    func testPlannerDateSelection() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        XCUIDevice.shared.orientation = .portrait
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.actions"].waitForExistence(timeout: 15))
+        app.buttons["fri.actions"].tap(); app.buttons["Find time for a task"].tap()
+        let picker = app.datePickers["fri.planner.date"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 8))
+        let gregorian = Calendar(identifier: .gregorian)
+        let day = gregorian.component(.day, from: Date()) == 15 ? 16 : 15
+        var components = gregorian.dateComponents([.year, .month], from: Date())
+        components.day = day
+        let chosenDate = try XCTUnwrap(gregorian.date(from: components))
+        let month = DateFormatter(); month.locale = Locale(identifier: "en_GB"); month.dateFormat = "MMMM"
+        picker.tap()
+        let choice = app.buttons.matching(NSPredicate(format: "label ENDSWITH %@", ", \(day) \(month.string(from: chosenDate))")).firstMatch
+        XCTAssertTrue(choice.waitForExistence(timeout: 5)); choice.tap()
+        let dismiss = app.buttons["PopoverDismissRegion"]
+        if dismiss.exists { dismiss.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.1)).tap() }
+        let title = app.textFields["fri.planner.title"]
+        title.tap(); title.typeText("Plan on another date\n")
+        let find = app.buttons["fri.planner.find"]
+        reveal(find, in: app, form: "fri.planner.form"); find.tap()
+        let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Plan on another date")).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 8))
+        let key = DateFormatter(); key.locale = Locale(identifier: "en_US_POSIX"); key.dateFormat = "yyyy-MM-dd"
+        XCTAssertTrue(app.buttons["fri.tab.\(key.string(from: chosenDate))"].isSelected)
+        app.buttons["fri.actions"].tap(); app.buttons["Find time for a task"].tap()
+        XCTAssertTrue(picker.waitForExistence(timeout: 8))
+        picker.tap()
+        XCTAssertTrue(choice.waitForExistence(timeout: 5))
+        XCTAssertTrue(choice.isSelected, "Planner must default to the active calendar day")
+        if dismiss.exists { dismiss.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.1)).tap() }
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = "Planner-selected-day"; shot.lifetime = .keepAlways; add(shot)
+    }
+
     func testYearMonthNavigationAndLeapDay() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

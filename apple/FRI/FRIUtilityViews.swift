@@ -117,6 +117,7 @@ struct FRIManageView: View {
 struct FRIPlannerView: View {
     let calendar: FRICalendarSession
     @State private var title = ""
+    @State private var date = Date.now
     @State private var duration = 60
     @State private var deadline = "18:00"
     @State private var result: String?
@@ -124,13 +125,25 @@ struct FRIPlannerView: View {
     var body: some View {
         FRISheetView(title: "Find time for a task") {
             Form {
-                TextField("Task name", text: $title)
-                TextField("Minutes needed", value: $duration, format: .number)
-                TextField("Finish before (HH:mm)", text: $deadline)
-                Button("Find a time") { plan() }
-                if let result { Text(result) }
-            }.formStyle(.grouped)
-        }
+                TextField("Task name", text: $title).accessibilityIdentifier("fri.planner.title")
+                DatePicker("Date", selection: $date, displayedComponents: .date)
+                    .accessibilityIdentifier("fri.planner.date")
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Minutes needed").friFont(.caption)
+                    TextField("Minutes needed", value: $duration, format: .number)
+                        .accessibilityIdentifier("fri.planner.duration")
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Finish before (HH:mm)").friFont(.caption)
+                    TextField("Finish before (HH:mm)", text: $deadline)
+                        .accessibilityIdentifier("fri.planner.deadline")
+                }
+                Text("Find an uninterrupted window after 09:00 around the appointments on this date.")
+                    .friFont(.caption).foregroundStyle(.secondary)
+                Button("Find a time") { plan() }.accessibilityIdentifier("fri.planner.find")
+                if let result { Text(result).accessibilityIdentifier("fri.planner.result") }
+            }.formStyle(.grouped).accessibilityIdentifier("fri.planner.form")
+        }.onAppear { date = CalendarClock.date(calendar.state.active) ?? .now }
     }
 
     private func plan() {
@@ -139,7 +152,7 @@ struct FRIPlannerView: View {
             result = "Enter a task name, 1–720 minutes and an end time after 09:00."
             return
         }
-        let active = calendar.state.active
+        let active = CalendarClock.day(date)
         let slots = Planning.free(in: calendar.state.tasks, day: active, end: end)
         guard let slot = slots.first(where: { $0.count >= duration }) else {
             let total = slots.reduce(0) { $0 + $1.count }
@@ -154,7 +167,8 @@ struct FRIPlannerView: View {
         draft.duration = duration
         draft.kind = "schedule"
         draft.category = "Work"
-        if calendar.addDrafts([draft]) { calendar.newDraft(deadline: false) }
+        draft.notes = "Placed in an open window before \(deadline)"
+        if calendar.addDrafts([draft]) { calendar.reviewDrafts([draft.id]) }
         else { result = calendar.message }
     }
 }

@@ -1,5 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{_electron}=require('../tests/node_modules/playwright');
 test('opaque Fri surfaces retain translucent workspace and readable widget detail',async()=>{
+ fs.mkdirSync(path.join(__dirname,'test-results'),{recursive:true});
  const env={...process.env,FRI_TEST_MODE:'1',FRI_TEST_USER_DATA:fs.mkdtempSync(path.join(__dirname,'test-results/brand-'))};delete env.ELECTRON_RUN_AS_NODE;
  const app=await _electron.launch({executablePath:process.env.FRI_TEST_EXE||require('electron'),args:process.env.FRI_TEST_EXE?[]:[__dirname],env});
  try{const p=await app.firstWindow();await p.waitForFunction(()=>window.FRI_PREVIEW);await p.evaluate(()=>FRI_COMMAND('deadline'));await p.locator('[name=title]').fill('A clear, opaque plan');await p.locator('[name=time]').fill('23:00');await p.getByRole('button',{name:'Done',exact:true}).click();

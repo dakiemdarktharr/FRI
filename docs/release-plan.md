@@ -15,15 +15,15 @@ Updated 23 November 2026. Current user instruction authorizes GitHub commits, pu
 
 ## Desktop acceptance
 
-- [ ] Preserve native translucent main space and existing calendar workflows.
-- [ ] Draw an area on the desktop to create a rounded widget; move/resize/remove; responsive information priorities; shared Done state.
-- [ ] Windows desktop-icon collision handling with local restoration state and explicit platform capability reporting.
-- [ ] Local encrypted storage, no personal calendar upload, validated IPC and network boundaries.
-- [ ] Real weather for a manually chosen place/opt-in location. Provider attribution and clear failures.
-- [ ] Google Maps/Spotify integration contracts and disconnected states; live provider tests await credentials and permissions.
-- [ ] Private mutual availability sharing that does not upload calendar titles/notes; paid entitlement remains unlaunched.
-- [ ] Review remaining source/import/reminder interactions against the existing V1, record implemented vs deferred work.
-- [ ] Package/test Windows installer upgrade, release artifacts, CI and macOS/iOS handoff.
+- [x] Preserve native translucent main space and existing calendar workflows.
+- [x] Draw an area on the desktop to create a rounded widget; move/resize/remove; responsive information priorities; shared Done state.
+- [x] Windows desktop-icon collision handling with local restoration state and explicit platform capability reporting.
+- [x] Local encrypted storage, no personal calendar upload, validated IPC and network boundaries.
+- [x] Real weather for a manually chosen place, with attribution and failure/cached states. Automatic location tracking is not enabled.
+- [x] Keyless Google Maps URL search and isolated Spotify Embed, with explicit provider disclosure. Embedded Places data and OAuth account playback remain unconfigured.
+- [x] Private mutual availability sharing that does not upload calendar titles/notes; paid entitlement remains unlaunched.
+- [x] Review remaining source/import/reminder interactions against the existing V1, record implemented vs deferred work.
+- [x] Package/test Windows installer upgrade, release artifacts, CI and macOS/iOS handoff.
 - [x] Copy the user-provided PDF to `docs/fri_design_guidebook.pdf`; preserve original bytes. Publish with the requested GitHub commit.
 
 ## Boundaries
@@ -34,10 +34,8 @@ Native Windows Acrylic/macOS vibrancy provides real OS background transparency/b
 
 ## Progress — 2026-11-23
 
-Website revision 2 implemented and verified: 16 interaction checks, axe zero findings, 276 surf frames captured and reviewed. Premium remains Coming soon. Vercel project fri created in the existing ACNE team; production deployment READY at https://fri-acne-a6cd.vercel.app, commit 286077a. Pricing direct-load and video rendering verified on the live site.
+Website revision 2 and the Windows-first 0.3.0 keyless release are built and verified. Premium remains Coming soon. Desktop/container CI passed on Windows and macOS; web CI passed on Chromium and WebKit. All 15 release assets were uploaded to GitHub and their SHA-256/SHA-512 hashes checked. Website: https://fri-acne-a6cd.vercel.app . Release: https://github.com/dakiemdarktharr/FRI/releases/tag/v0.3.0 . Publication/deployment receipts are in release-verification.md.
 
-Desktop work in progress: encrypted native store, selector and responsive widget, Windows icon adapter, opt-in weather and isolated Spotify player. These changes are not yet release-verified.
+The Windows installer upgrade retained eight saved appointments and settings, removed an obsolete file and left one uninstall entry. Native widget lifecycle, local OCR/import, encrypted restart, real Acrylic background and desktop-icon restoration were exercised. Website review includes 276 consecutive surf frames plus curtains, scramble and demo states. See web-verification-2026-11-23.md.
 
-Desktop checkpoint: encrypted restart and widget state passed; 9 real Windows desktop icons moved and restored; native weather and Spotify isolation checked; Windows local OCR reads the synthetic fixture. Public-source adapter, private free-time comparison and basic slot planner added. Installer/CI/release checks remain in progress.
-
-Final packaging checkpoint: the installed upgrade 0.2.0 -> 0.3.0 preserved eight task records and settings, removed an obsolete application file and left one uninstall entry. Packaged local OCR, public HTTPS import, denied renderer networking and native widget lifecycle passed. Windows Acrylic was visually verified over a separate checkerboard window. Widget Spotify/Maps launchers and local activity were added before the final rebuild.
+Remaining configured-service/platform work: signing/notarization, account/plan infrastructure, OAuth playback, Google Places/Routes, automatic shared-calendar linking, cloud/multimodal Day and native Apple widgets/iOS. The new desktop does not expose the research workspace's recurrence, overnight/nested travel planner. Privacy boundaries, actual service behavior and unsupported platform cases are explicit in README, privacy.md and apple-handoff.md.

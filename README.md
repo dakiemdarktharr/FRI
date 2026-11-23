@@ -41,7 +41,7 @@ node website/verify-v2.cjs
 npm run dist --prefix desktop
 ```
 
-The website builder writes a standalone HTML with embedded video, plus a smaller served page and video asset in website/public. Website tests generate screenshots and 276 frame captures under test-results. See [web verification](docs/web-verification-2026-11-23.md) and [desktop ground truth](docs/desktop.md).
+The website builder writes a standalone HTML with embedded video, plus a smaller served page and video asset in website/public. Website tests generate screenshots and 276 frame captures under test-results. See [web verification](docs/web-verification-2026-11-23.md) and [desktop ground truth](docs/desktop.md) and [release verification](docs/release-verification.md).
 
 Docker serves the browser version, without OS glass or native widgets:
 

@@ -3,6 +3,105 @@ import XCTest
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
     #if os(iOS)
+    func testAvailabilityFileWorkflow() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["FRI_AVAILABILITY_PICKER_TESTS"] == "1",
+                          "Prepare today's synthetic Files fixtures using apple/Tools/PrepareAvailabilityFixtures.py and enable FRI_AVAILABILITY_PICKER_TESTS.")
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        XCUIDevice.shared.orientation = .portrait
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.actions"].waitForExistence(timeout: 15))
+        app.buttons["fri.new"].tap(); app.buttons["Schedule"].tap()
+        let title = app.textFields["fri.editor.title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 8)); title.tap(); title.typeText("Private availability fixture\n")
+        let time = app.textFields["fri.editor.time"]
+        time.tap(); time.typeText("09:00\n")
+        let duration = app.textFields["fri.editor.duration"]
+        duration.tap(); duration.typeText("60\n")
+        let submit = app.buttons["fri.editor.submit"]
+        reveal(submit, in: app, form: "fri.editor.form"); submit.tap()
+        XCTAssertTrue(app.buttons["fri.actions"].waitForExistence(timeout: 8))
+        func openAvailability() {
+            app.buttons["fri.actions"].tap(); app.buttons["Find time together"].tap()
+            XCTAssertTrue(app.buttons["Compare a free-time file"].waitForExistence(timeout: 8))
+        }
+        func cancelPicker() {
+            if app.buttons["Cancel"].exists {
+                app.buttons["Cancel"].tap()
+            } else {
+                app.buttons["TopOverflowBarButtonItem"].tap()
+                let cancel = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cancel", "Hủy"])).firstMatch
+                XCTAssertTrue(cancel.waitForExistence(timeout: 5)); cancel.tap()
+            }
+            let dismissed = NSPredicate(format: "exists == false")
+            expectation(for: dismissed, evaluatedWith: app.otherElements["Browse View (Picker)"])
+            waitForExpectations(timeout: 8)
+        }
+        func openFixtureFolder() {
+            // Files remembers the last folder; no navigation is needed if already there.
+            if app.cells.matching(NSPredicate(format: "label BEGINSWITH %@", "matching.json")).firstMatch.exists { return }
+            let local = app.cells.matching(NSPredicate(format: "label IN %@", ["Trên iPad", "Trên iPhone", "On My iPad", "On My iPhone"])).firstMatch
+            if !local.exists {
+                let browse = app.buttons.matching(NSPredicate(format: "label IN %@", ["Browse", "Duyệt"])).firstMatch
+                XCTAssertTrue(browse.waitForExistence(timeout: 5)); browse.tap()
+            }
+            XCTAssertTrue(local.waitForExistence(timeout: 5)); local.tap()
+            let folder = app.cells.matching(NSPredicate(format: "label BEGINSWITH %@", "FRI QA Availability")).firstMatch
+            XCTAssertTrue(folder.waitForExistence(timeout: 8)); folder.doubleTap()
+        }
+        func compare(_ name: String) {
+            openAvailability(); app.buttons["Compare a free-time file"].tap()
+            XCTAssertTrue(app.otherElements["Browse View (Picker)"].waitForExistence(timeout: 10))
+            openFixtureFolder()
+            let file = app.cells.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
+            XCTAssertTrue(file.waitForExistence(timeout: 10)); file.tap()
+        }
+        compare("matching")
+        XCTAssertTrue(app.staticTexts["Shared free time"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.staticTexts.matching(identifier: "10:00–10:30").count, 1)
+        XCTAssertFalse(app.staticTexts["11:00–11:25"].exists)
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = "Availability-shared-window"; shot.lifetime = .keepAlways; add(shot)
+        app.buttons["Close"].tap()
+        compare("no-match")
+        XCTAssertTrue(app.staticTexts["No shared slots of at least 30 minutes."].waitForExistence(timeout: 10))
+        app.buttons["Close"].tap()
+        for (name, message) in [
+            ("invalid", "Choose a valid FRI free-time file. Calendar backups cannot be compared here."),
+            ("oversized", "Choose a free-time file no larger than 1 MB.")
+        ] {
+            compare(name)
+            XCTAssertTrue(app.staticTexts[message].waitForExistence(timeout: 10))
+            app.buttons["Dismiss"].tap()
+            XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Private availability fixture")).firstMatch.exists)
+        }
+        openAvailability(); app.buttons["Compare a free-time file"].tap()
+        XCTAssertTrue(app.otherElements["Browse View (Picker)"].waitForExistence(timeout: 10)); cancelPicker()
+        XCTAssertTrue(app.buttons["fri.actions"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["Dismiss"].exists)
+        openAvailability(); app.buttons["Export my free time"].tap()
+        XCTAssertTrue(app.otherElements["Browse View (Picker)"].waitForExistence(timeout: 10))
+        cancelPicker()
+        XCTAssertFalse(app.buttons["Dismiss"].exists)
+        openAvailability(); app.buttons["Export my free time"].tap()
+        XCTAssertTrue(app.otherElements["Browse View (Picker)"].waitForExistence(timeout: 10))
+        openFixtureFolder()
+        let filename = app.textFields["DOCPicker.filenameTextField"]
+        XCTAssertTrue(filename.waitForExistence(timeout: 8)); filename.tap()
+        let exportName = "availability-export-" + UUID().uuidString
+        filename.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: (filename.value as? String ?? "").count) + exportName)
+        app.buttons["DOCPicker.actionButton"].tap()
+        XCTAssertTrue(app.buttons["fri.actions"].waitForExistence(timeout: 8))
+        compare(exportName)
+        XCTAssertTrue(app.staticTexts["Shared free time"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["10:00–18:00"].exists)
+        app.buttons["Close"].tap()
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Private availability fixture")).firstMatch.exists)
+        print("AVAILABILITY_EXPORTED_FILE " + exportName + ".json")
+    }
+
     func testPlannerValidationAndReviewHandoff() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

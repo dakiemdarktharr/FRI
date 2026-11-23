@@ -49,6 +49,27 @@ private func withStore(_ action: (CalendarStore, URL) async throws -> Void) asyn
     #expect(matches.first?.duration == 1800)
 }
 
+@Test func availabilityRejectsInvalidFilesWithActionableErrors() throws {
+    let local = try Planning.Availability.export([], day: "2026-11-24")
+    for invalid in [
+        "not JSON", "{}", "[]",
+        #"{"format":"fri-backup","version":1,"windows":[]}"#,
+        #"{"format":"fri-free-time","version":2,"windows":[]}"#,
+        #"{"format":"fri-free-time","version":1,"windows":[{"start":"2026-11-24T10:00:00Z","end":"2026-11-24T09:00:00Z"}]}"#,
+        #"{"format":"fri-free-time","version":1,"windows":[{"start":"2026-11-24T10:00:00Z","end":"2026-11-26T10:00:00Z"}]}"#
+    ] {
+        #expect(throws: Planning.Availability.ReadError.invalidFile) {
+            try Planning.Availability.compare(local, Data(invalid.utf8))
+        }
+    }
+    #expect(throws: Planning.Availability.ReadError.tooLarge) {
+        try Planning.Availability.compare(local, Data(repeating: 32, count: 1_000_001))
+    }
+    var valid = Data(#"{"format":"fri-free-time","version":1,"windows":[]}"#.utf8)
+    valid.append(Data(repeating: 32, count: 1_000_000 - valid.count))
+    #expect(try Planning.Availability.compare(local, valid).isEmpty)
+}
+
 @Test func backupKeepsSettingsDraftsAndLegacyTasks() throws {
     let windows = """
     {"format":"fri-backup","schema":1,"state":{"version":1,

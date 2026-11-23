@@ -19,6 +19,17 @@ public enum Planning {
     }
 
     public struct Availability: Codable, Sendable {
+        public enum ReadError: LocalizedError, Equatable, Sendable {
+            case invalidFile, tooLarge
+
+            public var errorDescription: String? {
+                switch self {
+                case .invalidFile: "Choose a valid FRI free-time file. Calendar backups cannot be compared here."
+                case .tooLarge: "Choose a free-time file no larger than 1 MB."
+                }
+            }
+        }
+
         public struct Window: Codable, Equatable, Hashable, Sendable {
             public let start: String
             public let end: String
@@ -54,15 +65,17 @@ public enum Planning {
             fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
 
             func intervals(_ data: Data) throws -> [DateInterval] {
-                guard data.count <= 1_000_000 else { throw CalendarError.invalidRange }
-                let file = try JSONDecoder().decode(Self.self, from: data)
+                guard data.count <= 1_000_000 else { throw ReadError.tooLarge }
+                let file: Self
+                do { file = try JSONDecoder().decode(Self.self, from: data) }
+                catch { throw ReadError.invalidFile }
                 guard file.format == "fri-free-time", file.version == 1, file.windows.count <= 1_000 else {
-                    throw CalendarError.invalidRange
+                    throw ReadError.invalidFile
                 }
                 return try file.windows.map { window in
                     guard let start = fractional.date(from: window.start) ?? plain.date(from: window.start),
                           let end = fractional.date(from: window.end) ?? plain.date(from: window.end),
-                          end > start, end.timeIntervalSince(start) <= 86_400 else { throw CalendarError.invalidRange }
+                          end > start, end.timeIntervalSince(start) <= 86_400 else { throw ReadError.invalidFile }
                     return DateInterval(start: start, end: end)
                 }
             }

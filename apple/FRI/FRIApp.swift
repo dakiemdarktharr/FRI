@@ -464,6 +464,15 @@ private final class FRIAppointmentsNotification: NSObject, UNUserNotificationCen
         let pending = await center.pendingNotificationRequests()
         let delivered = await center.deliveredNotifications()
         guard !Task.isCancelled else { return nil }
+        let receiptKey = "FRI.localReminderReceipts.v1"
+        var receipts = UserDefaults.standard.data(forKey: receiptKey)
+            .flatMap { try? JSONDecoder().decode(ReminderReceipts.self, from: $0) } ?? ReminderReceipts()
+        receipts.retain(plans)
+        defer {
+            if let data = try? JSONEncoder().encode(receipts) {
+                UserDefaults.standard.set(data, forKey: receiptKey)
+            }
+        }
         let wanted = Set(plans.map(\.identifier))
         center.removePendingNotificationRequests(withIdentifiers: pending.map(\.identifier).filter {
             $0.hasPrefix("fri.appointment.") && !wanted.contains($0)
@@ -477,7 +486,16 @@ private final class FRIAppointmentsNotification: NSObject, UNUserNotificationCen
             let existing = pending.first { $0.identifier == plan.identifier }
                 ?? delivered.first { $0.request.identifier == plan.identifier }?.request
             if let stamp = existing?.content.userInfo["appointmentStart"] as? Double,
-               stamp == plan.startsAt.timeIntervalSince1970 { continue }
+               stamp == plan.startsAt.timeIntervalSince1970 {
+                // Migrate requests accepted before local receipts were introduced.
+                let fireDate = (existing?.trigger as? UNCalendarNotificationTrigger)?.nextTriggerDate()
+                    ?? Date.distantPast
+                receipts.record(plan, firesAt: fireDate)
+                continue
+            }
+            // Notification Center forgets dismissed alerts. OS acceptance plus an
+            // elapsed fire date prevents recreating the same alert after relaunch.
+            guard !receipts.hasElapsed(plan) else { continue }
             let content = UNMutableNotificationContent()
             content.title = "FRI · Coming up"
             content.body = "You have an appointment soon. Open FRI to view it."
@@ -488,7 +506,10 @@ private final class FRIAppointmentsNotification: NSObject, UNUserNotificationCen
                 dateMatching: CalendarClock.local.dateComponents([.year, .month, .day, .hour, .minute, .second], from: fireDate),
                 repeats: false
             )
-            do { try await center.add(UNNotificationRequest(identifier: plan.identifier, content: content, trigger: trigger)) }
+            do {
+                try await center.add(UNNotificationRequest(identifier: plan.identifier, content: content, trigger: trigger))
+                receipts.record(plan, firesAt: fireDate)
+            }
             catch { return "FRI could not schedule reminders. Check notification access in system settings and try again." }
         }
         return nil

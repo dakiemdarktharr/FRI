@@ -175,6 +175,7 @@ final class FRIWorkflowTests: XCTestCase {
                           "Opt in on a dedicated Simulator: this test allows FRI notifications and waits for a real local delivery.")
         continueAfterFailure = false
         let foreground = ProcessInfo.processInfo.environment["FRI_NOTIFICATION_FOREGROUND"] == "1"
+        let dismissAndRelaunch = ProcessInfo.processInfo.environment["FRI_NOTIFICATION_DISMISS"] == "1"
         let cancellation = ProcessInfo.processInfo.environment["FRI_NOTIFICATION_CANCEL"] ?? ""
         XCTAssertTrue(["", "disable", "complete"].contains(cancellation))
         XCTAssertTrue(cancellation.isEmpty || !foreground, "Pending cancellation requires a future delivery time")
@@ -212,6 +213,9 @@ final class FRIWorkflowTests: XCTestCase {
         reveal(save, in: app, form: "fri.editor.form"); save.tap()
         XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 8))
         let body = "You have an appointment soon. Open FRI to view it."
+        let appointmentStart = try XCTUnwrap(Calendar.current.dateInterval(of: .minute, for: start)?.start)
+        XCTAssertGreaterThan(appointmentStart.timeIntervalSinceNow, 25,
+                             "The fixture appointment must still be in the future after UI entry")
         let notice = springboard.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", body)).firstMatch
         if !cancellation.isEmpty {
             let delivery = try XCTUnwrap(Calendar.current.dateInterval(of: .minute, for: start)?.start).addingTimeInterval(-300)
@@ -266,6 +270,27 @@ final class FRIWorkflowTests: XCTestCase {
         let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         shot.name = foreground ? "System-foreground-reminder-delivered" : "System-local-reminder-delivered"
         shot.lifetime = .keepAlways; add(shot)
+        if dismissAndRelaunch {
+            app.terminate()
+            XCUIDevice.shared.press(.home)
+            let top = springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.01))
+            let bottom = springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.8))
+            top.press(forDuration: 0.1, thenDragTo: bottom)
+            XCTAssertTrue(notice.waitForExistence(timeout: 8))
+            notice.swipeLeft()
+            // A full swipe can clear immediately; a partial swipe exposes Clear.
+            if notice.exists {
+                let clear = springboard.buttons.matching(NSPredicate(format: "label IN %@", ["Clear", "Xóa"])).firstMatch
+                XCTAssertTrue(clear.waitForExistence(timeout: 8), springboard.debugDescription)
+                clear.tap()
+            }
+            expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: notice)
+            waitForExpectations(timeout: 8)
+            app.launch()
+            XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+            XCTAssertFalse(notice.waitForExistence(timeout: 20), "A dismissed reminder must not be scheduled again on relaunch")
+            XCTAssertGreaterThan(appointmentStart, .now, "Check suppression while the original appointment is still upcoming")
+        }
         app.activate()
         XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 8))
         settings()

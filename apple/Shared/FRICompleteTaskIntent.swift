@@ -12,7 +12,9 @@ struct FRICompleteTaskIntent: AppIntent {
 
     func perform() async throws -> some IntentResult {
         try CalendarStore.shared().complete(taskID)
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["fri.appointment.\(taskID)"])
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: ["fri.appointment.\(taskID)"])
+        center.removeDeliveredNotifications(withIdentifiers: ["fri.appointment.\(taskID)"])
         return .result()
     }
 }

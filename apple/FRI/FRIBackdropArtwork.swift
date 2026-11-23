@@ -1,4 +1,5 @@
 import SwiftUI
+import FRIDesign
 #if os(macOS)
 import AppKit
 #else
@@ -12,9 +13,14 @@ struct FRIWindowBackdrop: View {
 
     var body: some View {
         #if os(macOS)
-        FRIMacMaterial(enabled: enabled && !reduce && contrast != .increased)
+        ZStack {
+            FRIColors.workspace
+            if enabled && !reduce && contrast != .increased {
+                FRIMacMaterial(enabled: true).opacity(0.25)
+            }
+        }
         #else
-        Rectangle().fill(.background)
+        Rectangle().fill(FRIColors.workspace)
         #endif
     }
 }
@@ -51,7 +57,11 @@ struct FRIBackdropArtwork: View {
     var body: some View {
         GeometryReader { proxy in
             ZStack {
-                Rectangle().fill(.background)
+                if mode == "solid" {
+                    FRIColors.sidebar
+                } else {
+                    LinearGradient(colors: [FRIColors.sidebar, FRIColors.marsala.opacity(0.65), FRIColors.muted], startPoint: .topLeading, endPoint: .bottomTrailing)
+                }
                 if mode == "image", let image, let data = Data(base64Encoded: image) {
                     #if os(macOS)
                     if let bitmap = NSImage(data: data) { artwork(Image(nsImage: bitmap), size: proxy.size) }
@@ -61,17 +71,16 @@ struct FRIBackdropArtwork: View {
                 } else if mode != "solid" {
                     TimelineView(.animation(minimumInterval: 1.0 / 15, paused: reduced || !motion || scenePhase != .active)) { context in
                         let y = reduced || !motion ? 0.72 : 0.65 + 0.17 * sin(context.date.timeIntervalSinceReferenceDate / 12)
-                        RadialGradient(colors: [.primary.opacity(0.25), .primary.opacity(0.08), .clear],
+                        RadialGradient(colors: [FRIColors.marsala.opacity(0.4), FRIColors.cream.opacity(0.08), .clear],
                                        center: UnitPoint(x: 0.19, y: y), startRadius: 5, endRadius: 320)
                     }
-                    artwork(Image("DayBackdrop"), size: proxy.size)
                 }
             }.clipped()
         }.accessibilityHidden(true)
     }
 
     private func artwork(_ image: Image, size: CGSize) -> some View {
-        image.resizable().scaledToFill().saturation(0).opacity(0.16)
+        image.resizable().scaledToFill().opacity(0.16)
             .frame(width: size.width, height: size.height, alignment: .bottom).clipped()
     }
 }

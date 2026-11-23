@@ -108,6 +108,32 @@ private func withStore(_ action: (CalendarStore, URL) async throws -> Void) asyn
     }
 }
 
+@Test func deniedKeychainPreparationPreservesExistingCalendar() async throws {
+    try await withStore { store, directory in
+        let item = task("Keep this calendar", time: "10:00", duration: 30)
+        try store.update { $0.tasks = [item] }
+        let file = directory.appending(path: "calendar.v1.aesgcm")
+        let original = try Data(contentsOf: file)
+        let denied = CalendarStore(directory: directory) { _ in throw CalendarError.unavailableStore }
+        #expect(throws: CalendarError.self) { try denied.prepare() }
+        #expect(try Data(contentsOf: file) == original)
+        #expect(try store.prepare().state.tasks == [item])
+    }
+}
+
+@Test func initialPreparationRequiresKeyBeforeAcceptingEmptyCalendar() throws {
+    let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let denied = CalendarStore(directory: directory) { _ in throw CalendarError.unavailableStore }
+    #expect(throws: CalendarError.self) { try denied.prepare() }
+    #expect(!FileManager.default.fileExists(atPath: directory.appending(path: "calendar.v1.aesgcm").path))
+    let permitted = CalendarStore(directory: directory) { mayCreate in
+        guard mayCreate else { throw CalendarError.unavailableStore }
+        return SymmetricKey(data: Data(repeating: 1, count: 32))
+    }
+    #expect(try permitted.prepare().revision == 0)
+}
+
 @Test func calendarImportUnfoldsRetainsAllDayAndFlagsAmbiguousTimes() throws {
     let source = """
     BEGIN:VCALENDAR
@@ -232,4 +258,87 @@ func directPublicHTTPSConnectsUsingTheVerifiedHostname() async throws {
     #expect(WidgetSnapshot(state: state, day: day, now: day, showServices: false).service == nil)
     state.settings["activity"] = .object(["date": .string("2026-11-23"), "steps": .number(3200)])
     #expect(WidgetSnapshot(state: state, day: day, now: day).service == "3200 steps")
+}
+
+@Test func undoRestoreReturnsTheEntireCalendarAndSettings() async throws {
+    try await withStore { store, _ in
+        var before = CalendarState()
+        before.tasks = [task("Original", time: "09:00", duration: 30)]
+        before.active = "2026-11-23"
+        before.tabs = ["2026-11-23"]
+        before.settings = ["large": .bool(true), "reminders": .bool(true)]
+        before.widgets = [.object(["name": .string("Original widget")])]
+        before.collections = [.string("Original collection")]
+        before.finished = [.string("2026-11-22")]
+        _ = try store.restore(before)
+        var replacement = CalendarState()
+        replacement.active = "2026-12-01"
+        replacement.settings = ["large": .bool(false)]
+        let restored = try store.restore(replacement)
+        let undo = CalendarUndo.restore(before: restored.previous, after: restored.restored.state)
+        try store.update { $0 = try undo.applying(to: $0) }
+        #expect(try store.read().state == before)
+    }
+}
+
+@Test func undoAppointmentsPreservesUnrelatedSettingsAndRejectsNewerCompletion() throws {
+    var before = CalendarState()
+    before.tasks = [task("Appointment", time: "10:00", duration: 30)]
+    var after = before
+    after.tasks[0].title = "Edited"
+    let undo = CalendarUndo.appointments(before: before, after: after)
+    var latest = after
+    latest.settings["large"] = .bool(true)
+    latest.active = "2026-12-01"
+    let result = try undo.applying(to: latest)
+    #expect(result.tasks == before.tasks)
+    #expect(result.settings == latest.settings && result.active == latest.active)
+    latest.tasks[0].done = true
+    #expect(throws: CalendarError.self) { try undo.applying(to: latest) }
+    latest = after
+    latest.finished = [.string("2026-11-23")]
+    #expect(throws: CalendarError.self) { try undo.applying(to: latest) }
+    latest = after
+    latest.settings["large"] = .bool(true)
+    #expect(throws: CalendarError.self) {
+        try CalendarUndo.restore(before: before, after: after).applying(to: latest)
+    }
+}
+
+@Test func reminderLeadTimeCompletionAndMidnight() throws {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = try #require(TimeZone(secondsFromGMT: 25_200))
+    let day = try #require(CalendarClock.date("2026-11-23", calendar: calendar))
+    let now = try #require(calendar.date(bySettingHour: 9, minute: 56, second: 0, of: day))
+    var done = task("Already complete", time: "10:30", duration: 30)
+    done.done = true
+    let plans = ReminderPlan.upcoming([task("Imminent", time: "10:00", duration: 30),
+                                     task("Later", time: "11:00", duration: 60),
+                                     task("Past", time: "09:00", duration: 30), done], now: now, calendar: calendar)
+    #expect(plans.count == 2)
+    #expect(plans[0].firesAt == now.addingTimeInterval(1))
+    #expect(plans[1].startsAt.timeIntervalSince(plans[1].firesAt) == 300)
+    var midnight = task("Tomorrow", time: "00:02", duration: 30)
+    midnight.date = "2026-11-24"
+    let target = try #require(ReminderPlan.upcoming([midnight], now: now, calendar: calendar).first)
+    #expect(CalendarClock.day(target.firesAt, calendar: calendar) == "2026-11-23")
+    #expect(calendar.component(.hour, from: target.firesAt) == 23)
+    #expect(calendar.component(.minute, from: target.firesAt) == 57)
+}
+
+@Test func reminderDoesNotShiftNonexistentDSTTimeToAnotherDay() throws {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = try #require(TimeZone(identifier: "America/New_York"))
+    var missing = task("Skipped clock time", time: "02:30", duration: 30)
+    missing.date = "2026-03-08"
+    let now = try #require(CalendarClock.date("2026-03-07", calendar: calendar))
+    #expect(ReminderPlan.upcoming([missing], now: now, calendar: calendar).isEmpty)
+}
+
+@Test func spotifyLinksUseSupportedPublicResources() {
+    #expect(ServiceLinks.spotify("https://open.spotify.com/playlist/abc123?si=tracking")?.absoluteString == "https://open.spotify.com/playlist/abc123")
+    #expect(ServiceLinks.spotify("https://open.spotify.com/artist/abc123") == nil)
+    #expect(ServiceLinks.spotify("https://open.spotify.com.evil.example/track/abc") == nil)
+    #expect(ServiceLinks.spotify("https://user@open.spotify.com/track/abc") == nil)
+    #expect(ServiceLinks.spotify("http://open.spotify.com/track/abc") == nil)
 }

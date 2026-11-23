@@ -9,7 +9,7 @@ struct FRIApp: App {
     @State private var calendar = FRICalendarSession()
 
     var body: some Scene {
-        WindowGroup("FRI") {
+        WindowGroup("FRI", id: "calendar") {
             FRIWorkspaceView(calendar: calendar)
                 #if os(macOS)
                 .frame(minWidth: 540, minHeight: 520)
@@ -24,19 +24,21 @@ struct FRIApp: App {
                 Button("New Deadline") { calendar.newDraft(deadline: true) }
                     .keyboardShortcut("n", modifiers: [.command, .shift])
                 Divider()
-                Button("Import Plans…") { calendar.panel = .importPlans }
-                Button("Export Backup…") { calendar.fileAction = .exportBackup }
-                Button("Restore Backup…") { calendar.fileAction = .restoreBackup }
-                Button("Add FRI Widget…") { calendar.panel = .widget }
+                Button("Import Plans…") { calendar.show(.importPlans) }
+                Button("Export Backup…") { calendar.requestFile(.exportBackup) }
+                Button("Restore Backup…") { calendar.requestFile(.restoreBackup) }
+                Button("New Desktop Widget") { calendar.addDesktopWidget() }
+                Button("Show Desktop Widgets") { calendar.showDesktopWidgets() }
+                Button("Widget Gallery…") { calendar.show(.widget) }
             }
             CommandGroup(replacing: .undoRedo) {
                 Button("Undo") { calendar.undo() }.keyboardShortcut("z").disabled(!calendar.canUndo)
             }
-            CommandMenu("View") {
-                Button("Today") { calendar.select(CalendarClock.day()) }.keyboardShortcut("1")
-                Button("Month") { calendar.view = .month }.keyboardShortcut("2")
-                Button("Year") { calendar.view = .year }.keyboardShortcut("3")
-                Button("Search") { calendar.panel = .search }.keyboardShortcut("f")
+            CommandGroup(after: .sidebar) {
+                Button("Today") { calendar.revealCalendar?(); calendar.select(CalendarClock.day()) }.keyboardShortcut("1")
+                Button("Month") { calendar.revealCalendar?(); calendar.view = .month }.keyboardShortcut("2")
+                Button("Year") { calendar.revealCalendar?(); calendar.view = .year }.keyboardShortcut("3")
+                Button("Search") { calendar.show(.search) }.keyboardShortcut("f")
             }
         }
         #endif
@@ -48,17 +50,28 @@ struct FRIApp: App {
 final class FRICalendarSession {
     enum CalendarView: String, CaseIterable { case day = "Day", month = "Month", year = "Year" }
     enum Panel: String, Identifiable {
-        case draft, search, manage, importPlans, widget, appearance, services, planner, availability
+        case draft, search, manage, importPlans, widget, appearance, services, planner, availability, dayAssistant, collections
         var id: String { rawValue }
     }
     enum FileAction { case exportBackup, restoreBackup, exportAvailability, compareAvailability }
 
     private(set) var state = CalendarState()
     private(set) var ready = false
+    private(set) var opening = false
+    private var pendingOpenURL: URL?
     private(set) var synthetic = false
     private var store: CalendarStore?
+    #if os(macOS)
+    @ObservationIgnored var revealCalendar: (() -> Void)?
+    @ObservationIgnored private var desktopWidgets: FRIDesktopWidgetManager?
+    func addDesktopWidget() {
+        guard ready else { return }
+        desktopWidgets?.add()
+    }
+    func showDesktopWidgets() { desktopWidgets?.showAll() }
+    #endif
     private var observedWrite: Date?
-    private var undoState: (before: CalendarState, after: CalendarState)?
+    private var undoState: CalendarUndo?
     private var lastReminderTasks: [Appointment]?
     var canUndo: Bool { undoState != nil }
     var message: String?
@@ -69,43 +82,82 @@ final class FRICalendarSession {
     var appointment: Appointment?
     var draftDeadline = false
     var onlyPending = false
+    var collection: String?
     var restoreCandidate: CalendarState?
     var matchResults: [DateInterval]?
 
     func open() {
+        guard !opening else { return }
         do {
             if store == nil {
                 #if DEBUG
                 if ProcessInfo.processInfo.environment["FRI_SYNTHETIC_PREVIEW"] == "1" {
                     synthetic = true
                     let root = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-                    store = CalendarStore(directory: root.appending(path: "FRI-Synthetic")) { _ in
+                    let testID = ProcessInfo.processInfo.environment["FRI_TEST_STORE_ID"].flatMap(UUID.init(uuidString:))
+                    let directory = testID.map { "FRI-Tests/\($0.uuidString)" } ?? "FRI-Synthetic"
+                    store = CalendarStore(directory: root.appending(path: directory)) { _ in
                         // Fixed fixture key for Debug smoke runs with synthetic data only.
                         CryptoKit.SymmetricKey(data: Data(repeating: 0x46, count: 32))
                     }
                 } else {
-                    store = try CalendarStore.shared()
+                    store = try configuredStore()
                 }
                 #else
-                store = try CalendarStore.shared()
+                store = try configuredStore()
                 #endif
             }
             guard let store else { throw CalendarError.unavailableStore }
-            let stamp = store.modificationDate
-            let loaded = try store.read()
-            observedWrite = stamp
             if !ready {
-                cursor = CalendarClock.date(loaded.state.active) ?? .now
+                opening = true
+                message = nil
+                Task {
+                    defer { opening = false }
+                    do {
+                        let result = try await Task.detached {
+                            let stamp = store.modificationDate
+                            return (try store.prepare(), stamp)
+                        }.value
+                        accept(result.0, stamp: result.1)
+                    } catch {
+                        ready = false
+                        message = error.localizedDescription
+                    }
+                }
+            } else {
+                let stamp = store.modificationDate
+                accept(try store.read(), stamp: stamp)
             }
-            if loaded.state != state || !ready {
-                state = loaded.state
-                reconcileReminders()
-            }
-            ready = true
         } catch {
             ready = false
             message = error.localizedDescription
         }
+    }
+
+    private func accept(_ loaded: CalendarRevision, stamp: Date?) {
+        observedWrite = stamp
+        if !ready { cursor = CalendarClock.date(loaded.state.active) ?? .now }
+        if loaded.state != state || !ready {
+            state = loaded.state
+            reconcileReminders()
+        }
+        ready = true
+        #if os(macOS)
+        if desktopWidgets == nil { desktopWidgets = FRIDesktopWidgetManager(calendar: self) }
+        #endif
+        if let pending = pendingOpenURL {
+            pendingOpenURL = nil
+            openURL(pending)
+        }
+    }
+
+    private func configuredStore() throws -> CalendarStore {
+        #if os(macOS)
+        if Bundle.main.object(forInfoDictionaryKey: "FRIStorageMode") as? String == "standalone" {
+            return try CalendarStore.standaloneMac()
+        }
+        #endif
+        return try CalendarStore.shared()
     }
 
     func refreshIfChanged() {
@@ -115,7 +167,23 @@ final class FRICalendarSession {
     func newDraft(deadline: Bool) {
         guard ready else { return }
         draftDeadline = deadline
-        panel = .draft
+        show(.draft)
+    }
+
+    func show(_ destination: Panel) {
+        guard ready else { return }
+        #if os(macOS)
+        revealCalendar?()
+        #endif
+        panel = destination
+    }
+
+    func requestFile(_ action: FileAction) {
+        guard ready else { return }
+        #if os(macOS)
+        revealCalendar?()
+        #endif
+        fileAction = action
     }
 
     func select(_ day: String) {
@@ -126,6 +194,7 @@ final class FRICalendarSession {
         }) else { return }
         cursor = date
         view = .day
+        collection = nil
     }
 
     func closeTab(_ day: String) {
@@ -147,7 +216,7 @@ final class FRICalendarSession {
             }
             state = current.state
             if previous.tasks != state.tasks || previous.drafts != state.drafts {
-                undoState = undoable ? (previous, state) : nil
+                undoState = undoable ? .appointments(before: previous, after: state) : nil
             }
             WidgetCenter.shared.reloadTimelines(ofKind: "FRIDayWidget")
             reconcileReminders()
@@ -160,15 +229,11 @@ final class FRICalendarSession {
 
     func undo() {
         guard let undo = undoState else { return }
-        _ = change { latest in
-            guard latest.tasks == undo.after.tasks, latest.drafts == undo.after.drafts else {
-                throw FRISessionError.changedSinceUndo
-            }
-            latest.tasks = undo.before.tasks
-            latest.drafts = undo.before.drafts
-            latest.finished = undo.before.finished
+        if change({ latest in latest = try undo.applying(to: latest) }) {
+            undoState = nil
+            cursor = CalendarClock.date(state.active) ?? .now
+            appointment = appointment.flatMap { selected in state.tasks.first { $0.id == selected.id } }
         }
-        undoState = nil
     }
 
     func addDrafts(_ drafts: [Appointment]) -> Bool {
@@ -249,7 +314,7 @@ final class FRICalendarSession {
         do {
             let result = try store.restore(backup)
             state = result.restored.state
-            undoState = (result.previous, state)
+            undoState = .restore(before: result.previous, after: state)
             cursor = CalendarClock.date(state.active) ?? .now
             WidgetCenter.shared.reloadTimelines(ofKind: "FRIDayWidget")
             reconcileReminders()
@@ -260,6 +325,7 @@ final class FRICalendarSession {
     }
 
     func openURL(_ url: URL) {
+        guard ready else { pendingOpenURL = url; return }
         guard url.scheme == "fri", url.user == nil, url.password == nil,
               url.port == nil, url.query == nil, url.fragment == nil else { message = "This FRI link is invalid."; return }
         let parts = url.pathComponents.dropFirst()
@@ -305,38 +371,47 @@ final class FRICalendarSession {
         reminderUpdate = Task {
             await previous?.value
             guard !Task.isCancelled else { return }
-            await FRIAppointmentsNotification.reconcile(tasks)
+            let failure = await FRIAppointmentsNotification.reconcile(tasks)
+            if !Task.isCancelled, let failure {
+                lastReminderTasks = nil
+                message = failure
+            }
         }
         previous?.cancel()
     }
 }
 
-private enum FRISessionError: LocalizedError {
-    case changedSinceUndo
-    var errorDescription: String? { "The calendar changed. Undo would replace newer edits." }
-}
-
 private enum FRIAppointmentsNotification {
-    static func reconcile(_ tasks: [Appointment]) async {
+    static func reconcile(_ tasks: [Appointment]) async -> String? {
         let center = UNUserNotificationCenter.current()
         let pending = await center.pendingNotificationRequests()
-        center.removePendingNotificationRequests(withIdentifiers: pending.map(\.identifier).filter { $0.hasPrefix("fri.appointment.") })
-        let calendar = CalendarClock.local
-        let upcoming = tasks.compactMap { item -> (Appointment, Date)? in
-            guard !item.done, let minute = CalendarClock.minutes(item.time),
-                  let day = CalendarClock.date(item.date),
-                  let instant = calendar.date(bySettingHour: minute / 60, minute: minute % 60, second: 0, of: day),
-                  instant > .now else { return nil }
-            return (item, instant)
-        }.sorted { $0.1 < $1.1 }
-        for (item, instant) in upcoming.prefix(48) {
-            guard !Task.isCancelled else { return }
+        let delivered = await center.deliveredNotifications()
+        let plans = ReminderPlan.upcoming(tasks)
+        let wanted = Set(plans.map(\.identifier))
+        center.removePendingNotificationRequests(withIdentifiers: pending.map(\.identifier).filter {
+            $0.hasPrefix("fri.appointment.") && !wanted.contains($0)
+        })
+        center.removeDeliveredNotifications(withIdentifiers: delivered.map { $0.request.identifier }.filter {
+            $0.hasPrefix("fri.appointment.") && !wanted.contains($0)
+        })
+        for plan in plans {
+            guard !Task.isCancelled else { return nil }
+            let existing = pending.first { $0.identifier == plan.identifier }
+                ?? delivered.first { $0.request.identifier == plan.identifier }?.request
+            if let stamp = existing?.content.userInfo["appointmentStart"] as? Double,
+               stamp == plan.startsAt.timeIntervalSince1970 { continue }
             let content = UNMutableNotificationContent()
-            content.title = "FRI reminder"
-            content.body = "You have an appointment now."
+            content.title = "FRI · Coming up"
+            content.body = "You have an appointment soon. Open FRI to view it."
             content.sound = .default
-            let trigger = UNCalendarNotificationTrigger(dateMatching: calendar.dateComponents([.year, .month, .day, .hour, .minute], from: instant), repeats: false)
-            try? await center.add(UNNotificationRequest(identifier: "fri.appointment.\(item.id)", content: content, trigger: trigger))
+            content.userInfo = ["appointmentStart": plan.startsAt.timeIntervalSince1970]
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: CalendarClock.local.dateComponents([.year, .month, .day, .hour, .minute, .second], from: plan.firesAt),
+                repeats: false
+            )
+            do { try await center.add(UNNotificationRequest(identifier: plan.identifier, content: content, trigger: trigger)) }
+            catch { return "FRI could not schedule reminders. Check notification access in system settings and try again." }
         }
+        return nil
     }
 }

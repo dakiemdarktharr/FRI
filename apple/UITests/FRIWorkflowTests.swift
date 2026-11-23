@@ -6,6 +6,7 @@ final class FRIWorkflowTests: XCTestCase {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launchEnvironment["FRI_WIDGET_PREVIEW"] = "1"
         app.launch()
         #if os(macOS)
@@ -48,6 +49,7 @@ final class FRIWorkflowTests: XCTestCase {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launch()
         let canvas = app.descendants(matching: .any)["fri.calendar.content"]
         XCTAssertTrue(canvas.waitForExistence(timeout: 15))

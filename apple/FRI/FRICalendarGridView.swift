@@ -1,4 +1,5 @@
 import FRICore
+import FRIDesign
 import SwiftUI
 
 struct FRICalendarGridView: View {
@@ -50,7 +51,8 @@ struct FRICalendarGridView: View {
                             }
                         }
                         .frame(maxWidth: .infinity, minHeight: 44)
-                        .background(.primary.opacity(clock.isDateInToday(date) ? 0.20 : 0.06), in: RoundedRectangle(cornerRadius: 10))
+                        .foregroundStyle(clock.isDateInToday(date) ? FRIColors.cream : FRIColors.ink)
+                        .background(clock.isDateInToday(date) ? FRIColors.marsala : FRIColors.cream, in: RoundedRectangle(cornerRadius: 10))
                     }
                     .buttonStyle(.plain)
                     .opacity(clock.isDate(date, equalTo: cursor, toGranularity: .month) ? 1 : 0.48)
@@ -74,7 +76,8 @@ struct FRICalendarGridView: View {
                             if count > 0 { Text("\(count) plans").font(.caption).foregroundStyle(.secondary) }
                         }
                         .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading).padding(10)
-                        .background(.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
+                        .foregroundStyle(FRIColors.ink)
+                        .background(FRIColors.cream, in: RoundedRectangle(cornerRadius: 12))
                     }.buttonStyle(.plain)
                 }
             }

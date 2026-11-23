@@ -51,21 +51,22 @@ public struct FRISurface: ViewModifier {
     @Environment(\.colorSchemeContrast) private var contrast
     public let glass: Bool
     public let radius: CGFloat
+    public let fill: Color
+    public let text: Color
 
-    public init(glass: Bool, radius: CGFloat = 22) {
+    public init(glass: Bool, radius: CGFloat = 22, fill: Color = FRIColors.cream, text: Color = FRIColors.ink) {
         self.glass = glass
         self.radius = radius
+        self.fill = fill
+        self.text = text
     }
 
     public func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: radius)
-        if reduceTransparency || contrast == .increased || !glass {
-            content.background(.background, in: shape)
-                .overlay(shape.strokeBorder(.primary.opacity(0.13)))
-        } else if #available(macOS 26.0, iOS 26.0, *) {
-            content.glassEffect(.regular, in: shape)
-        } else {
-            content.background(.regularMaterial, in: shape)
-        }
+        content
+            .foregroundStyle(text)
+            .background(fill, in: shape)
+            .overlay(shape.strokeBorder(contrast == .increased ? FRIColors.muted : FRIColors.line))
+            .shadow(color: .black.opacity(glass && !reduceTransparency ? 0.07 : 0), radius: 10, y: 3)
     }
 }

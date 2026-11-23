@@ -6,11 +6,12 @@ import WidgetKit
 struct FRIWidgetContent<Completion: View>: View {
     let snapshot: WidgetSnapshot
     let family: WidgetFamily
+    var tint = Color(red: 149 / 255, green: 82 / 255, blue: 81 / 255)
+    var secondaryColor: Color = .secondary
     @ViewBuilder let completion: () -> Completion
     @Environment(\.dynamicTypeSize) private var typeSize
 
     private var expanded: Bool { family == .systemLarge || family == .systemExtraLarge }
-    private let accent = Color(red: 0.58, green: 0.30, blue: 0.30)
 
     var body: some View {
         GeometryReader { geometry in
@@ -19,15 +20,15 @@ struct FRIWidgetContent<Completion: View>: View {
                     VStack(alignment: .leading, spacing: 14) {
                         summary(wide: geometry.size.width >= 280 && !typeSize.isAccessibilitySize)
                         if let service = snapshot.service, !snapshot.locked {
-                            Text(service).font(.caption).foregroundStyle(.secondary)
+                            Text(service).font(.caption).foregroundStyle(secondaryColor)
                                 .lineLimit(2).privacySensitive()
                         }
                         if snapshot.tasks.count > 1 {
                             Divider()
-                            Text("Later today").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                            Text("Later today").font(.caption.weight(.semibold)).foregroundStyle(secondaryColor)
                             ForEach(snapshot.tasks.dropFirst()) { task in
                                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                                    Text(task.time).monospacedDigit().foregroundStyle(.secondary)
+                                    Text(task.time).monospacedDigit().foregroundStyle(secondaryColor)
                                     Text(task.title).frame(maxWidth: .infinity, alignment: .leading)
                                 }
                                 .font(.caption).lineLimit(2).privacySensitive()
@@ -52,7 +53,7 @@ struct FRIWidgetContent<Completion: View>: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .tint(accent)
+        .tint(tint)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("fri.widget.content")
     }
@@ -84,7 +85,7 @@ struct FRIWidgetContent<Completion: View>: View {
                     Label("Calendar unavailable", systemImage: "lock")
                         .font(.headline).lineLimit(2).minimumScaleFactor(0.85)
                     Text("Open FRI to access your calendar.")
-                        .font(.caption).foregroundStyle(.secondary).lineLimit(3)
+                        .font(.caption).foregroundStyle(secondaryColor).lineLimit(3)
                 } else if let next = snapshot.tasks.first {
                     Text(next.title)
                         .font(.headline).lineLimit(compact ? 2 : 3).minimumScaleFactor(0.85)
@@ -112,7 +113,7 @@ struct FRIWidgetContent<Completion: View>: View {
                 .font(.subheadline.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.85)
                 .widgetAccentable()
             Text(snapshot.day, format: .dateTime.month(.abbreviated).day())
-                .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                .font(.caption).foregroundStyle(secondaryColor).lineLimit(1)
         }
     }
 
@@ -122,7 +123,7 @@ struct FRIWidgetContent<Completion: View>: View {
             VStack(alignment: .leading, spacing: 4) {
                 ProgressView(value: Double(snapshot.completed), total: Double(snapshot.total))
                 Text("\(snapshot.completed) of \(snapshot.total) done")
-                    .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                    .font(.caption2).foregroundStyle(secondaryColor).lineLimit(1)
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(snapshot.completed) of \(snapshot.total) appointments done")

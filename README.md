@@ -25,7 +25,11 @@ The [Android local alpha](mobile/README.md) starts with an Expo/React Native app
 
 ## Native Apple development
 
-The `apple/FRI.xcodeproj` project contains SwiftUI macOS and iOS apps with embedded WidgetKit extensions. Select `FRIMac` or `FRIiOS` in Xcode. Native widgets adapt their content to the system size and Dynamic Type; the app includes size previews and native placement instructions. This is separate from the Electron download described above. Signed installation and shared App Group/Keychain verification still require the owning Apple Developer team. [Widget build and verification](docs/apple/verification/WIDGETS-2026-11-23.md).
+Open `apple/FRI.xcodeproj` in Xcode. `FRIMac` is the standalone SwiftUI/AppKit Mac app, with encrypted local storage, a login-Keychain key and desktop widget windows. Use **File → New Desktop Widget**; the top bar moves it, the bottom-right grip resizes it, and its menu provides sizes, placement, date and keep-on-top controls. Widget windows restore with the app and share its calendar directly. They require FRI to remain running.
+
+`FRIMacWidgetKit` and `FRIiOS` embed the system WidgetKit extensions and use App Group/Keychain sharing; those configurations require the owning developer team. The standalone Mac configuration never silently falls back from a failed shared store. Transfer calendars between the standalone and App Group configurations using a JSON backup. These native apps are separate from the Electron download described above.
+
+The current native work follows the Windows/Linux 0.5 cream/marsala interface. It is **in development, not a verified distribution release**. See the [production acceptance ledger](docs/apple/verification/PRODUCTION-READINESS.md) and [earlier WidgetKit build evidence](docs/apple/verification/WIDGETS-2026-11-23.md).
 
 ## Develop and verify
 

@@ -24,19 +24,38 @@ public struct CalendarStore: Sendable {
               !keychain.isEmpty, !keychain.hasPrefix("."),
               let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: group)
         else { throw CalendarError.unavailableStore }
+        let cache = CalendarKeyCache()
         return Self(directory: container.appending(path: "Calendar")) { mayCreate in
-            try keychainKey(group: keychain, mayCreate: mayCreate)
+            try cache.resolve { try keychainKey(group: keychain, mayCreate: mayCreate) }
         }
     }
 
-    private static func keychainKey(group: String, mayCreate: Bool) throws -> SymmetricKey {
-        let identity: [String: Any] = [
+    #if os(macOS)
+    /// Explicit standalone Mac storage. It is never a fallback for a failed shared store.
+    /// Native desktop panels share the host session; WidgetKit continues to use shared().
+    public static func standaloneMac(bundle: Bundle = .main) throws -> Self {
+        guard let identifier = bundle.bundleIdentifier, !identifier.isEmpty else { throw CalendarError.unavailableStore }
+        let root = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask,
+                                               appropriateFor: nil, create: true)
+        let cache = CalendarKeyCache()
+        return Self(directory: root.appending(path: identifier).appending(path: "Calendar")) { mayCreate in
+            try cache.resolve { try keychainKey(group: nil, mayCreate: mayCreate) }
+        }
+    }
+    #endif
+
+    private static func keychainKey(group: String?, mayCreate: Bool) throws -> SymmetricKey {
+        var identity: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccessGroup as String: group,
-            kSecAttrService as String: "FRI.Calendar",
-            kSecAttrAccount as String: "v1",
-            kSecUseDataProtectionKeychain as String: true
+            kSecAttrService as String: group == nil ? "FRI.Calendar.Standalone" : "FRI.Calendar",
+            kSecAttrAccount as String: "v1"
         ]
+        if let group {
+            identity[kSecAttrAccessGroup as String] = group
+            identity[kSecUseDataProtectionKeychain as String] = true
+        }
+        // The standalone Mac distribution uses the login keychain and its application ACL.
+        // No App Group, shared-access entitlement, or synthetic key is used for this mode.
         var query = identity
         query[kSecReturnData as String] = true
         var result: CFTypeRef?
@@ -48,7 +67,7 @@ public struct CalendarStore: Sendable {
         let key = SymmetricKey(size: .bits256)
         var attributes = identity
         attributes[kSecValueData as String] = key.withUnsafeBytes { Data($0) }
-        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        if group != nil { attributes[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly }
         guard SecItemAdd(attributes as CFDictionary, nil) == errSecSuccess else {
             throw CalendarError.unavailableStore
         }
@@ -57,6 +76,15 @@ public struct CalendarStore: Sendable {
 
     public var modificationDate: Date? {
         try? file.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
+    }
+
+    /// Call off the UI thread: the OS may ask the user to unlock or authorize Keychain access.
+    public func prepare() throws -> CalendarRevision {
+        try locked {
+            let existing = try readLocked()
+            if existing.revision == 0 { _ = try keySource(true) }
+            return existing
+        }
     }
 
     public func read() throws -> CalendarRevision {
@@ -144,5 +172,20 @@ public struct CalendarStore: Sendable {
         }
         defer { flock(descriptor, LOCK_UN) }
         return try body()
+    }
+}
+
+/// A key lives only for this store instance's process lifetime; it is never written outside Keychain.
+private final class CalendarKeyCache: @unchecked Sendable {
+    private let lock = NSLock()
+    private var key: SymmetricKey?
+
+    func resolve(_ load: () throws -> SymmetricKey) throws -> SymmetricKey {
+        lock.lock()
+        defer { lock.unlock() }
+        if let key { return key }
+        let loaded = try load()
+        key = loaded
+        return loaded
     }
 }

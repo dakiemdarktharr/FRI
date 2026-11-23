@@ -4,6 +4,35 @@ import SwiftUI
 import WidgetKit
 import UniformTypeIdentifiers
 
+struct FRICollectionsView: View {
+    let calendar: FRICalendarSession
+    @State private var name = ""
+    @State private var error: String?
+
+    var body: some View {
+        FRISheetView(title: "A new collection") {
+            Form {
+                TextField("Collection name", text: $name)
+                    .accessibilityIdentifier("fri.collection.name")
+                Text("Use this name in an appointment’s Category field to include it in the collection.")
+                    .font(.caption).foregroundStyle(.secondary)
+                if let error { Text(error).foregroundStyle(.red) }
+                Button("Create collection") {
+                    let value = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !value.isEmpty, value.utf16.count <= 35 else {
+                        error = "Enter a collection name of up to 35 characters."
+                        return
+                    }
+                    if calendar.change({ state in
+                        if !state.collections.contains(.string(value)) { state.collections.append(.string(value)) }
+                    }) { calendar.panel = nil }
+                    else { error = calendar.message }
+                }.buttonStyle(.borderedProminent)
+            }.formStyle(.grouped)
+        }
+    }
+}
+
 struct FRISearchView: View {
     let tasks: [Appointment]
     let select: (Appointment) -> Void
@@ -142,6 +171,27 @@ struct FRIWidgetHelpView: View {
         FRISheetView(title: "Add FRI Widget") {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
+                    Text("In your calendar").font(.title2.bold())
+                    Text("Choose the cards beside your appointments.").foregroundStyle(.secondary)
+                    ForEach([("upnext", "Up next"), ("weather", "Weather"), ("maps", "Maps"), ("spotify", "Spotify"), ("health", "Manual activity")], id: \.0) { key, label in
+                        Toggle(label, isOn: Binding(get: { calendar.state.widgets.contains(.string(key)) }, set: { enabled in
+                            _ = calendar.change { state in
+                                state.widgets.removeAll { $0 == .string(key) }
+                                if enabled { state.widgets.append(.string(key)) }
+                            }
+                        }))
+                    }
+                    Divider()
+                    #if os(macOS)
+                    Text("Desktop widgets").font(.title2.bold())
+                    Text("Add a Swift desktop widget, drag its top bar to move it, and drag the bottom-right corner to resize. Your position and size are restored when FRI reopens.")
+                    Button("Create desktop widget", systemImage: "plus") { calendar.addDesktopWidget() }
+                        .buttonStyle(.borderedProminent)
+                    Button("Show desktop widgets") { calendar.showDesktopWidgets() }
+                    Text("Desktop widgets use this app’s calendar. FRI must be running. The system WidgetKit gallery uses a separately configured shared store.")
+                        .font(.caption).foregroundStyle(.secondary)
+                    Divider()
+                    #endif
                     Text("Auto fit").font(.title2.bold())
                     Text("Your widget adapts to its size. The next appointment and Done stay first; more details appear when there is room.")
                         .foregroundStyle(.secondary)
@@ -231,7 +281,7 @@ struct FRIAppearanceView: View {
                     Toggle("Appointment reminders", isOn: Binding(get: { calendar.state.settings["reminders"]?.bool == true }, set: { value in
                         Task { await calendar.setReminders(value) }
                     }))
-                    Text("Notifications use a generic title and hide appointment details.")
+                    Text("A private reminder arrives five minutes before each appointment. Notifications hide appointment details.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 if let error { Text(error).foregroundStyle(.red) }

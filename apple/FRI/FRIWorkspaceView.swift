@@ -6,9 +6,12 @@ import UniformTypeIdentifiers
 struct FRIWorkspaceView: View {
     @Bindable var calendar: FRICalendarSession
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.openURL) private var openURL
+    @Environment(\.openWindow) private var openWindow
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var showSidebar = true
+    @State private var showUpcoming = false
     @State private var fileExport: FRIFile?
     @State private var exporting = false
     @State private var importing = false
@@ -18,7 +21,9 @@ struct FRIWorkspaceView: View {
 
     private var selected: Date { CalendarClock.date(calendar.state.active) ?? .now }
     private var dayTasks: [Appointment] { calendar.state.tasks(on: calendar.state.active) }
-    private var visible: [Appointment] { dayTasks.filter { !calendar.onlyPending || !$0.done } }
+    private var visible: [Appointment] {
+        dayTasks.filter { (!calendar.onlyPending || !$0.done) && (calendar.collection == nil || $0.category == calendar.collection) }
+    }
     private var complete: Int { dayTasks.filter(\.done).count }
     private var finished: Bool { calendar.state.finished.contains(.string(calendar.state.active)) }
     private var effectiveType: DynamicTypeSize {
@@ -30,7 +35,7 @@ struct FRIWorkspaceView: View {
         GeometryReader { geometry in
             let wide = geometry.size.width >= 800
             HStack(spacing: 0) {
-                if wide && showSidebar { sidebar.frame(width: 218) }
+                if wide && showSidebar { sidebar.frame(width: 235) }
                 VStack(alignment: .leading, spacing: 0) {
                     toolbar(wide: wide)
                     if calendar.synthetic {
@@ -51,7 +56,7 @@ struct FRIWorkspaceView: View {
                         dateTabs
                         ScrollView {
                             VStack(alignment: .leading, spacing: 18) {
-                                if calendar.view == .day { day }
+                                if calendar.view == .day { day(wide: wide && geometry.size.width >= 1000) }
                                 else {
                                     FRICalendarGridView(mode: calendar.view, cursor: $calendar.cursor,
                                                         tasks: calendar.state.tasks, select: calendar.select) { date in
@@ -62,6 +67,12 @@ struct FRIWorkspaceView: View {
                             }.padding(.horizontal, wide ? 26 : 16).padding(.vertical, 20)
                         }
                         .accessibilityIdentifier("fri.calendar.content")
+                    } else if calendar.opening {
+                        VStack(spacing: 12) {
+                            ProgressView("Opening your calendar…")
+                            Text("If macOS asks for Keychain access, review the system dialog to unlock your calendar.")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }.padding(24).frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
                         ContentUnavailableView {
                             Label("Calendar unavailable", systemImage: "lock")
@@ -73,10 +84,21 @@ struct FRIWorkspaceView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .tint(colorScheme == .dark ? .white : .black)
+        .tint(FRIColors.marsala)
+        .foregroundStyle(FRIColors.cream)
         .environment(\.dynamicTypeSize, effectiveType)
         .background { FRIWindowBackdrop(enabled: glass).ignoresSafeArea() }
         .task {
+            #if os(macOS)
+            calendar.revealCalendar = {
+                if let existing = NSApp.windows.first(where: { $0.identifier?.rawValue.hasPrefix("calendar-") == true }) {
+                    existing.makeKeyAndOrderFront(nil)
+                } else {
+                    openWindow(id: "calendar")
+                }
+                NSApp.activate(ignoringOtherApps: true)
+            }
+            #endif
             calendar.open()
             #if DEBUG
             if ProcessInfo.processInfo.environment["FRI_WIDGET_PREVIEW"] == "1" { calendar.panel = .widget }
@@ -101,6 +123,8 @@ struct FRIWorkspaceView: View {
         }) { panel in
             switch panel {
             case .draft: FRIPlanEditorView(calendar: calendar)
+            case .dayAssistant: FRIDayAssistantView(calendar: calendar)
+            case .collections: FRICollectionsView(calendar: calendar)
             case .search: FRISearchView(tasks: calendar.state.tasks) { item in
                 searchedAppointment = item
                 calendar.panel = nil
@@ -120,7 +144,7 @@ struct FRIWorkspaceView: View {
         .sheet(item: $calendar.appointment) { item in
             FRIPlanDetailView(item: item, calendar: calendar)
         }
-        .onChange(of: calendar.fileAction) { _, action in
+        .onChange(of: calendar.fileAction, initial: true) { _, action in
             guard let action else { return }
             calendar.fileAction = nil
             switch action {
@@ -179,42 +203,91 @@ struct FRIWorkspaceView: View {
     }
 
     private var sidebar: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 9) {
-                Image("FRIMark").resizable().frame(width: 29, height: 29).accessibilityHidden(true)
-                Text("FRI").font(.system(.title, design: .rounded, weight: .black))
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .firstTextBaseline, spacing: 0) {
+                Text("fri").font(.system(size: 48, weight: .semibold)).tracking(-4)
+                Text(".").font(.system(size: 48, weight: .semibold)).foregroundStyle(FRIColors.marsala)
                 Spacer()
-            }
-            .padding(.bottom, 12)
+                Button("Search appointments", systemImage: "magnifyingglass") { calendar.panel = .search }
+                    .labelStyle(.iconOnly).frame(width: 40, height: 40)
+                    .background(FRIColors.control, in: Circle())
+            }.padding(.bottom, 8)
+            dayButtons.frame(maxWidth: .infinity).padding(5)
+                .background(FRIColors.control, in: RoundedRectangle(cornerRadius: 18))
+            newMenu.frame(maxWidth: .infinity, alignment: .leading).padding(14)
+                .background(FRIColors.marsala, in: RoundedRectangle(cornerRadius: 16))
+            Text("YOUR SPACE").font(.caption2.weight(.semibold)).tracking(2).padding(.top, 12)
             navigation
+            if !calendar.state.collections.isEmpty {
+                Text("COLLECTIONS").font(.caption2.weight(.semibold)).tracking(2)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(Array(Set(calendar.state.collections.compactMap(\.string))).sorted(), id: \.self) { name in
+                            Button {
+                                calendar.collection = calendar.collection == name ? nil : name
+                                calendar.view = .day
+                            } label: {
+                                Label(name, systemImage: "folder").lineLimit(2)
+                                    .frame(maxWidth: .infinity, alignment: .leading).padding(8)
+                                    .background(calendar.collection == name ? FRIColors.marsala : .clear, in: RoundedRectangle(cornerRadius: 10))
+                            }.accessibilityAddTraits(calendar.collection == name ? .isSelected : [])
+                        }
+                    }
+                }.frame(maxHeight: 110)
+            }
+            Text("QUICK LINKS").font(.caption2.weight(.semibold)).tracking(2).padding(.top, 10)
+            Button("Google Calendar", systemImage: "link") {
+                if let url = URL(string: "https://calendar.google.com") { openURL(url) }
+            }
+            .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+            .background(FRIColors.sidebar, in: RoundedRectangle(cornerRadius: 13))
+            Button("A little focus music", systemImage: "music.note") { calendar.panel = .services }
+                .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+                .background(FRIColors.sidebar, in: RoundedRectangle(cornerRadius: 13))
             Spacer(minLength: 20)
-            Button { calendar.panel = .services } label: {
-                Label("Services", systemImage: "square.grid.2x2")
-            }
-            Button { calendar.panel = .appearance } label: {
-                Label("Settings", systemImage: "gearshape")
-            }
-        }.buttonStyle(.plain).padding(20)
+            HStack {
+                Button("Services", systemImage: "square.grid.2x2") { calendar.panel = .services }
+                Spacer()
+                Button("Settings", systemImage: "gearshape") { calendar.panel = .appearance }.labelStyle(.iconOnly)
+            }.padding(12).background(FRIColors.control, in: RoundedRectangle(cornerRadius: 18))
+        }.buttonStyle(.plain).padding(18)
+        .foregroundStyle(FRIColors.cream)
         .background {
             FRIBackdropArtwork(mode: calendar.state.settings["sidebar"]?.string ?? "gradient",
                                image: calendar.state.settings["appleSidebarImage"]?.string,
                                motion: calendar.state.settings["motion"]?.bool != false)
         }
-        .overlay(alignment: .trailing) { Rectangle().fill(.primary.opacity(0.08)).frame(width: 1) }
+        .overlay(alignment: .trailing) { Rectangle().fill(FRIColors.line.opacity(0.2)).frame(width: 1) }
     }
 
     private var navigation: some View {
         ForEach(FRICalendarSession.CalendarView.allCases, id: \.self) { view in
-            Button { calendar.view = view } label: {
+            Button { calendar.view = view; calendar.collection = nil } label: {
                 HStack {
-                    Label(view.rawValue, systemImage: view == .day ? "rectangle" : (view == .month ? "calendar" : "square.grid.2x2"))
+                    Label(view == .day ? "My day" : view.rawValue,
+                          systemImage: view == .day ? "square.grid.2x2" : (view == .month ? "calendar" : "calendar.badge.clock"))
                     Spacer(minLength: 0)
+                    if view == .day { Text(dayTasks.count, format: .number).font(.caption) }
                 }
-                .padding(.vertical, 10).padding(.horizontal, 12)
-                .background(.primary.opacity(calendar.view == view ? 0.12 : 0), in: RoundedRectangle(cornerRadius: 9))
+                .padding(.vertical, 12).padding(.horizontal, 12)
+                .foregroundStyle(calendar.view == view ? FRIColors.ink : FRIColors.cream)
+                .background(calendar.view == view ? FRIColors.cream : FRIColors.sidebar, in: RoundedRectangle(cornerRadius: 13))
             }
+            .accessibilityIdentifier("fri.navigation.\(view.rawValue.lowercased())")
             .accessibilityAddTraits(calendar.view == view ? .isSelected : [])
         }
+    }
+
+    private var newMenu: some View {
+        Menu {
+            Button("Schedule", systemImage: "calendar") { calendar.newDraft(deadline: false) }
+            Button("One-time deadline", systemImage: "flag") { calendar.newDraft(deadline: true) }
+            Button("Collection", systemImage: "folder.badge.plus") { calendar.show(.collections) }
+            if !calendar.state.drafts.isEmpty {
+                Button("Resume drafts", systemImage: "doc") { calendar.newDraft(deadline: false) }
+            }
+        } label: { Label("New", systemImage: "plus") }
+            .accessibilityIdentifier("fri.new")
     }
 
     private func toolbar(wide: Bool) -> some View {
@@ -246,22 +319,15 @@ struct FRIWorkspaceView: View {
                 Button("Restore backup", systemImage: "arrow.down.document") { calendar.fileAction = .restoreBackup }
                 if calendar.canUndo { Button("Undo", systemImage: "arrow.uturn.left") { calendar.undo() } }
             } label: { Label("Calendar actions", systemImage: "ellipsis.circle").labelStyle(.iconOnly) }
-            Menu {
-                Button("Schedule", systemImage: "calendar") { calendar.newDraft(deadline: false) }
-                Button("One-time deadline", systemImage: "flag") { calendar.newDraft(deadline: true) }
-                if !calendar.state.drafts.isEmpty {
-                    Button("Resume drafts", systemImage: "doc") { calendar.newDraft(deadline: false) }
-                }
-            } label: {
-                Label("New", systemImage: "plus")
-                    .foregroundStyle(colorScheme == .dark ? .black : .white)
+                .accessibilityIdentifier("fri.actions")
+            if !wide {
+                newMenu.buttonStyle(.borderedProminent).tint(FRIColors.marsala)
             }
-                .accessibilityIdentifier("fri.new")
-                .buttonStyle(.borderedProminent)
-                .tint(colorScheme == .dark ? .white : .black)
+
         }
-        .font(.body)
+        .font(.body).buttonStyle(.plain).tint(FRIColors.cream)
         .padding(.horizontal, 18).padding(.vertical, 12)
+        .background(FRIColors.sidebar)
         .disabled(!calendar.ready)
     }
 
@@ -286,54 +352,169 @@ struct FRIWorkspaceView: View {
                         }
                         .font(.subheadline.weight(.medium))
                         .padding(.horizontal, 10).padding(.vertical, 8)
-                        .background(.primary.opacity(key == calendar.state.active ? 0.13 : 0.04), in: Capsule())
+                        .foregroundStyle(key == calendar.state.active ? FRIColors.ink : FRIColors.cream)
+                        .background(key == calendar.state.active ? FRIColors.cream : FRIColors.control,
+                                    in: UnevenRoundedRectangle(topLeadingRadius: 14, topTrailingRadius: 14))
                     }
                 }
-            }.padding(.horizontal, 18)
-        }.scrollIndicators(.hidden)
+                Button("Open another day", systemImage: "plus") { calendar.view = .month }
+                    .labelStyle(.iconOnly).buttonStyle(.plain).padding(12)
+            }.padding(.horizontal, 18).padding(.top, 4)
+        }.scrollIndicators(.hidden).background(FRIColors.sidebar)
     }
 
-    private var day: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            ViewThatFits {
-                HStack(alignment: .center, spacing: 14) {
+    private func day(wide: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 20) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 16) {
+                    dayHeading.frame(minWidth: 180, maxWidth: .infinity)
+                    headingActions.frame(width: 110)
+                    ring.frame(width: 100)
+                }.frame(minHeight: 174)
+                VStack(spacing: 14) {
                     dayHeading
-                    Spacer()
-                    dayButtons
-                    ring
-                }
-                VStack(alignment: .leading, spacing: 10) {
-                    dayHeading
-                    HStack { dayButtons; Spacer(); ring }
+                    HStack { headingActions; Spacer(); ring }
                 }
             }
-            if visible.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
-                    Image(systemName: "sun.horizon").font(.largeTitle)
-                    Text(dayTasks.isEmpty ? "A fresh day." : "Your day is clear.").font(.title2.weight(.semibold))
-                    if dayTasks.isEmpty { Button("Add a schedule", systemImage: "plus") { calendar.newDraft(deadline: false) } }
-                }
-                .padding(24).frame(maxWidth: .infinity, minHeight: 180, alignment: .leading)
-                .modifier(FRISurface(glass: glass))
-            } else {
-                FRIMosaic(durations: visible.map(\.duration), largeText: effectiveType.isAccessibilitySize || calendar.state.settings["large"]?.bool == true,
-                          list: calendar.state.settings["layout"]?.string == "list") {
-                    ForEach(visible) { item in
-                        FRICardView(item: item, glass: glass, show: { calendar.appointment = item },
-                                    complete: { calendar.setDoneWithoutOpening(item) })
+            HStack {
+                Text("Appointments").font(.headline).accessibilityAddTraits(.isHeader)
+                Spacer()
+                Menu {
+                    Button("All collections") { calendar.collection = nil }
+                    ForEach(Array(Set(calendar.state.collections.compactMap(\.string))).sorted(), id: \.self) { name in
+                        Button(name) { calendar.collection = name }
                     }
+                    Button("New collection…") { calendar.show(.collections) }
+                } label: { Label(calendar.collection ?? "Collections", systemImage: "folder") }
+                .accessibilityIdentifier("fri.collections")
+                Button(calendar.onlyPending ? "Still to do" : "All plans", systemImage: "line.3.horizontal.decrease") {
+                    calendar.onlyPending.toggle()
+                }.buttonStyle(.plain).padding(10)
+                    .background(FRIColors.sidebar, in: RoundedRectangle(cornerRadius: 12))
+                    .accessibilityIdentifier("fri.filter")
+            }
+            if wide && !effectiveType.isAccessibilitySize {
+                HStack(alignment: .top, spacing: 20) {
+                    appointments
+                    upNext.frame(width: 200)
+                }
+            } else {
+                appointments
+                upNext
+            }
+        }
+    }
+
+    @ViewBuilder private var appointments: some View {
+        if visible.isEmpty {
+            VStack(spacing: 16) {
+                Image(systemName: "leaf").font(.largeTitle)
+                Text(dayTasks.isEmpty ? "This day is yours." : "A little breathing room.").font(.title2.weight(.semibold))
+                if dayTasks.isEmpty {
+                    Text("Start with one thing you would love to make time for.")
+                        .foregroundStyle(FRIColors.muted).multilineTextAlignment(.center)
+                    Button("Add an appointment") { calendar.newDraft(deadline: false) }
+                        .buttonStyle(.borderedProminent).tint(FRIColors.marsala)
+                } else {
+                    Text("No appointments match this view.").foregroundStyle(FRIColors.muted)
+                    Button("Show all plans") { calendar.onlyPending = false; calendar.collection = nil }
+                        .buttonStyle(.borderedProminent).tint(FRIColors.marsala)
+                }
+            }
+            .padding(30).frame(maxWidth: .infinity, minHeight: 245)
+            .modifier(FRISurface(glass: glass, radius: 28))
+        } else {
+            FRIMosaic(durations: visible.map(\.duration), largeText: effectiveType.isAccessibilitySize || calendar.state.settings["large"]?.bool == true,
+                      list: calendar.state.settings["layout"]?.string == "list") {
+                ForEach(Array(visible.enumerated()), id: \.element.id) { index, item in
+                    FRICardView(item: item, glass: glass, accented: index % 3 == 1, show: { calendar.appointment = item },
+                                complete: { calendar.setDoneWithoutOpening(item) })
                 }
             }
         }
     }
 
+    private var headingActions: some View {
+        VStack(spacing: 12) {
+            Button { calendar.newDraft(deadline: false) } label: {
+                Label("Add", systemImage: "plus").font(.title2)
+                    .frame(maxWidth: .infinity, minHeight: 68)
+            }.background(FRIColors.marsala, in: RoundedRectangle(cornerRadius: 24))
+            Button { calendar.panel = .manage } label: {
+                Label("Manage appointments", systemImage: "ellipsis").labelStyle(.iconOnly)
+                    .font(.title2).frame(maxWidth: .infinity, minHeight: 68)
+            }.background(FRIColors.sidebar, in: RoundedRectangle(cornerRadius: 24))
+        }.buttonStyle(.plain)
+    }
+
     private var dayHeading: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text(selected, format: .dateTime.month(.wide).day().year())
-                .font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
-            Text(selected, format: .dateTime.weekday(.wide))
-                .font(.system(.largeTitle, design: .rounded, weight: .bold))
-                .accessibilityAddTraits(.isHeader)
+        Button { calendar.view = .month; calendar.cursor = selected } label: {
+            VStack(alignment: .leading, spacing: 22) {
+                Text(selected, format: .dateTime.weekday(.wide))
+                    .font(.system(size: 42, weight: .medium)).minimumScaleFactor(0.75).lineLimit(1)
+                    .accessibilityAddTraits(.isHeader)
+                HStack {
+                    Text(selected, format: .dateTime.month(.wide).day().year())
+                        .font(.subheadline).foregroundStyle(FRIColors.muted)
+                    Spacer()
+                    Image(systemName: "calendar")
+                }
+            }.padding(24).frame(maxWidth: .infinity, minHeight: 174, alignment: .leading)
+                .modifier(FRISurface(glass: glass, radius: 26))
+        }.buttonStyle(.plain).accessibilityLabel("Open month calendar")
+    }
+
+    private var upNext: some View {
+        let nextID = WidgetSnapshot(state: calendar.state, day: selected, now: .now).tasks.first?.id
+        let next = dayTasks.first { $0.id == nextID }
+        return VStack(spacing: 14) {
+            if calendar.state.widgets.contains(.string("upnext")) {
+            VStack(alignment: .leading, spacing: 22) {
+                HStack { Text("UP NEXT").font(.caption2.weight(.semibold)).tracking(2); Spacer(); Image(systemName: "clock") }
+                if let next {
+                    Button { calendar.appointment = next } label: {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(next.time).font(.title.weight(.medium))
+                            Text(next.title).font(.title3.weight(.semibold)).fixedSize(horizontal: false, vertical: true)
+                            if !next.location.isEmpty { Label(next.location, systemImage: "mappin").font(.caption) }
+                        }.frame(maxWidth: .infinity, alignment: .leading)
+                    }.buttonStyle(.plain)
+                    Button(next.done ? "Completed" : "Done", systemImage: "checkmark.circle") { calendar.setDoneWithoutOpening(next) }
+                        .buttonStyle(.bordered).tint(FRIColors.marsala)
+                } else {
+                    Rectangle().fill(FRIColors.line).frame(height: 3)
+                    Text(dayTasks.isEmpty ? "A fresh page." : "Room to breathe.").font(.title2.weight(.medium))
+                    Text(dayTasks.isEmpty ? "Your next appointment will find a home here." : "You have finished every appointment. Enjoy this little moment.").font(.callout).foregroundStyle(FRIColors.muted)
+                }
+                HStack {
+                    Text("\(dayTasks.count - complete) remaining").font(.caption)
+                    Spacer(minLength: 0)
+                    Button(showUpcoming ? "Less" : "Coming up") { showUpcoming.toggle() }
+                        .font(.caption).buttonStyle(.plain).foregroundStyle(FRIColors.muted)
+                }
+                if showUpcoming {
+                    ForEach(dayTasks.filter { !$0.done && $0.id != nextID }) { item in
+                        Button { calendar.appointment = item } label: {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(item.title).font(.callout.weight(.medium))
+                                Text(item.time).font(.caption).foregroundStyle(FRIColors.muted)
+                            }.frame(maxWidth: .infinity, alignment: .leading)
+                        }.buttonStyle(.plain)
+                    }
+                }
+            }.padding(20).frame(maxWidth: .infinity, minHeight: 240, alignment: .topLeading)
+                .modifier(FRISurface(glass: glass, radius: 26))
+            }
+            FRIServiceCardsView(calendar: calendar)
+            Button("Add a widget", systemImage: "plus") { calendar.panel = .widget }
+                .buttonStyle(.plain).padding(14).frame(maxWidth: .infinity)
+                .background(FRIColors.sidebar, in: RoundedRectangle(cornerRadius: 14))
+            Button { calendar.panel = .dayAssistant } label: {
+                VStack(spacing: 8) {
+                    Image("DayBackdrop").resizable().scaledToFit().frame(maxWidth: 150, maxHeight: 150)
+                    Text("Meet Day").font(.caption)
+                }.frame(maxWidth: .infinity)
+            }.buttonStyle(.plain).accessibilityLabel("Talk to Day")
         }
     }
 
@@ -342,7 +523,7 @@ struct FRIWorkspaceView: View {
             Button("Previous day", systemImage: "chevron.left") { moveDay(-1) }.labelStyle(.iconOnly)
             Button("Today") { calendar.select(CalendarClock.day()) }
             Button("Next day", systemImage: "chevron.right") { moveDay(1) }.labelStyle(.iconOnly)
-        }.buttonStyle(.bordered)
+        }.buttonStyle(.plain).tint(FRIColors.cream)
     }
 
     @ViewBuilder private var ring: some View {
@@ -371,7 +552,8 @@ struct FRIWorkspaceView: View {
             if finished { Image(systemName: "checkmark").font(.body.weight(.semibold)) }
             else { Text("\(complete)/\(dayTasks.count)").font(.caption.monospacedDigit()) }
         }
-        .frame(width: 50, height: 50)
+        .frame(width: 86, height: 86).padding(7)
+        .background(FRIColors.sidebar, in: Circle())
     }
 
     private func moveDay(_ offset: Int) {
@@ -399,32 +581,35 @@ struct FRIFile: FileDocument {
 private struct FRICardView: View {
     let item: Appointment
     let glass: Bool
+    let accented: Bool
     let show: () -> Void
     let complete: () -> Void
 
+    private var fill: Color { item.done ? FRIColors.completed : (accented ? FRIColors.marsala : FRIColors.cream) }
+    private var ink: Color { accented && !item.done ? FRIColors.cream : FRIColors.ink }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(item.time).font(.title2.weight(.semibold).monospacedDigit())
-                Spacer()
-                Button(item.done ? "Mark as pending" : "Done", systemImage: item.done ? "checkmark.circle.fill" : "circle", action: complete)
-                    .labelStyle(.iconOnly).buttonStyle(.borderless)
-                    .accessibilityIdentifier("fri.done.\(item.id)")
-            }
+        VStack(alignment: .leading, spacing: 16) {
             Button(action: show) {
-                VStack(alignment: .leading, spacing: 7) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(item.isDeadline ? "Deadline" : item.category).font(.caption)
+                        Spacer(minLength: 4)
+                        if !item.isDeadline { Text("\(item.duration) min").font(.caption) }
+                    }.opacity(0.8)
+                    Text(item.time).font(.system(size: 31, weight: .medium).monospacedDigit())
                     Text(item.title).font(.headline).fixedSize(horizontal: false, vertical: true)
-                    Text(item.isDeadline ? "Deadline" : "\(item.duration) min · \(item.category)")
-                        .font(.caption).foregroundStyle(.secondary)
-                    if !item.location.isEmpty {
-                        Label(item.location, systemImage: "mappin").font(.caption).foregroundStyle(.secondary)
-                    }
+                    Text(item.location.isEmpty ? "A place of your choosing" : item.location)
+                        .font(.caption).opacity(0.8).fixedSize(horizontal: false, vertical: true)
                 }.frame(maxWidth: .infinity, alignment: .leading).contentShape(.rect)
             }.buttonStyle(.plain)
             Spacer(minLength: 0)
+            Button(item.done ? "Mark as pending" : "Done", systemImage: item.done ? "checkmark.circle.fill" : "circle", action: complete)
+                .labelStyle(.iconOnly).buttonStyle(.plain).font(.title2)
+                .frame(minWidth: 44, minHeight: 44)
+                .accessibilityIdentifier("fri.done.\(item.id)")
         }
-        .padding(16).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .modifier(FRISurface(glass: glass))
-        .opacity(item.done ? 0.72 : 1)
+        .padding(18).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .modifier(FRISurface(glass: glass, radius: 24, fill: fill, text: ink))
     }
 }

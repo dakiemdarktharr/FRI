@@ -54,7 +54,16 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(FRI_BUNDLE_PREFIX).mac
+        CODE_SIGN_ENTITLEMENTS: $(FRI_MAC_ENTITLEMENTS)
+        FRI_STORAGE_MODE: $(FRI_MAC_STORAGE_MODE)
+  FRIMacWidgetKit:
+    templates: [App]
+    platform: macOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(FRI_BUNDLE_PREFIX).mac
         CODE_SIGN_ENTITLEMENTS: Config/Mac.entitlements
+        FRI_STORAGE_MODE: shared
     dependencies:
       - target: FRIMacWidgets
         embed: true
@@ -111,6 +120,10 @@ schemes:
         FRIMac: all
     test:
       targets: [FRIMacUITests]
+  FRIMacWidgetKit:
+    build:
+      targets:
+        FRIMacWidgetKit: all
   FRIiOS:
     build:
       targets:

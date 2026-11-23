@@ -2,7 +2,7 @@ import Foundation
 
 public enum CalendarError: LocalizedError, Sendable {
     case invalidBackup, invalidDate, invalidAppointment, invalidRange
-    case missingAppointment, unavailableStore, damagedStore
+    case missingAppointment, unavailableStore, damagedStore, changedSinceUndo
     case overlap(String)
 
     public var errorDescription: String? {
@@ -14,6 +14,7 @@ public enum CalendarError: LocalizedError, Sendable {
         case .missingAppointment: "This appointment was deleted."
         case .unavailableStore: "FRI could not open secure calendar storage."
         case .damagedStore: "FRI could not read this calendar. Your data was kept."
+        case .changedSinceUndo: "The calendar changed. Undo would replace newer edits."
         case .overlap(let title): "This time overlaps “\(title)”. Choose a different time."
         }
     }
@@ -132,7 +133,7 @@ public struct CalendarState: Codable, Equatable, Sendable {
     public var tabs: [String] = []
     public var active = CalendarClock.day()
     public var settings: [String: JSONValue] = [:]
-    public var widgets: [JSONValue] = []
+    public var widgets: [JSONValue] = [.string("upnext")]
     public var collections: [JSONValue] = []
     public var finished: [JSONValue] = []
 
@@ -149,7 +150,7 @@ public struct CalendarState: Codable, Equatable, Sendable {
         tabs = try values.decodeIfPresent([String].self, forKey: .tabs) ?? []
         active = try values.decodeIfPresent(String.self, forKey: .active) ?? CalendarClock.day()
         settings = try values.decodeIfPresent([String: JSONValue].self, forKey: .settings) ?? [:]
-        widgets = try values.decodeIfPresent([JSONValue].self, forKey: .widgets) ?? []
+        widgets = try values.decodeIfPresent([JSONValue].self, forKey: .widgets) ?? [.string("upnext")]
         collections = try values.decodeIfPresent([JSONValue].self, forKey: .collections) ?? []
         finished = try values.decodeIfPresent([JSONValue].self, forKey: .finished) ?? []
     }

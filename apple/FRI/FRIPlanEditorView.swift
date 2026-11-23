@@ -29,9 +29,10 @@ struct FRIPlanEditorView: View {
     @State private var askOverlap = false
     @State private var error: String?
     @State private var missingTime = ""
+    @State private var missingDate = Date.now
     @State private var missingDuration = 0
 
-    private var missing: Appointment? { queue.first { $0.time.isEmpty || (!$0.isDeadline && $0.duration == 0) } }
+    private var missing: Appointment? { queue.first { CalendarClock.date($0.date) == nil || $0.time.isEmpty || (!$0.isDeadline && $0.duration == 0) } }
 
     var body: some View {
         FRISheetView(title: title) {
@@ -45,10 +46,16 @@ struct FRIPlanEditorView: View {
                         Section("Saved drafts") {
                             ForEach(calendar.state.drafts) { item in
                                 HStack {
-                                    Text(item.title)
+                                    Button(item.title) {
+                                        if !draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                                           draft.id != item.id, !stashDraft() { return }
+                                        draft = item
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityIdentifier("fri.draft.\(item.id)")
                                     Spacer()
                                     Button("Remove draft", systemImage: "trash", role: .destructive) {
-                                        _ = calendar.change { $0.drafts.removeAll { $0.id == item.id } }
+                                        if calendar.change({ $0.drafts.removeAll { $0.id == item.id } }), draft.id == item.id { resetDraft() }
                                     }.labelStyle(.iconOnly).buttonStyle(.borderless)
                                 }
                             }
@@ -70,14 +77,13 @@ struct FRIPlanEditorView: View {
         }
         .onAppear { if let editing { draft = editing } else { resetDraft() } }
         .onDisappear {
-            if editing == nil, !saved, !draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-               (try? draft.validate(draft: true)) != nil,
-               !calendar.state.drafts.contains(where: { $0.id == draft.id }) {
+            if editing == nil, !saved, !reviewing, !draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+               (try? draft.validate(draft: true)) != nil {
                 _ = calendar.addDrafts([draft])
             }
         }
         .alert("These plans overlap", isPresented: $askOverlap) {
-            Button("Change times", role: .cancel) { reviewing = false }
+            Button("Change times", role: .cancel) { reviewing = true }
             Button("Keep both") { finish(allowOverlap: true) }
         } message: {
             Text(error ?? "Confirm that you want to keep the overlapping appointments.")
@@ -140,14 +146,18 @@ struct FRIPlanEditorView: View {
 
     private func resetQuestion() {
         missingTime = ""
+        missingDate = CalendarClock.date(calendar.state.active) ?? .now
         missingDuration = 0
         error = nil
     }
 
     private func clarification(_ item: Appointment) -> some View {
-        Section(item.time.isEmpty ? (item.isDeadline ? "When is it due?" : "When shall we begin?") : "How much time does it need?") {
+        Section(CalendarClock.date(item.date) == nil ? "Which day is it for?" : (item.time.isEmpty ? (item.isDeadline ? "When is it due?" : "When shall we begin?") : "How much time does it need?")) {
             Text(item.title)
-            if item.time.isEmpty {
+            if CalendarClock.date(item.date) == nil {
+                DatePicker("Date", selection: $missingDate, displayedComponents: .date)
+                    .accessibilityIdentifier("fri.editor.missingDate")
+            } else if item.time.isEmpty {
                 TextField("Time (HH:mm)", text: $missingTime).accessibilityIdentifier("fri.editor.missingTime")
             } else {
                 TextField("Duration in minutes", value: $missingDuration, format: .number)
@@ -156,7 +166,9 @@ struct FRIPlanEditorView: View {
             Button("Continue") {
                 guard let index = queue.firstIndex(where: { $0.id == item.id }) else { return }
                 var updated = item
-                if item.time.isEmpty {
+                if CalendarClock.date(item.date) == nil {
+                    updated.date = CalendarClock.day(missingDate)
+                } else if item.time.isEmpty {
                     guard CalendarClock.minutes(missingTime) != nil else { error = "Enter a time from 00:00 to 23:59."; return }
                     updated.time = missingTime
                 } else {
@@ -171,7 +183,7 @@ struct FRIPlanEditorView: View {
                 if missing == nil { finish() }
             }
             .accessibilityIdentifier("fri.editor.continue")
-            Button("Back to plans") { reviewing = false }
+            Button("Back to plans") { returnToPlans() }
         }
     }
 
@@ -183,12 +195,17 @@ struct FRIPlanEditorView: View {
                     Text("\(item.date) · \(item.time)").font(.caption).foregroundStyle(.secondary)
                     TextField("Adjust time (HH:mm)", text: Binding(get: { item.time }, set: { value in
                         if let index = queue.firstIndex(where: { $0.id == item.id }) { queue[index].time = value }
-                    }))
+                    })).accessibilityIdentifier("fri.editor.adjustTime.\(item.id)")
                 }
             }
-            Button("Save plans") { finish() }
-            Button("Back to plans") { reviewing = false }
+            Button("Save plans") { finish() }.accessibilityIdentifier("fri.editor.saveReviewed")
+            Button("Back to plans") { returnToPlans() }
         }
+    }
+
+    private func returnToPlans() {
+        draft = queue.first { $0.id == draft.id } ?? queue.first ?? draft
+        reviewing = false
     }
 
     private func finish(allowOverlap: Bool = false) {
@@ -224,6 +241,10 @@ struct FRIPlanFields: View {
             DatePicker("Date", selection: Binding(get: { CalendarClock.date(draft.date) ?? .now }, set: {
                 draft.date = CalendarClock.day($0)
             }), displayedComponents: .date)
+            if CalendarClock.date(draft.date) == nil {
+                Text("No date was found in the source. Choose a date above or use today.").font(.caption).foregroundStyle(.secondary)
+                Button("Use today") { draft.date = CalendarClock.day() }
+            }
             TextField("Time (HH:mm)", text: $draft.time).accessibilityIdentifier("fri.editor.time")
             if !draft.isDeadline {
                 TextField("Duration in minutes", value: $draft.duration, format: .number)
@@ -257,7 +278,9 @@ struct FRIPlanDetailView: View {
                     Button(current.done ? "Mark as pending" : "Done", systemImage: "checkmark.circle") { calendar.setDone(current) }
                         .accessibilityIdentifier("fri.detail.done")
                     Button("Edit", systemImage: "pencil") { editing = current }
+                        .accessibilityIdentifier("fri.detail.edit")
                     Button("Delete", systemImage: "trash", role: .destructive) { calendar.remove([current.id]) }
+                        .accessibilityIdentifier("fri.detail.delete")
                 }.formStyle(.grouped)
             }
         }

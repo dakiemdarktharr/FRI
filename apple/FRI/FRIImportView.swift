@@ -47,6 +47,7 @@ struct FRIImportView: View {
                     }
                     Section("Apple Calendar") {
                         Button("Connect Calendar and review next 7 days") { connectCalendar() }
+                            .accessibilityIdentifier("fri.import.connectCalendar")
                         Text("You choose which events to copy. Changes in FRI are saved locally.")
                             .friFont(.caption).foregroundStyle(.secondary)
                     }
@@ -60,6 +61,7 @@ struct FRIImportView: View {
                         Button("Add to drafts") { accept() }.buttonStyle(.borderedProminent).tint(FRIColors.marsala).foregroundStyle(FRIColors.cream)
                             .accessibilityIdentifier("fri.import.accept")
                         Button("Skip") { next() }
+                            .accessibilityIdentifier("fri.import.skip")
                     }
                 }
             }

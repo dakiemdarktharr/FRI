@@ -6,6 +6,155 @@ import UIKit
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
     #if os(iOS)
+    func testAppleCalendarImportWithRealEventKitStore() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["FRI_EVENTKIT_TESTS"] == "1",
+                          "Requires the Simulator-only CalendarFixture helper installed on a dedicated QA Simulator")
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let runID = UUID().uuidString
+        let denied = ProcessInfo.processInfo.environment["FRI_EVENTKIT_DENY"] == "1"
+        let fixture = XCUIApplication(bundleIdentifier: "com.fri.qa.calendarfixture")
+        fixture.launchEnvironment["FRI_CALENDAR_FIXTURE_ID"] = runID
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        func answerCalendar(allowAccess: Bool = true) {
+            let alert = springboard.alerts.firstMatch
+            if alert.waitForExistence(timeout: 20) {
+                let choices = allowAccess ? [
+                    "Allow Full Access", "Allow", "Cho phép truy cập đầy đủ", "Cho phép"
+                ] : ["Don't Allow", "Don’t Allow", "Không cho phép", "Từ chối"]
+                let identified = alert.buttons.matching(identifier: allowAccess ? "kTCCServiceCalendar-allow-button" : "kTCCServiceCalendar-deny-button").firstMatch
+                let answer = identified.exists ? identified : alert.buttons.matching(NSPredicate(format: "label IN %@", choices)).firstMatch
+                XCTAssertTrue(answer.exists, alert.debugDescription)
+                answer.tap()
+            } else { XCTAssertTrue(allowAccess, "The denial variant requires a fresh app identity and an actual system prompt") }
+        }
+        let identity = XCTAttachment(string: runID)
+        identity.name = "EventKit-fixture-ID"; identity.lifetime = .keepAlways; add(identity)
+        if !denied {
+            fixture.launch()
+            XCTAssertTrue(fixture.buttons["Prepare calendar"].waitForExistence(timeout: 8))
+            addTeardownBlock { @MainActor in
+                fixture.launch()
+                let remove = fixture.buttons["Remove calendar"]
+                XCTAssertTrue(remove.waitForExistence(timeout: 8))
+                remove.tap()
+                let removed = fixture.staticTexts["Removed QA calendar"]
+                XCTAssertTrue(removed.waitForExistence(timeout: 10), fixture.debugDescription)
+                fixture.terminate()
+            }
+            fixture.buttons["Prepare calendar"].tap(); answerCalendar()
+            XCTAssertTrue(fixture.staticTexts["Prepared four events"].waitForExistence(timeout: 10), fixture.debugDescription)
+            fixture.terminate()
+        }
+
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = runID
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.actions"].waitForExistence(timeout: 15))
+        app.buttons["fri.actions"].tap(); app.buttons["Import plans"].tap()
+        let connect = app.buttons["fri.import.connectCalendar"]
+        reveal(connect, in: app, form: "fri.import.form"); connect.tap(); answerCalendar(allowAccess: !denied)
+        if denied {
+            let message = app.staticTexts["Calendar access was declined. File import is still available."]
+            XCTAssertTrue(message.waitForExistence(timeout: 10))
+            XCTAssertTrue(message.isHittable && app.frame.contains(message.frame))
+            XCTAssertFalse(app.buttons["fri.import.accept"].exists)
+            let rejected = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            rejected.name = "EventKit-permission-denied"; rejected.lifetime = .keepAlways; add(rejected)
+            app.buttons["fri.import.feedback.dismiss"].tap()
+            let source = app.textFields["fri.import.text"]
+            reveal(source, in: app, form: "fri.import.form", upward: false)
+            source.tap(); source.typeText("QA Calendar denied fallback 2031-06-15 15:30")
+            reveal(app.buttons["fri.import.reviewText"], in: app, form: "fri.import.form")
+            app.buttons["fri.import.reviewText"].tap()
+            XCTAssertTrue(app.textFields["fri.editor.title"].waitForExistence(timeout: 5))
+            reveal(app.buttons["fri.import.accept"], in: app, form: "fri.import.form")
+            app.buttons["fri.import.accept"].tap()
+            let duration = app.textFields["fri.editor.missingDuration"]
+            XCTAssertTrue(duration.waitForExistence(timeout: 8))
+            duration.tap(); duration.typeText("30\n")
+            reveal(app.buttons["fri.editor.continue"], in: app, form: "fri.editor.form")
+            app.buttons["fri.editor.continue"].tap()
+            XCTAssertTrue(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'fri.card.' AND label CONTAINS 'QA Calendar denied fallback'")).firstMatch.waitForExistence(timeout: 8))
+            XCTAssertEqual(app.staticTexts["fri.day.progress"].label, "0 of 1 appointments done")
+            return
+        }
+        let title = app.textFields["fri.editor.title"]
+        let timed = "FRI QA timed \(runID)"
+        let allDay = "FRI QA all day \(runID)"
+        let skipped = "FRI QA skip \(runID)"
+        var seen = Set<String>()
+        for _ in 0..<3 {
+            XCTAssertTrue(title.waitForExistence(timeout: 10), app.debugDescription)
+            let name = try XCTUnwrap(title.value as? String)
+            XCTAssertTrue([timed, allDay, skipped].contains(name), "Only the three events within seven days should be offered")
+            XCTAssertTrue(seen.insert(name).inserted)
+            if name == timed {
+                reveal(app.textFields["fri.editor.time"], in: app, form: "fri.import.form")
+                XCTAssertEqual(app.textFields["fri.editor.time"].value as? String, "09:00")
+                reveal(app.textFields["fri.editor.duration"], in: app, form: "fri.import.form")
+                XCTAssertEqual(app.textFields["fri.editor.duration"].value as? String, "45")
+            }
+            let action = app.buttons[name == skipped ? "fri.import.skip" : "fri.import.accept"]
+            reveal(action, in: app, form: "fri.import.form"); action.tap()
+            if seen.count < 3 { reveal(title, in: app, form: "fri.import.form", upward: false) }
+        }
+        XCTAssertEqual(seen, Set([timed, allDay, skipped]))
+        let time = app.textFields["fri.editor.missingTime"]
+        XCTAssertTrue(time.waitForExistence(timeout: 10), "An all-day event must ask for a time rather than invent midnight")
+        time.tap(); time.typeText("16:00\n")
+        reveal(app.buttons["fri.editor.continue"], in: app, form: "fri.editor.form")
+        app.buttons["fri.editor.continue"].tap()
+        let duration = app.textFields["fri.editor.missingDuration"]
+        XCTAssertTrue(duration.waitForExistence(timeout: 5))
+        duration.tap(); duration.typeText("30\n")
+        reveal(app.buttons["fri.editor.continue"], in: app, form: "fri.editor.form")
+        app.buttons["fri.editor.continue"].tap()
+        let timedCard = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'fri.card.' AND label CONTAINS %@", timed)).firstMatch
+        XCTAssertTrue(timedCard.waitForExistence(timeout: 10))
+        XCTAssertEqual(app.staticTexts["fri.day.progress"].label, "0 of 2 appointments done")
+        XCTAssertTrue(timedCard.label.contains("QA Room"))
+        let dayFormat = DateFormatter()
+        dayFormat.calendar = Calendar(identifier: .gregorian)
+        dayFormat.locale = Locale(identifier: "en_US_POSIX")
+        dayFormat.dateFormat = "yyyy-MM-dd"
+        let tomorrow = try XCTUnwrap(dayFormat.calendar.date(byAdding: .day, value: 1, to: .now))
+        XCTAssertTrue(app.buttons["fri.tab." + dayFormat.string(from: tomorrow)].isSelected)
+        let allDayCard = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'fri.card.' AND label CONTAINS %@", allDay)).firstMatch
+        reveal(allDayCard, in: app, form: "fri.calendar.content")
+        XCTAssertTrue(allDayCard.label.contains("16:00") && allDayCard.label.contains("30 min"))
+        let imported = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        imported.name = "EventKit-selected-events-saved"; imported.lifetime = .keepAlways; add(imported)
+        app.terminate(); app.launch()
+        XCTAssertTrue(timedCard.waitForExistence(timeout: 15))
+        XCTAssertEqual(app.staticTexts["fri.day.progress"].label, "0 of 2 appointments done")
+        app.buttons["fri.actions"].tap(); app.buttons["Import plans"].tap()
+        reveal(connect, in: app, form: "fri.import.form"); connect.tap()
+        var seenAgain = Set<String>()
+        for _ in 0..<3 {
+            reveal(title, in: app, form: "fri.import.form", upward: false)
+            XCTAssertTrue(title.waitForExistence(timeout: 10))
+            let name = try XCTUnwrap(title.value as? String)
+            XCTAssertTrue([timed, allDay, skipped].contains(name))
+            XCTAssertTrue(seenAgain.insert(name).inserted)
+            let action = app.buttons[name == skipped ? "fri.import.skip" : "fri.import.accept"]
+            reveal(action, in: app, form: "fri.import.form"); action.tap()
+        }
+        XCTAssertEqual(seenAgain, Set([timed, allDay, skipped]))
+        XCTAssertTrue(app.staticTexts["This source is already in your calendar or saved drafts."].waitForExistence(timeout: 5))
+        app.buttons["Close"].firstMatch.tap()
+        XCTAssertEqual(app.staticTexts["fri.day.progress"].label, "0 of 2 appointments done")
+        reveal(timedCard, in: app, form: "fri.calendar.content"); timedCard.tap()
+        app.buttons["fri.detail.done"].tap()
+        XCTAssertEqual(app.buttons["fri.detail.done"].label, "Mark as pending")
+        fixture.launch()
+        fixture.buttons["Verify source unchanged"].tap()
+        XCTAssertTrue(fixture.staticTexts["Source unchanged"].waitForExistence(timeout: 10), fixture.debugDescription)
+        let unchanged = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        unchanged.name = "EventKit-source-unchanged"; unchanged.lifetime = .keepAlways; add(unchanged)
+    }
+
     func testSidebarGradientMotionAndPause() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

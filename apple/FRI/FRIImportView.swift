@@ -34,24 +34,24 @@ struct FRIImportView: View {
                     Section("Calendar files and images") {
                         Button("Choose ICS, CSV, text, PDF or image…") { pickFile = true }
                         Text("CSV uses a title column with optional date, time, duration, kind, location and notes. FRI reads images locally.")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .friFont(.caption).foregroundStyle(.secondary)
                     }
                     Section("Calendar link") {
                         TextField("Public HTTPS calendar link", text: $link)
                         Button("Read link") { fetchLink() }.disabled(link.isEmpty)
                         Text("The calendar website receives your IP address. FRI reads direct public ICS or structured event links and blocks private networks and redirects.")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .friFont(.caption).foregroundStyle(.secondary)
                     }
                     Section("Apple Calendar") {
                         Button("Connect Calendar and review next 7 days") { connectCalendar() }
                         Text("You choose which events to copy. Changes in FRI are saved locally.")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .friFont(.caption).foregroundStyle(.secondary)
                     }
                 } else {
                     if let binding = items.indices.first {
                         Section {
                             Text(items[binding].notes.isEmpty ? "Confirm the date and time before saving." : items[binding].notes)
-                                .font(.caption).foregroundStyle(.secondary)
+                                .friFont(.caption).foregroundStyle(.secondary)
                         } header: { Text("Source evidence") }
                         FRIPlanFields(draft: $items[binding])
                         Button("Add to drafts") { accept() }.buttonStyle(.borderedProminent).tint(FRIColors.marsala).foregroundStyle(FRIColors.cream)
@@ -61,7 +61,7 @@ struct FRIImportView: View {
                 }
                 if busy { ProgressView() }
                 ForEach(Array(notices.enumerated()), id: \.offset) { _, note in
-                    Text(note).font(.caption).foregroundStyle(.secondary)
+                    Text(note).friFont(.caption).foregroundStyle(.secondary)
                 }
             }
             .formStyle(.grouped)

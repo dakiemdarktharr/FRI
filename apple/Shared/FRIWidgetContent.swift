@@ -1,4 +1,5 @@
 import FRICore
+import FRIDesign
 import SwiftUI
 import WidgetKit
 
@@ -20,18 +21,18 @@ struct FRIWidgetContent<Completion: View>: View {
                     VStack(alignment: .leading, spacing: 14) {
                         summary(wide: geometry.size.width >= 280 && !typeSize.isAccessibilitySize)
                         if let service = snapshot.service, !snapshot.locked {
-                            Text(service).font(.caption).foregroundStyle(secondaryColor)
+                            Text(service).friFont(.caption).foregroundStyle(secondaryColor)
                                 .lineLimit(2).privacySensitive()
                         }
                         if snapshot.tasks.count > 1 {
                             Divider()
-                            Text("Later today").font(.caption.weight(.semibold)).foregroundStyle(secondaryColor)
+                            Text("Also today").friFont(.caption, weight: .semibold).foregroundStyle(secondaryColor)
                             ForEach(snapshot.tasks.dropFirst()) { task in
                                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                                     Text(task.time).monospacedDigit().foregroundStyle(secondaryColor)
                                     Text(task.title).frame(maxWidth: .infinity, alignment: .leading)
                                 }
-                                .font(.caption).lineLimit(2).privacySensitive()
+                                .friFont(.caption).lineLimit(2).privacySensitive()
                             }
                         }
                     }
@@ -83,17 +84,17 @@ struct FRIWidgetContent<Completion: View>: View {
             VStack(alignment: .leading, spacing: 4) {
                 if snapshot.locked {
                     Label("Calendar unavailable", systemImage: "lock")
-                        .font(.headline).lineLimit(2).minimumScaleFactor(0.85)
+                        .friFont(.headline).lineLimit(2).minimumScaleFactor(0.85)
                     Text("Open FRI to access your calendar.")
-                        .font(.caption).foregroundStyle(secondaryColor).lineLimit(3)
+                        .friFont(.caption).foregroundStyle(secondaryColor).lineLimit(3)
                 } else if let next = snapshot.tasks.first {
                     Text(next.title)
-                        .font(.headline).lineLimit(compact ? 2 : 3).minimumScaleFactor(0.85)
+                        .friFont(.headline).lineLimit(compact ? 2 : 3).minimumScaleFactor(0.85)
                         .privacySensitive().accessibilityIdentifier("fri.widget.title")
-                    Text(next.time).font(.caption).monospacedDigit().privacySensitive()
+                    Text(next.time).friFont(.caption).monospacedDigit().privacySensitive()
                 } else {
                     Text(snapshot.total == 0 ? "A fresh day." : "Your day is clear.")
-                        .font(.headline).lineLimit(2).minimumScaleFactor(0.85)
+                        .friFont(.headline).lineLimit(2).minimumScaleFactor(0.85)
                         .accessibilityIdentifier("fri.widget.empty")
                 }
             }
@@ -110,10 +111,10 @@ struct FRIWidgetContent<Completion: View>: View {
     private func date(compact: Bool) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(snapshot.day, format: .dateTime.weekday(compact ? .abbreviated : .wide))
-                .font(.subheadline.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.85)
+                .friFont(.subheadline, weight: .semibold).lineLimit(1).minimumScaleFactor(0.85)
                 .widgetAccentable()
             Text(snapshot.day, format: .dateTime.month(.abbreviated).day())
-                .font(.caption).foregroundStyle(secondaryColor).lineLimit(1)
+                .friFont(.caption).foregroundStyle(secondaryColor).lineLimit(1)
         }
     }
 
@@ -123,7 +124,7 @@ struct FRIWidgetContent<Completion: View>: View {
             VStack(alignment: .leading, spacing: 4) {
                 ProgressView(value: Double(snapshot.completed), total: Double(snapshot.total))
                 Text("\(snapshot.completed) of \(snapshot.total) done")
-                    .font(.caption2).foregroundStyle(secondaryColor).lineLimit(1)
+                    .friFont(.caption2).foregroundStyle(secondaryColor).lineLimit(1)
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(snapshot.completed) of \(snapshot.total) appointments done")

@@ -1,4 +1,5 @@
 import FRICore
+import FRIDesign
 import MapKit
 import SwiftUI
 
@@ -26,15 +27,15 @@ struct FRIServicesView: View {
             Form {
                 Section("Weather") {
                     Text("Open-Meteo receives the city you enter and your IP address.")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .friFont(.caption).foregroundStyle(.secondary)
                     TextField("City", text: $city)
                     Button("Get forecast") { refreshWeather() }.disabled(loadingWeather || city.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     if loadingWeather { ProgressView("Getting forecast…") }
-                    Text("Weather data: Open-Meteo · CC BY 4.0").font(.caption).foregroundStyle(.secondary)
+                    Text("Weather data: Open-Meteo · CC BY 4.0").friFont(.caption).foregroundStyle(.secondary)
                     if case .object(let cached) = calendar.state.settings["appleWeatherCache"],
                        let summary = cached["summary"]?.string, case .number(let fetchedAt) = cached["fetchedAt"] {
                         Text(summary)
-                        Text(Date(timeIntervalSince1970: fetchedAt), style: .relative).font(.caption).foregroundStyle(.secondary)
+                        Text(Date(timeIntervalSince1970: fetchedAt), style: .relative).friFont(.caption).foregroundStyle(.secondary)
                         Button("Disconnect weather", role: .destructive) {
                             weatherTask?.cancel()
                             calendar.updateSetting("appleWeatherCache", nil)
@@ -44,7 +45,7 @@ struct FRIServicesView: View {
                 }
                 Section("Maps") {
                     Text("MapKit sends the place you enter to Apple Maps.")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .friFont(.caption).foregroundStyle(.secondary)
                     TextField("City or place", text: $mapQuery)
                     Button("Show on map") { refreshMap() }.disabled(loadingMap || mapQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     if loadingMap { ProgressView("Finding place…") }
@@ -65,7 +66,7 @@ struct FRIServicesView: View {
                 }
                 Section("Spotify") {
                     Text("Opening a public Spotify link shares the connection with Spotify.")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .friFont(.caption).foregroundStyle(.secondary)
                     TextField("Spotify link", text: $spotify)
                     if let url = ServiceLinks.spotify(spotify) {
                         Button("Save link") { calendar.updateSetting("spotifyUrl", .string(url.absoluteString)) }
@@ -79,7 +80,7 @@ struct FRIServicesView: View {
                     }
                 }
                 Section("Manual activity") {
-                    Text("Steps are entered by you; FRI does not read Health data.").font(.caption).foregroundStyle(.secondary)
+                    Text("Steps are entered by you; FRI does not read Health data.").friFont(.caption).foregroundStyle(.secondary)
                     TextField("Steps today", value: $steps, format: .number)
                     Button("Save steps") {
                         guard (0...100_000).contains(steps) else { message = "Enter 0–100,000 steps."; return }

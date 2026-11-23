@@ -171,7 +171,7 @@ private struct FRIDesktopWidgetView: View {
                 FRIPanelDragRegion()
                     .overlay(alignment: .leading) {
                         Label(calendar.synthetic ? "FRI · Preview" : "FRI", systemImage: "circle.grid.2x2.fill")
-                            .font(.caption.weight(.semibold)).padding(.leading, 12).allowsHitTesting(false)
+                            .friFont(.caption, weight: .semibold).padding(.leading, 12).allowsHitTesting(false)
                     }
                     .frame(maxWidth: .infinity, minHeight: 32)
                     .help("Drag here to move the widget")
@@ -205,7 +205,7 @@ private struct FRIDesktopWidgetView: View {
                                      family: geometry.size.height >= 290 ? .systemLarge : (geometry.size.width >= 280 ? .systemMedium : .systemSmall), tint: FRIColors.cream, secondaryColor: FRIColors.cream.opacity(0.85)) {
                         if let next = snapshot.tasks.first, let item = calendar.state.tasks.first(where: { $0.id == next.id }) {
                             Button { calendar.setDoneWithoutOpening(item) } label: {
-                                Image(systemName: "checkmark.circle.fill").font(.title2)
+                                Image(systemName: "checkmark.circle.fill").friFont(.title2)
                             }.buttonStyle(.plain).accessibilityLabel("Complete \(next.title)")
                         }
                     }
@@ -221,9 +221,10 @@ private struct FRIDesktopWidgetView: View {
         .overlay(RoundedRectangle(cornerRadius: 22).strokeBorder(FRIColors.line))
         .overlay(alignment: .bottomTrailing) {
             FRIPanelResizeRegion().frame(width: 24, height: 24)
-                .overlay { Image(systemName: "arrow.down.right").font(.caption2).foregroundStyle(FRIColors.muted).allowsHitTesting(false) }
+                .overlay { Image(systemName: "arrow.down.right").friFont(.caption2).foregroundStyle(FRIColors.muted).allowsHitTesting(false) }
                 .help("Drag to resize; content fits automatically")
         }
+        .environment(\.dynamicTypeSize, calendar.state.settings["large"]?.bool == true ? .xxxLarge : .large)
         .environment(\.colorScheme, .light)
         .accessibilityIdentifier("fri.desktopWidget")
     }

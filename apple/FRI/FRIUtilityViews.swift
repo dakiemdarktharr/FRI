@@ -16,7 +16,7 @@ struct FRICollectionsView: View {
                 TextField("Collection name", text: $name)
                     .accessibilityIdentifier("fri.collection.name")
                 Text("Use this name in an appointment’s Category field to include it in the collection.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .friFont(.caption).foregroundStyle(.secondary)
                 if let error { Text(error).foregroundStyle(.red) }
                 Button("Create collection") {
                     let value = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -50,7 +50,7 @@ struct FRISearchView: View {
                         Button { select(task) } label: {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(task.title)
-                                Text("\(task.date) · \(task.time)").font(.caption).foregroundStyle(.secondary)
+                                Text("\(task.date) · \(task.time)").friFont(.caption).foregroundStyle(.secondary)
                             }
                         }
                         .buttonStyle(.plain)
@@ -81,7 +81,7 @@ struct FRIManageView: View {
                         if selected { selections.insert(task.id) } else { selections.remove(task.id) }
                     })) {
                         Text(task.title)
-                        Text(task.time).font(.caption).foregroundStyle(.secondary)
+                        Text(task.time).friFont(.caption).foregroundStyle(.secondary)
                     }
                 }
                 Button("Delete selected (\(selections.count))", role: .destructive) { confirming = true }
@@ -172,7 +172,7 @@ struct FRIWidgetHelpView: View {
         FRISheetView(title: "Add FRI Widget") {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    Text("In your calendar").font(.title2.bold())
+                    Text("In your calendar").friFont(.title2, weight: .bold)
                     Text("Choose the cards beside your appointments.").foregroundStyle(.secondary)
                     ForEach([("upnext", "Up next"), ("weather", "Weather"), ("maps", "Maps"), ("spotify", "Spotify"), ("health", "Manual activity")], id: \.0) { key, label in
                         Toggle(label, isOn: Binding(get: { calendar.state.widgets.contains(.string(key)) }, set: { enabled in
@@ -184,16 +184,16 @@ struct FRIWidgetHelpView: View {
                     }
                     Divider()
                     #if os(macOS)
-                    Text("Desktop widgets").font(.title2.bold())
+                    Text("Desktop widgets").friFont(.title2, weight: .bold)
                     Text("Add a Swift desktop widget, drag its top bar to move it, and drag the bottom-right corner to resize. Your position and size are restored when FRI reopens.")
                     Button("Create desktop widget", systemImage: "plus") { calendar.addDesktopWidget() }
                         .buttonStyle(.borderedProminent).tint(FRIColors.marsala).foregroundStyle(FRIColors.cream)
                     Button("Show desktop widgets") { calendar.showDesktopWidgets() }
                     Text("Desktop widgets use this app’s calendar. FRI must be running. The system WidgetKit gallery uses a separately configured shared store.")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .friFont(.caption).foregroundStyle(.secondary)
                     Divider()
                     #endif
-                    Text("Auto fit").font(.title2.bold())
+                    Text("Auto fit").friFont(.title2, weight: .bold)
                     Text("Your widget adapts to its size. The next appointment and Done stay first; more details appear when there is room.")
                         .foregroundStyle(.secondary)
                     Picker("Widget size", selection: $size) {
@@ -212,7 +212,7 @@ struct FRIWidgetHelpView: View {
                                                      day: .now, now: .now),
                             family: family
                         ) {
-                            Image(systemName: "checkmark.circle.fill").font(.title2)
+                            Image(systemName: "checkmark.circle.fill").friFont(.title2)
                                 .accessibilityLabel("Complete appointment preview")
                         }
                         .environment(\.dynamicTypeSize, largeText ? .accessibility1 : .large)
@@ -226,17 +226,17 @@ struct FRIWidgetHelpView: View {
                     }
                     .frame(height: size == 2 ? 340 : 160)
                     Text("Size preview · add the actual widget from the system gallery. Preview controls do not change your appointments.")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .friFont(.caption).foregroundStyle(.secondary)
                     Divider()
                     #if os(macOS)
-                    Text("Add to your desktop").font(.headline)
+                    Text("Add to your desktop").friFont(.headline)
                     Text("Control-click the desktop → Edit Widgets → FRI → choose a size. Drag the widget from the gallery onto your desktop.")
-                    Text("Move or resize").font(.headline)
+                    Text("Move or resize").friFont(.headline)
                     Text("Drag a desktop widget to move it. Control-click it to choose Small, Medium or Large, edit its date, or remove it.")
                     #else
-                    Text("Add to your Home Screen").font(.headline)
+                    Text("Add to your Home Screen").friFont(.headline)
                     Text("Touch and hold the Home Screen → Edit → Add Widget → FRI. On iOS 17, tap + instead of Edit. Choose a size and tap Add Widget.")
-                    Text("Move or resize").font(.headline)
+                    Text("Move or resize").friFont(.headline)
                     Text("Touch and hold the widget, choose Edit Home Screen, then drag it to a new position. On iOS 18 or later, use the size choices in its menu. On iOS 17, remove it and add the size you want.")
                     #endif
                     Text("Tap the checkmark to finish an appointment. Tap elsewhere to open its day. Removing a widget keeps your appointments.")
@@ -256,7 +256,7 @@ struct FRIAppearanceView: View {
         FRISheetView(title: "Settings") {
             Form {
                 Text("A space that feels like you")
-                    .font(.title2.weight(.semibold))
+                    .friFont(.title2, weight: .semibold)
                     .fixedSize(horizontal: false, vertical: true)
                     .listRowBackground(Color.clear)
                 Section("Appearance") {
@@ -266,7 +266,7 @@ struct FRIAppearanceView: View {
                         if calendar.state.settings["appleSidebarImage"] != nil { Text("My image").tag("image") }
                     }
                     Text("Soft movement, a still color, or your own image.")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .friFont(.caption).foregroundStyle(.secondary)
                     Button("Choose sidebar photo…") { pickImage = true }
                     if calendar.state.settings["appleSidebarImage"] != nil {
                         Button("Remove sidebar photo", role: .destructive) {
@@ -291,20 +291,20 @@ struct FRIAppearanceView: View {
                         Task { await calendar.setReminders(value) }
                     })).tint(FRIColors.marsala)
                     Text("A private reminder arrives five minutes before each appointment. Notifications hide appointment details.")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .friFont(.caption).foregroundStyle(.secondary)
                 }
                 Section("Comfort") {
                     Toggle(isOn: toggle("glass", initial: true)) {
                         Text("Liquid glass")
-                        Text("Turn off for solid, quieter surfaces.").font(.caption).foregroundStyle(.secondary)
+                        Text("Turn off for solid, quieter surfaces.").friFont(.caption).foregroundStyle(.secondary)
                     }.tint(FRIColors.marsala).accessibilityLabel("Liquid glass")
                     Toggle(isOn: toggle("motion", initial: true)) {
                         Text("Gentle motion")
-                        Text("Includes the moving sidebar. Respects Reduce Motion.").font(.caption).foregroundStyle(.secondary)
+                        Text("Includes the moving sidebar. Respects Reduce Motion.").friFont(.caption).foregroundStyle(.secondary)
                     }.tint(FRIColors.marsala).accessibilityLabel("Gentle motion")
                     Toggle(isOn: toggle("large", initial: false)) {
                         Text("Larger text")
-                        Text("A little more room to read.").font(.caption).foregroundStyle(.secondary)
+                        Text("A little more room to read.").friFont(.caption).foregroundStyle(.secondary)
                     }.tint(FRIColors.marsala).accessibilityLabel("Larger text")
                         .accessibilityIdentifier("fri.settings.largeText")
                     Picker("Layout", selection: setting("layout", initial: "mosaic")) {

@@ -15,7 +15,7 @@ struct FRICalendarGridView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text(cursor, format: mode == .year ? .dateTime.year() : .dateTime.month(.wide).year())
-                    .font(.largeTitle.weight(.bold)).accessibilityAddTraits(.isHeader)
+                    .friFont(.largeTitle, weight: .bold).accessibilityAddTraits(.isHeader)
                 Spacer()
                 Button("Previous", systemImage: "chevron.left") { move(-1) }.labelStyle(.iconOnly)
                 Button("Next", systemImage: "chevron.right") { move(1) }.labelStyle(.iconOnly)
@@ -36,7 +36,7 @@ struct FRICalendarGridView: View {
         return LazyVGrid(columns: columns, spacing: 5) {
             ForEach(0..<7) { index in
                 Text(symbols[(clock.firstWeekday - 1 + index) % 7])
-                    .font(.caption.weight(.medium)).foregroundStyle(.secondary)
+                    .friFont(.caption, weight: .medium).foregroundStyle(.secondary)
                     .accessibilityHidden(true)
             }
             ForEach(0..<42) { index in
@@ -45,9 +45,9 @@ struct FRICalendarGridView: View {
                     let items = counts[key] ?? []
                     Button { select(key) } label: {
                         VStack(spacing: 1) {
-                            Text(date, format: .dateTime.day()).font(.body.monospacedDigit())
+                            Text(date, format: .dateTime.day()).friFont(.body).monospacedDigit()
                             if !items.isEmpty {
-                                Text(items.count, format: .number).font(.caption2).foregroundStyle(.secondary)
+                                Text(items.count, format: .number).friFont(.caption2).foregroundStyle(.secondary)
                             }
                         }
                         .frame(maxWidth: .infinity, minHeight: 44)
@@ -72,8 +72,8 @@ struct FRICalendarGridView: View {
                     let count = counts[CalendarClock.day(month).prefix(7)]?.count ?? 0
                     Button { showMonth(month) } label: {
                         VStack(alignment: .leading, spacing: 5) {
-                            Text(month, format: .dateTime.month(.wide)).font(.headline)
-                            if count > 0 { Text("\(count) plans").font(.caption).foregroundStyle(.secondary) }
+                            Text(month, format: .dateTime.month(.wide)).friFont(.headline)
+                            if count > 0 { Text("\(count) plans").friFont(.caption).foregroundStyle(.secondary) }
                         }
                         .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading).padding(10)
                         .foregroundStyle(FRIColors.ink)

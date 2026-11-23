@@ -23,7 +23,7 @@ struct FRIDayAssistantView: View {
             VStack(spacing: 16) {
                 HStack(spacing: 18) {
                     Image("DayBackdrop").resizable().scaledToFit().frame(width: 85, height: 85).accessibilityHidden(true)
-                    Text("Your day, with a little company.").font(.title3)
+                    Text("Your day, with a little company.").friFont(.title3)
                 }
                 ScrollViewReader { proxy in
                     ScrollView {
@@ -59,7 +59,7 @@ struct FRIDayAssistantView: View {
                 }
                 if let error { Text(error).foregroundStyle(.red) }
                 Text("Day uses local rules, just like the desktop preview. No AI service is connected. Use your keyboard’s Dictation to enter text by voice.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .friFont(.caption).foregroundStyle(.secondary)
             }.padding(20)
         }
         .onDisappear { speech.stopSpeaking(at: .immediate) }

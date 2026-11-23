@@ -47,6 +47,8 @@ targetTemplates:
     dependencies:
       - package: FRICore
         product: FRICore
+      - package: FRICore
+        product: FRIDesign
 targets:
   FRIMac:
     templates: [App]

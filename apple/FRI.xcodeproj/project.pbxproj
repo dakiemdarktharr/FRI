@@ -40,6 +40,7 @@
 		6292BBBBFF2B1936AD029586 /* FRIWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E6A093A9562979FC902AF2 /* FRIWorkflowTests.swift */; };
 		64BF26E983C44AB8EA51A791 /* FRIWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BAEC6BF9E2B8A9280E645C7 /* FRIWidgetContent.swift */; };
 		6E8584C03C13EEED7CD7651A /* FRIWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E6A093A9562979FC902AF2 /* FRIWorkflowTests.swift */; };
+		6E894551B51C1602295720F4 /* FRIDesign in Frameworks */ = {isa = PBXBuildFile; productRef = B12708056EC1863717844E29 /* FRIDesign */; };
 		7077E7F4327DC028361D68B2 /* import-image.png in Resources */ = {isa = PBXBuildFile; fileRef = E3E7D1075A3D7DD8890D646B /* import-image.png */; };
 		73577334302B193D5AE860F4 /* FRICompleteTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82CE1C7FFD8F3E9124F52232 /* FRICompleteTaskIntent.swift */; };
 		742A9BBFFB73A9E52A55CE13 /* FRIServicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FDC5569BA10EDCDB07AE7D9 /* FRIServicesView.swift */; };
@@ -84,6 +85,7 @@
 		F0910EF7FD01083CAEE88844 /* FRIWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BAEC6BF9E2B8A9280E645C7 /* FRIWidgetContent.swift */; };
 		F3E0AD97BBFEA64444B96C6B /* import-review.csv in Resources */ = {isa = PBXBuildFile; fileRef = 6A18C851F277E618DAA12F5E /* import-review.csv */; };
 		FAC4ABE3386D0C29AAFF8C04 /* FRICalendarGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C43C4A035AAA8EB1A0277E6 /* FRICalendarGridView.swift */; };
+		FF67EB489257D4F724554414 /* FRIDesign in Frameworks */ = {isa = PBXBuildFile; productRef = C9DCC91A6685A56200D885E8 /* FRIDesign */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -184,6 +186,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C3B9E0109310570258AF952D /* FRICore in Frameworks */,
+				FF67EB489257D4F724554414 /* FRIDesign in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -201,6 +204,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC6707E52AB598E9936A0774 /* FRICore in Frameworks */,
+				6E894551B51C1602295720F4 /* FRIDesign in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -346,6 +350,7 @@
 			name = FRIMacWidgets;
 			packageProductDependencies = (
 				E97ED3375431C052B4D7ECD3 /* FRICore */,
+				C9DCC91A6685A56200D885E8 /* FRIDesign */,
 			);
 			productName = FRIMacWidgets;
 			productReference = FA17A58D3F8DDE5F4F0C1DF7 /* FRIMacWidgets.appex */;
@@ -471,6 +476,7 @@
 			name = FRIiOSWidgets;
 			packageProductDependencies = (
 				9DF6143390D2C6E4D91189BE /* FRICore */,
+				B12708056EC1863717844E29 /* FRIDesign */,
 			);
 			productName = FRIiOSWidgets;
 			productReference = 17CCA72EA3562B08CE006A63 /* FRIiOSWidgets.appex */;
@@ -1203,6 +1209,10 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = FRICore;
 		};
+		B12708056EC1863717844E29 /* FRIDesign */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FRIDesign;
+		};
 		B5CE98D51D46E85AE0BF48ED /* FRIDesign */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FRIDesign;
@@ -1210,6 +1220,10 @@
 		C77DAF069FF4678C20AA1B09 /* FRICore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FRICore;
+		};
+		C9DCC91A6685A56200D885E8 /* FRIDesign */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FRIDesign;
 		};
 		DC236B9ABEEE73234E60EBC9 /* FRIDesign */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -10,6 +10,7 @@ struct FRISheetView<Content: View>: View {
     var body: some View {
         NavigationStack {
             content
+                .friFont(.body)
                 .scrollContentBackground(.hidden)
                 .background(FRIColors.sidebar)
                 .foregroundStyle(FRIColors.cream)
@@ -231,7 +232,7 @@ struct FRIPlanEditorView: View {
             ForEach(queue) { item in
                 VStack(alignment: .leading, spacing: 5) {
                     Text(item.title)
-                    Text("\(item.date) · \(item.time)").font(.caption).foregroundStyle(.secondary)
+                    Text("\(item.date) · \(item.time)").friFont(.caption).foregroundStyle(.secondary)
                     TextField("Adjust time (HH:mm)", text: Binding(get: { item.time }, set: { value in
                         if let index = queue.firstIndex(where: { $0.id == item.id }) { queue[index].time = value }
                     })).accessibilityIdentifier("fri.editor.adjustTime.\(item.id)")
@@ -281,7 +282,7 @@ struct FRIPlanFields: View {
                 draft.date = CalendarClock.day($0)
             }), displayedComponents: .date)
             if CalendarClock.date(draft.date) == nil {
-                Text("No date was found in the source. Choose a date above or use today.").font(.caption).foregroundStyle(.secondary)
+                Text("No date was found in the source. Choose a date above or use today.").friFont(.caption).foregroundStyle(.secondary)
                 Button("Use today") { draft.date = CalendarClock.day() }
             }
             TextField("Time (HH:mm)", text: $draft.time).accessibilityIdentifier("fri.editor.time")

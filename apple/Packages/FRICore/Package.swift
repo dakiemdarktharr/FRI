@@ -11,6 +11,7 @@ let package = Package(
     targets: [
         .target(name: "FRICore"),
         .target(name: "FRIDesign"),
-        .testTarget(name: "FRICoreTests", dependencies: ["FRICore"])
+        .testTarget(name: "FRICoreTests", dependencies: ["FRICore"]),
+        .testTarget(name: "FRIDesignTests", dependencies: ["FRIDesign"])
     ]
 )

@@ -10,10 +10,10 @@ struct FRIServiceCardsView: View {
         ForEach(services.filter { calendar.state.widgets.contains(.string($0)) }, id: \.self) { service in
             Button { calendar.panel = .services } label: {
                 VStack(alignment: .leading, spacing: 14) {
-                    Label(title(service), systemImage: symbol(service)).font(.caption.weight(.semibold))
-                    Text(summary(service)).font(.title3.weight(.medium)).fixedSize(horizontal: false, vertical: true)
-                    Text(detail(service)).font(.caption).foregroundStyle(FRIColors.muted)
-                    Text("Manage").font(.caption.weight(.semibold)).foregroundStyle(FRIColors.marsala)
+                    Label(title(service), systemImage: symbol(service)).friFont(.caption, weight: .semibold)
+                    Text(summary(service)).friFont(.title3, weight: .medium).fixedSize(horizontal: false, vertical: true)
+                    Text(detail(service)).friFont(.caption).foregroundStyle(FRIColors.muted)
+                    Text("Manage").friFont(.caption, weight: .semibold).foregroundStyle(FRIColors.marsala)
                 }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
                     .modifier(FRISurface(glass: calendar.state.settings["glass"]?.bool != false, radius: 24))
             }.buttonStyle(.plain).accessibilityIdentifier("fri.serviceCard.\(service)")

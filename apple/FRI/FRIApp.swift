@@ -9,6 +9,10 @@ struct FRIApp: App {
     @State private var calendar = FRICalendarSession()
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        UNUserNotificationCenter.current().delegate = FRIAppointmentsNotification.shared
+    }
+
     var body: some Scene {
         WindowGroup("FRI", id: "calendar") {
             FRIWorkspaceView(calendar: calendar)
@@ -444,7 +448,17 @@ final class FRICalendarSession {
     }
 }
 
-private enum FRIAppointmentsNotification {
+@MainActor
+private final class FRIAppointmentsNotification: NSObject, UNUserNotificationCenterDelegate {
+    static let shared = FRIAppointmentsNotification()
+
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                            willPresent notification: UNNotification,
+                                            withCompletionHandler completionHandler: @escaping @Sendable (UNNotificationPresentationOptions) -> Void) {
+        // Keep the same private heads-up while the user is working inside FRI.
+        completionHandler(notification.request.identifier.hasPrefix("fri.appointment.") ? [.banner, .list, .sound] : [])
+    }
+
     static func reconcile(_ plans: [ReminderPlan]) async -> String? {
         let center = UNUserNotificationCenter.current()
         let pending = await center.pendingNotificationRequests()

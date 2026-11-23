@@ -3,6 +3,84 @@ import XCTest
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
     #if os(iOS)
+    func testLocalReminderDeliveryAndDisable() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["FRI_NOTIFICATION_TESTS"] == "1",
+                          "Opt in on a dedicated Simulator: this test allows FRI notifications and waits for a real local delivery.")
+        continueAfterFailure = false
+        let foreground = ProcessInfo.processInfo.environment["FRI_NOTIFICATION_FOREGROUND"] == "1"
+        let app = XCUIApplication()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        XCUIDevice.shared.orientation = .portrait
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        func settings() {
+            app.buttons["fri.navigation.menu"].tap(); app.buttons["Settings"].tap()
+        }
+        settings()
+        let reminders = app.switches["Appointment reminders"]
+        reveal(reminders, in: app, form: "fri.settings.form")
+        reminders.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        let allow = springboard.alerts.buttons.matching(NSPredicate(format: "label IN %@", ["Allow", "Cho phép"])).firstMatch
+        if allow.waitForExistence(timeout: 5) { allow.tap() }
+        expectation(for: NSPredicate(format: "value == '1'"), evaluatedWith: reminders)
+        waitForExpectations(timeout: 10)
+        app.buttons["Close"].firstMatch.tap()
+        app.buttons["fri.new"].tap(); app.buttons["Schedule"].tap()
+        let title = app.textFields["fri.editor.title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 8))
+        title.tap(); title.typeText("Private reminder QA\n")
+        let start = Date.now.addingTimeInterval(Double(foreground ? 3 : 7) * 60)
+        let components = Calendar.current.dateComponents([.hour, .minute], from: start)
+        let time = String(format: "%02d:%02d", components.hour ?? 0, components.minute ?? 0)
+        let field = app.textFields["fri.editor.time"]
+        field.tap(); field.typeText(time + "\n")
+        let duration = app.textFields["fri.editor.duration"]
+        duration.tap(); duration.typeText("10\n")
+        let save = app.buttons["fri.editor.submit"]
+        reveal(save, in: app, form: "fri.editor.form"); save.tap()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 8))
+        if !foreground { XCUIDevice.shared.press(.home) }
+        let body = "You have an appointment soon. Open FRI to view it."
+        let notice = springboard.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", body)).firstMatch
+        XCTAssertTrue(notice.waitForExistence(timeout: foreground ? 20 : 140), "A real scheduled notification must appear in the tested app state")
+        XCTAssertFalse(notice.label.contains("Private reminder QA"))
+        if !foreground {
+            let top = springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.01))
+            let bottom = springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.8))
+            top.press(forDuration: 0.1, thenDragTo: bottom)
+            XCTAssertTrue(notice.waitForExistence(timeout: 8))
+        } else {
+            // Let the system banner finish its entrance before saving visual evidence.
+            Thread.sleep(forTimeInterval: 1)
+        }
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = foreground ? "System-foreground-reminder-delivered" : "System-local-reminder-delivered"
+        shot.lifetime = .keepAlways; add(shot)
+        app.activate()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 8))
+        settings()
+        reveal(reminders, in: app, form: "fri.settings.form")
+        reminders.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        expectation(for: NSPredicate(format: "value == '0'"), evaluatedWith: reminders)
+        waitForExpectations(timeout: 8)
+        app.buttons["Close"].firstMatch.tap()
+        XCUIDevice.shared.press(.home)
+        let top = springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.01))
+        let bottom = springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.8))
+        top.press(forDuration: 0.1, thenDragTo: bottom)
+        expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: notice)
+        waitForExpectations(timeout: 10)
+        let cleared = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        cleared.name = "System-reminder-cleared-after-disable"; cleared.lifetime = .keepAlways; add(cleared)
+        app.activate(); app.terminate(); app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        settings()
+        reveal(reminders, in: app, form: "fri.settings.form")
+        XCTAssertEqual(reminders.value as? String, "0")
+    }
+
     func testSidebarPhotoBackupAndReplacement() throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["FRI_PHOTO_PICKER_TESTS"] == "1",
                           "Prepare synthetic Files fixtures using apple/Tools/PrepareSidebarPhotoFixtures.py and enable FRI_PHOTO_PICKER_TESTS.")

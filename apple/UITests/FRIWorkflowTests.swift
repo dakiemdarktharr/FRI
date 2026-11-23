@@ -94,5 +94,38 @@ final class FRIWorkflowTests: XCTestCase {
         XCTAssertEqual(done.label, "Mark as pending")
         done.tap()
         XCTAssertEqual(done.label, "Done")
+        app.buttons["Close"].firstMatch.tap()
+        #if os(macOS)
+        app.menuButtons["fri.new"].click()
+        app.menuItems["Collection"].click()
+        #else
+        app.buttons["fri.new"].tap()
+        app.buttons["Collection"].tap()
+        #endif
+        let collectionName = app.textFields["fri.collection.name"]
+        XCTAssertTrue(collectionName.waitForExistence(timeout: 5))
+        collectionName.tap()
+        collectionName.typeText("Work review")
+        app.buttons["Create collection"].tap()
+        #if os(macOS)
+        app.menuButtons["fri.collections"].click()
+        app.menuItems["Work review"].click()
+        #else
+        app.buttons["fri.collections"].tap()
+        app.buttons["Work review"].firstMatch.tap()
+        #endif
+        XCTAssertTrue(app.staticTexts["No appointments match this view."].waitForExistence(timeout: 5))
+        app.buttons["Show all plans"].tap()
+        XCTAssertFalse(app.staticTexts["No appointments match this view."].exists)
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(canvas.waitForExistence(timeout: 15))
+        #if os(macOS)
+        app.menuButtons["fri.collections"].click()
+        XCTAssertTrue(app.menuItems["Work review"].waitForExistence(timeout: 5))
+        #else
+        app.buttons["fri.collections"].tap()
+        XCTAssertTrue(app.buttons["Work review"].firstMatch.waitForExistence(timeout: 5))
+        #endif
     }
 }

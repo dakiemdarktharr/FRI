@@ -1,4 +1,5 @@
 import FRICore
+import FRIDesign
 import SwiftUI
 
 struct FRISheetView<Content: View>: View {
@@ -9,9 +10,14 @@ struct FRISheetView<Content: View>: View {
     var body: some View {
         NavigationStack {
             content
+                .scrollContentBackground(.hidden)
+                .background(FRIColors.cream)
+                .foregroundStyle(FRIColors.ink)
                 .navigationTitle(title)
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
         }
+        .tint(FRIColors.marsala)
+        .preferredColorScheme(.light)
         #if os(macOS)
         .frame(minWidth: 510, minHeight: 430)
         #endif

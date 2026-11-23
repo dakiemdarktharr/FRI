@@ -96,6 +96,7 @@ final class FRICalendarSession {
     var draftDeadline = false
     var draftReviewIDs: Set<String>?
     var draftStartingID: String?
+    var dayHistory: [FRIDayMessage] = [.greeting]
     var onlyPending = false
     var collection: String?
     var restoreCandidate: CalendarState?

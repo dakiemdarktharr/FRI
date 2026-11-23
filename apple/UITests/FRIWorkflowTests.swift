@@ -3,6 +3,51 @@ import XCTest
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
     #if os(iOS)
+    func testDayConversationWithLargerTextAndKeyboard() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        XCUIDevice.shared.orientation = .portrait
+        defer { XCUIDevice.shared.orientation = .portrait }
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        app.buttons["fri.navigation.menu"].tap(); app.buttons["Settings"].tap()
+        let larger = app.switches["fri.settings.largeText"]
+        reveal(larger, in: app, form: "fri.settings.form")
+        larger.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        reveal(larger, in: app, form: "fri.settings.form")
+        XCTAssertEqual(larger.value as? String, "1")
+        app.buttons["Close"].firstMatch.tap()
+        let talk = app.buttons["Talk to Day"]
+        reveal(talk, in: app, form: "fri.calendar.content"); talk.tap()
+        let field = app.textFields["fri.day.message"]
+        reveal(field, in: app, form: "fri.day.content")
+        XCTAssertGreaterThanOrEqual(field.frame.height, 44)
+        field.tap(); field.typeText("Room to breathe\n")
+        let firstMessage = app.staticTexts["Room to breathe"]
+        reveal(firstMessage, in: app, form: "fri.day.content", upward: false)
+        XCTAssertTrue(firstMessage.exists)
+        let portrait = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        portrait.name = "Day-larger-text-portrait"; portrait.lifetime = .keepAlways; add(portrait)
+        XCUIDevice.shared.orientation = .landscapeLeft
+        reveal(field, in: app, form: "fri.day.content")
+        field.tap(); field.typeText("Another calm thought\n")
+        let secondMessage = app.staticTexts["Another calm thought"]
+        reveal(secondMessage, in: app, form: "fri.day.content", upward: false)
+        XCTAssertTrue(secondMessage.exists)
+        XCTAssertTrue(secondMessage.isHittable)
+        XCTAssertTrue(app.scrollViews["fri.day.content"].frame.intersection(app.frame).contains(secondMessage.frame))
+        let landscape = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        landscape.name = "Day-larger-text-landscape"; landscape.lifetime = .keepAlways; add(landscape)
+        app.buttons["Close"].firstMatch.tap()
+        reveal(talk, in: app, form: "fri.calendar.content"); talk.tap()
+        reveal(secondMessage, in: app, form: "fri.day.content")
+        XCTAssertTrue(secondMessage.waitForExistence(timeout: 8))
+        reveal(field, in: app, form: "fri.day.content")
+        XCTAssertFalse(app.buttons["fri.day.send"].isEnabled)
+    }
+
     func testDayDraftHandoffAndRotation() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -20,14 +65,30 @@ final class FRIWorkflowTests: XCTestCase {
         let talk = app.buttons["Talk to Day"]
         reveal(talk, in: app, form: "fri.calendar.content")
         talk.tap()
+        let greeting = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Hi, I’m Day.")).firstMatch
+        XCTAssertTrue(greeting.waitForExistence(timeout: 8))
+        let upcoming = app.buttons["What’s coming up?"]
+        reveal(upcoming, in: app, form: "fri.day.content")
+        XCTAssertGreaterThanOrEqual(upcoming.frame.height, 44)
+        upcoming.tap()
+        let reply = app.staticTexts["You have a little breathing room. There are no unfinished plans on this day."]
+        XCTAssertTrue(reply.waitForExistence(timeout: 5))
+        app.buttons["Close"].firstMatch.tap()
+        reveal(talk, in: app, form: "fri.calendar.content")
+        talk.tap()
+        XCTAssertTrue(reply.waitForExistence(timeout: 8), "Closing Day must retain the conversation for this app session")
+        let conversation = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        conversation.name = "Day-conversation-portrait"; conversation.lifetime = .keepAlways; add(conversation)
         XCTAssertTrue(app.buttons["Make time for a walk"].waitForExistence(timeout: 8))
+        reveal(app.buttons["Make time for a walk"], in: app, form: "fri.day.content")
         app.buttons["Make time for a walk"].tap()
+        reveal(app.buttons["fri.day.create"], in: app, form: "fri.day.content", upward: false)
         app.buttons["fri.day.create"].tap()
         XCTAssertTrue(title.waitForExistence(timeout: 8))
         XCTAssertEqual(title.value as? String, "A little walk", "Day must open the suggested draft, not a blank composition")
         XCUIDevice.shared.orientation = .landscapeLeft
         XCTAssertEqual(title.value as? String, "A little walk")
-        let shot = XCTAttachment(screenshot: app.screenshot())
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         shot.name = "Day-draft-landscape"; shot.lifetime = .keepAlways; add(shot)
         app.buttons["Close"].firstMatch.tap()
         app.buttons["fri.new"].tap(); app.buttons["Resume drafts"].tap()
@@ -49,7 +110,7 @@ final class FRIWorkflowTests: XCTestCase {
         XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 10))
         let walk = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "A little walk")).firstMatch
         XCTAssertTrue(walk.waitForExistence(timeout: 8))
-        let calendarShot = XCTAttachment(screenshot: app.screenshot())
+        let calendarShot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         calendarShot.name = "Day-plan-landscape"; calendarShot.lifetime = .keepAlways; add(calendarShot)
         app.buttons["fri.new"].tap(); app.buttons["Resume drafts"].tap()
         let unrelated = app.buttons["Keep separate from Day"]

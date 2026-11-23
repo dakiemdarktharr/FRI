@@ -7,6 +7,7 @@ public enum FRIColors {
     public static let marsala = Color(red: 149 / 255, green: 82 / 255, blue: 81 / 255)
     public static let sidebar = Color(red: 48 / 255, green: 41 / 255, blue: 41 / 255)
     public static let control = Color(red: 64 / 255, green: 54 / 255, blue: 53 / 255)
+    public static let dialogControl = Color(red: 83 / 255, green: 68 / 255, blue: 64 / 255)
     public static let muted = Color(red: 98 / 255, green: 84 / 255, blue: 78 / 255)
     public static let line = Color(red: 215 / 255, green: 205 / 255, blue: 198 / 255)
     public static let completed = Color(red: 233 / 255, green: 225 / 255, blue: 218 / 255)

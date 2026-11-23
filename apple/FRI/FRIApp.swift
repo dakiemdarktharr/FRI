@@ -7,6 +7,7 @@ import WidgetKit
 @main
 struct FRIApp: App {
     @State private var calendar = FRICalendarSession()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup("FRI", id: "calendar") {
@@ -14,6 +15,14 @@ struct FRIApp: App {
                 #if os(macOS)
                 .frame(minWidth: 540, minHeight: 520)
                 #endif
+        }
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            #if os(iOS)
+            calendar.setWeatherUpdatesEnabled(phase == .active)
+            #else
+            // AppKit panels remain useful when the main calendar is not frontmost.
+            if phase == .active { calendar.setWeatherUpdatesEnabled(true) }
+            #endif
         }
         #if os(macOS)
         .defaultSize(width: 1050, height: 740)
@@ -61,6 +70,9 @@ final class FRICalendarSession {
     private var pendingOpenURL: URL?
     private(set) var synthetic = false
     private var store: CalendarStore?
+    @ObservationIgnored private let automaticWeather = WeatherAutoRefresh()
+    @ObservationIgnored private var weatherTimer: Task<Void, Never>?
+    @ObservationIgnored private var weatherUpdatesEnabled = false
     #if os(macOS)
     @ObservationIgnored var revealCalendar: (() -> Void)?
     @ObservationIgnored private var desktopWidgets: FRIDesktopWidgetManager?
@@ -143,6 +155,7 @@ final class FRICalendarSession {
             reconcileReminders()
         }
         ready = true
+        refreshWeatherAutomatically()
         #if os(macOS)
         if desktopWidgets == nil { desktopWidgets = FRIDesktopWidgetManager(calendar: self) }
         #endif
@@ -163,6 +176,46 @@ final class FRICalendarSession {
 
     func refreshIfChanged() {
         if store?.modificationDate != observedWrite { open() }
+    }
+
+    func setWeatherUpdatesEnabled(_ enabled: Bool) {
+        weatherUpdatesEnabled = enabled
+        if !enabled {
+            weatherTimer?.cancel()
+            weatherTimer = nil
+            automaticWeather.cancel()
+            return
+        }
+        refreshWeatherAutomatically()
+        guard weatherTimer == nil else { return }
+        weatherTimer = Task { [weak self] in
+            while !Task.isCancelled {
+                do { try await Task.sleep(for: .seconds(60)) } catch { return }
+                guard let self, !Task.isCancelled else { return }
+                self.refreshIfChanged()
+                self.refreshWeatherAutomatically()
+            }
+        }
+    }
+
+    func cancelAutomaticWeather() { automaticWeather.cancel() }
+
+    private func refreshWeatherAutomatically() {
+        guard weatherUpdatesEnabled, ready, panel != .services else { return }
+        automaticWeather.refreshIfNeeded(settings: state.settings) { [weak self] forecast, expected in
+            guard let self, let store = self.store, self.ready else { return }
+            var previous = self.state
+            let current = try store.update {
+                previous = $0
+                try $0.applyWeather(forecast, replacing: expected)
+            }
+            // A background cache update must not make a just-restored backup impossible to undo.
+            if case let .restore(before, after) = self.undoState, after == previous {
+                self.undoState = .restore(before: before, after: current.state)
+            }
+            self.accept(current, stamp: store.modificationDate)
+            WidgetCenter.shared.reloadTimelines(ofKind: "FRIDayWidget")
+        }
     }
 
     func newDraft(deadline: Bool) {

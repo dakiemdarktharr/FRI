@@ -10,6 +10,8 @@ These files contain synthetic plans only. They are used for native file-picker a
 - `invalid-zero-duration-backup.json`: deliberately invalid completed-calendar entry (a schedule with no duration). Select it through Restore Backup; the app must report an invalid backup, show no replacement confirmation and leave the current calendar unchanged. Zero duration remains valid for a deadline or an unfinished draft.
 - `desktop-service-cache-backup.json`: synthetic desktop-format Weather cache with a deliberately old millisecond timestamp, plus a legacy mapsRegion name. Use a separate QA store. The rail must label the weather as cached; Services must show both saved values and allow Disconnect to remove them completely.
 
+- `auto-refresh-weather-backup.json`: stale Hanoi Weather with saved coordinates, empty tasks, a legacy map name and Larger text. Restore in an isolated QA store while online; the forecast should update automatically without pressing Refresh. Export must preserve the rest of the fixture. This exercises a live provider and must not be treated as a deterministic offline test.
+
 The PDF/image fixtures can be regenerated on macOS from the repository root:
 
 ```sh

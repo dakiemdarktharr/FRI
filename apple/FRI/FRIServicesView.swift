@@ -33,6 +33,8 @@ struct FRIServicesView: View {
                 Section("Weather") {
                     Text("Open-Meteo receives the city you enter and your IP address.")
                         .friFont(.caption).foregroundStyle(.secondary)
+                    Text("Saved locations refresh every 30 minutes while FRI is running. On iOS, refresh resumes when you open the app.")
+                        .friFont(.caption).foregroundStyle(.secondary)
                     TextField("City", text: $city).accessibilityIdentifier("fri.services.weather.city")
                         .focused($cityFocused)
                         .submitLabel(.search)
@@ -135,6 +137,7 @@ struct FRIServicesView: View {
             .accessibilityIdentifier("fri.services.form")
         }
         .onAppear {
+            calendar.cancelAutomaticWeather()
             spotify = calendar.state.settings["spotifyUrl"]?.string ?? ""
             mapQuery = savedMapName ?? ""
             city = savedWeather?.city ?? ""
@@ -151,6 +154,7 @@ struct FRIServicesView: View {
     }
 
     private func cancelWeather() {
+        calendar.cancelAutomaticWeather()
         weatherRequest = UUID()
         weatherTask?.cancel()
         loadingWeather = false
@@ -192,6 +196,7 @@ struct FRIServicesView: View {
         let request = weatherRequest
         loadingWeather = true
         weatherMessage = nil
+        let expected = WeatherCacheRevision(settings: calendar.state.settings)
         weatherTask = Task {
             defer { if weatherRequest == request { loadingWeather = false } }
             do {
@@ -199,8 +204,7 @@ struct FRIServicesView: View {
                 try Task.checkCancellation()
                 guard weatherRequest == request else { return }
                 if calendar.change({ state in
-                    state.settings["weather"] = forecast.setting
-                    state.settings.removeValue(forKey: "appleWeatherCache")
+                    try state.applyWeather(forecast, replacing: expected)
                 }) {
                     city = location.name
                     weatherChoices = []

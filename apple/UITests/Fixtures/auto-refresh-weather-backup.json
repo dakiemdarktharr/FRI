@@ -1,0 +1,30 @@
+{
+  "format": "fri-backup",
+  "schema": 1,
+  "state": {
+    "version": 1,
+    "active": "2026-11-23",
+    "tabs": [
+      "2026-11-23"
+    ],
+    "tasks": [],
+    "drafts": [],
+    "widgets": [
+      "weather",
+      "maps"
+    ],
+    "collections": [],
+    "finished": [],
+    "settings": {
+      "weather": {
+        "city": "Hanoi",
+        "temperature": 28,
+        "fetchedAt": 1700000000000,
+        "latitude": 21.0245,
+        "longitude": 105.8412
+      },
+      "mapsRegion": "QA imported place",
+      "large": true
+    }
+  }
+}

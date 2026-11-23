@@ -28,7 +28,13 @@ test('automatically detects conflict and deadline; applies only flexible task wi
  assert.equal(await p.evaluate(()=>FRI_PREVIEW.getState().tasks.find(t=>t.id==='fixed').time),'10:00');
  assert.equal(await p.locator('[data-day-card]').count(),1);
  await p.locator('[data-day-dismiss]').click();assert.equal(await p.locator('[data-day-card]').count(),0);
- await p.reload();await p.waitForFunction(()=>window.FRI_PREVIEW);await p.locator('[data-action=day]').first().click();
+ await p.evaluate(()=>FRI_PREVIEW.flush());
+ const persisted=await p.evaluate(()=>JSON.parse(localStorage.getItem('fri-liquid-preview-v1')));
+ assert.equal(persisted.tasks.find(t=>t.id==='focus').time,'09:00');
+ assert.equal(persisted.settings.dayDismissed.length,1);
+ await p.reload();await p.waitForFunction(()=>window.FRI_PREVIEW);
+ assert.equal(await p.evaluate(()=>FRI_PREVIEW.getState().tasks.find(t=>t.id==='focus').time),'09:00');
+ await p.locator('[data-action=day]').first().click();
  assert.equal(await p.locator('[data-day-card]').count(),0);
  await p.locator('.day-options summary').click();await p.locator('[data-day-reset]').click();assert.equal(await p.locator('[data-day-card]').count(),1);
  assert.deepEqual(errors,[]);

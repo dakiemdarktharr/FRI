@@ -3,6 +3,89 @@ import XCTest
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
     #if os(iOS)
+    func testYearMonthNavigationAndLeapDay() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        XCUIDevice.shared.orientation = .portrait
+        defer { XCUIDevice.shared.orientation = .portrait }
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        app.buttons["fri.navigation.menu"].tap()
+        app.buttons["fri.navigation.year"].tap()
+        let heading = app.staticTexts["fri.calendar.heading"]
+        let currentYear = Calendar(identifier: .gregorian).component(.year, from: Date())
+        XCTAssertEqual(heading.value as? String, String(currentYear))
+        let next = app.buttons["fri.calendar.next"]
+        let previous = app.buttons["fri.calendar.previous"]
+        reveal(next, in: app, form: "fri.calendar.content")
+        XCTAssertGreaterThanOrEqual(next.frame.height, 44)
+        XCTAssertGreaterThanOrEqual(previous.frame.width, 44)
+        next.tap()
+        XCTAssertEqual(heading.value as? String, String(currentYear + 1))
+        previous.tap()
+        XCTAssertEqual(heading.value as? String, String(currentYear))
+        let yearShot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        yearShot.name = "Year-mini-calendars"; yearShot.lifetime = .keepAlways; add(yearShot)
+        var leapYear = currentYear
+        while !(leapYear % 4 == 0 && (leapYear % 100 != 0 || leapYear % 400 == 0)) {
+            next.tap()
+            leapYear += 1
+        }
+        let february = app.buttons["fri.calendar.month.\(leapYear)-02"]
+        reveal(february, in: app, form: "fri.calendar.content")
+        february.tap()
+        XCTAssertEqual(heading.value as? String, "\(leapYear)-02")
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "fri.calendar.day.")).count, 42)
+        let leapDay = app.buttons["fri.calendar.day.\(leapYear)-02-29"]
+        reveal(leapDay, in: app, form: "fri.calendar.content")
+        XCTAssertGreaterThanOrEqual(leapDay.frame.height, 44)
+        XCTAssertEqual(leapDay.frame.width, leapDay.frame.height, accuracy: 2)
+        let monthShot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        monthShot.name = "Month-leap-day"; monthShot.lifetime = .keepAlways; add(monthShot)
+        leapDay.tap()
+        XCTAssertTrue(app.buttons["fri.tab.\(leapYear)-02-29"].isSelected)
+        let openMonth = app.buttons["Open month calendar"]
+        reveal(openMonth, in: app, form: "fri.calendar.content", upward: false)
+        openMonth.tap()
+        reveal(next, in: app, form: "fri.calendar.content")
+        next.tap()
+        XCTAssertEqual(heading.value as? String, "\(leapYear)-03")
+        let marchLast = app.buttons["fri.calendar.day.\(leapYear)-03-31"]
+        reveal(marchLast, in: app, form: "fri.calendar.content")
+        marchLast.tap()
+        reveal(openMonth, in: app, form: "fri.calendar.content", upward: false)
+        openMonth.tap()
+        reveal(previous, in: app, form: "fri.calendar.content")
+        previous.tap()
+        XCTAssertEqual(heading.value as? String, "\(leapYear)-02", "Paging from March 31 must reach February")
+
+        app.buttons["fri.navigation.menu"].tap()
+        app.buttons["Settings"].tap()
+        let larger = app.switches["fri.settings.largeText"]
+        reveal(larger, in: app, form: "fri.settings.form")
+        larger.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        reveal(larger, in: app, form: "fri.settings.form")
+        XCTAssertEqual(larger.value as? String, "1")
+        app.buttons["Close"].firstMatch.tap()
+        app.buttons["fri.navigation.menu"].tap()
+        app.buttons["fri.navigation.year"].tap()
+        let january = app.buttons["fri.calendar.month.\(leapYear)-01"]
+        reveal(january, in: app, form: "fri.calendar.content", upward: false)
+        XCTAssertTrue(app.frame.contains(january.frame))
+        XCTAssertEqual(january.frame.width, january.frame.height, accuracy: 2)
+        let largeShot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        largeShot.name = "Year-larger-text-portrait"; largeShot.lifetime = .keepAlways; add(largeShot)
+        XCUIDevice.shared.orientation = .landscapeLeft
+        XCTAssertEqual(heading.value as? String, String(leapYear))
+        reveal(january, in: app, form: "fri.calendar.content", upward: false)
+        let landscapeShot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        landscapeShot.name = "Year-larger-text-landscape"; landscapeShot.lifetime = .keepAlways; add(landscapeShot)
+        january.tap()
+        XCTAssertEqual(heading.value as? String, "\(leapYear)-01")
+    }
+
     func testSidebarAndUpNextWithLargerText() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -378,6 +461,17 @@ final class FRIWorkflowTests: XCTestCase {
                 let from = origin.withOffset(CGVector(dx: scroll.frame.width / 2, dy: (upward ? bottom : top) - scroll.frame.minY))
                 let to = origin.withOffset(CGVector(dx: scroll.frame.width / 2, dy: (upward ? top : bottom) - scroll.frame.minY))
                 from.press(forDuration: 0.05, thenDragTo: to)
+            } else if form == "fri.calendar.content" {
+                // Calendar tiles can be partly visible at the edge. Short drags avoid
+                // flinging past an entire row; reverse when the target is above us.
+                let target = element.exists ? element.frame : .null
+                let towardsBottom = target.isNull ? upward : target.maxY > visible.maxY
+                let origin = scroll.coordinate(withNormalizedOffset: .zero)
+                let startY = towardsBottom ? visible.maxY - 24 : visible.minY + 24
+                let delta = visible.height * 0.3 * (towardsBottom ? -1 : 1)
+                let from = origin.withOffset(CGVector(dx: scroll.frame.width / 2, dy: startY - scroll.frame.minY))
+                let to = origin.withOffset(CGVector(dx: scroll.frame.width / 2, dy: startY + delta - scroll.frame.minY))
+                from.press(forDuration: 0.1, thenDragTo: to)
             } else if upward { scroll.swipeUp() } else { scroll.swipeDown() }
             #else
             if upward { scroll.swipeUp() } else { scroll.swipeDown() }

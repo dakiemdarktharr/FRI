@@ -56,14 +56,7 @@ struct FRIWorkspaceView: View {
                         dateTabs
                         ScrollView {
                             VStack(alignment: .leading, spacing: 18) {
-                                if calendar.view == .day { day(wide: wide && geometry.size.width >= 1000) }
-                                else {
-                                    FRICalendarGridView(mode: calendar.view, cursor: $calendar.cursor,
-                                                        tasks: calendar.state.tasks, select: calendar.select) { date in
-                                        calendar.cursor = date
-                                        calendar.view = .month
-                                    }
-                                }
+                                workspaceContent(wide: wide && geometry.size.width >= 1000)
                             }.padding(.horizontal, wide ? 26 : 16).padding(.vertical, 20)
                         }
                         .accessibilityIdentifier("fri.calendar.content")
@@ -365,6 +358,7 @@ struct FRIWorkspaceView: View {
                                 if key == CalendarClock.day() { Text("Today") }
                                 else { Text(date, format: .dateTime.month(.abbreviated).day()) }
                             }.buttonStyle(.plain)
+                                .accessibilityIdentifier("fri.tab.\(key)")
                                 .accessibilityAddTraits(key == calendar.state.active ? .isSelected : [])
                             if key != CalendarClock.day() {
                                 Button("Close date tab", systemImage: "xmark") { calendar.closeTab(key) }
@@ -384,7 +378,7 @@ struct FRIWorkspaceView: View {
         }.scrollIndicators(.hidden).background(FRIColors.sidebar)
     }
 
-    private func day(wide: Bool) -> some View {
+    private func workspaceContent(wide: Bool) -> some View {
         VStack(alignment: .leading, spacing: 20) {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 16) {
@@ -399,23 +393,34 @@ struct FRIWorkspaceView: View {
             }
             ViewThatFits(in: .horizontal) {
                 HStack {
-                    Text("Appointments").friFont(.headline).accessibilityAddTraits(.isHeader)
+                    if calendar.view == .day { Text("Appointments").friFont(.headline).accessibilityAddTraits(.isHeader) }
                     Spacer()
                     appointmentFilters
                 }
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Appointments").friFont(.headline).accessibilityAddTraits(.isHeader)
+                    if calendar.view == .day { Text("Appointments").friFont(.headline).accessibilityAddTraits(.isHeader) }
                     appointmentFilters
                 }
             }
             if wide && !effectiveType.isAccessibilitySize {
                 HStack(alignment: .top, spacing: 20) {
-                    appointments
+                    calendarContents
                     upNext.frame(width: 200)
                 }
             } else {
-                appointments
+                calendarContents
                 upNext
+            }
+        }
+    }
+
+    @ViewBuilder private var calendarContents: some View {
+        if calendar.view == .day { appointments }
+        else {
+            FRICalendarGridView(mode: calendar.view, cursor: $calendar.cursor,
+                                tasks: calendar.state.tasks, select: calendar.select) { date in
+                calendar.cursor = date
+                calendar.view = .month
             }
         }
     }

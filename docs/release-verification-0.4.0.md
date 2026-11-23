@@ -49,3 +49,11 @@ npm run dist --prefix desktop
 ```
 
 Installer is unsigned because no code-signing certificate is configured. No native Xcode targets, notarized Apple release, billing backend or live cross-account calendar linking are claimed. Weather's free host requires an appropriate commercial arrangement before paid service use. Provider availability and Spotify account playback are external constraints.
+
+## Real desktop interaction
+
+At the user's request, the normal packaged EXE was opened without test mode on the real Windows desktop. Physical pointer creation and two drags displaced 10 icons, then five additional icons. No icon cells intersected the final widget rectangle. Removing the widget restored all 32 original coordinates exactly. The [aggregate receipt](verification/0.4.0/desktop-icon-reflow.json) contains no filenames or screenshots; private desktop captures remain local. Explorer Auto arrange was off.
+
+The website widget video now autoplays muted and loops when visible; leaving the viewport pauses decoding. Reduced-motion and the accessible animation toggle still work. Chromium confirmed playback time advanced without invoking Play.
+
+Linux WebKit CI exposed an expiring Undo notification under slow rendering. Actionable Undo now remains available until another notification or action replaces it; informational notifications still dismiss.

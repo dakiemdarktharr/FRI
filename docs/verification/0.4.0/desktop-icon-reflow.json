@@ -1,0 +1,10 @@
+{
+  "date": "2026-11-23T06:58:56.790Z",
+  "appVersion": "0.4.0",
+  "input": "physical pointer on normal packaged EXE, no test mode",
+  "iconCount": 32,
+  "firstDragMoved": 10,
+  "secondDragAdditionalMoved": 5,
+  "coveredIconsAfterSecondDrag": 0,
+  "originalLayoutRestored": true
+}

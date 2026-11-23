@@ -120,7 +120,7 @@
       $('#choose-download').addEventListener('click',()=>openDialog('download'));
     }else{
       $('#dialog-title').textContent='Take a little space.';
-      $('#dialog-content').innerHTML=options()+'<a class="dialog-release" href="'+releases+'" target="_blank" rel="noopener noreferrer">Version 0.3.0 · Release notes ↗</a>';
+      $('#dialog-content').innerHTML=options()+'<a class="dialog-release" href="'+releases+'" target="_blank" rel="noopener noreferrer">Version 0.4.0 · Release notes ↗</a>';
     }
     if(!dialog.open)dialog.showModal();
     $('.dialog-close').focus();
@@ -181,19 +181,19 @@
   function setChapter(n){elapsed=[0,4400,9000][n];lastKey='';renderDemo();$('#demo-status').textContent=['Add your plans.','Fill in the missing time.','Your appointment is on the calendar.'][n]}
   $$('[data-step]').forEach(b=>b.addEventListener('click',()=>setChapter(Number(b.dataset.step))));
   $$('[data-demo-jump]').forEach(b=>b.addEventListener('click',()=>{setChapter(Number(b.dataset.demoJump));$('#demo').scrollIntoView({behavior:reduced.matches?'instant':'smooth'})}));
-  $('#motion-access').addEventListener('click',()=>{paused=!paused;updatePause();if(paused)$('#surf').pause();else $('#surf').play().catch(()=>{})});
+  $('#motion-access').addEventListener('click',()=>{paused=!paused;updatePause();syncVideo()});
   updatePause();renderDemo();
 
-  let motionTime=0,reviewFrozen=false,seaVisible=true,demoVisible=true;
-  const visibilityObserver=new IntersectionObserver(entries=>{for(const e of entries){if(e.target.id==='home')seaVisible=e.isIntersecting;else demoVisible=e.isIntersecting}syncVideo()},{rootMargin:'100px'});
-  function syncVideo(){const v=$('#surf');if(entered&&seaVisible&&!document.hidden&&!paused&&!reviewFrozen)v.play().catch(()=>{});else v.pause()}
-  visibilityObserver.observe($('#home'));visibilityObserver.observe($('#demo'));document.addEventListener('visibilitychange',syncVideo);
+  let motionTime=0,reviewFrozen=false,seaVisible=true,demoVisible=true,widgetVisible=false;
+  const visibilityObserver=new IntersectionObserver(entries=>{for(const e of entries){if(e.target.id==='home')seaVisible=e.isIntersecting;else if(e.target.id==='widget-demo')widgetVisible=e.isIntersecting;else demoVisible=e.isIntersecting}syncVideo()},{rootMargin:'100px'});
+  function syncVideo(){const v=$('#surf');if(entered&&seaVisible&&!document.hidden&&!paused&&!reviewFrozen)v.play().catch(()=>{});else v.pause();const widget=$('#widget-demo');if(entered&&widgetVisible&&!document.hidden&&!paused)widget.play().catch(()=>{});else widget.pause()}
+  visibilityObserver.observe($('#home'));visibilityObserver.observe($('#demo'));visibilityObserver.observe($('#widget-demo'));document.addEventListener('visibilitychange',syncVideo);
   function frame(now){
     const dt=Math.min(now-lastFrame,60);lastFrame=now;
     if(entered&&!document.hidden&&!paused&&!reviewFrozen){elapsed+=dt;motionTime+=dt/1000;if(demoVisible)renderDemo();window.FRI_MOTION?.render(motionTime)}
     requestAnimationFrame(frame);
   }
-  reduced.addEventListener('change',()=>{if(reduced.matches){paused=true;$('#surf').pause();updatePause()}});
+  reduced.addEventListener('change',()=>{if(reduced.matches){paused=true;syncVideo();updatePause()}});
   window.FRI_WEBSITE.review={async seek(seconds){reviewFrozen=true;elapsed=seconds*1000;lastKey='';renderDemo();const v=$('#surf');v.pause();if(v.readyState<2)await Promise.race([new Promise(r=>v.addEventListener('loadeddata',r,{once:true})),new Promise(r=>setTimeout(r,1500))]);if(v.readyState<2){window.FRI_MOTION?.render(seconds,true);return}const time=Number.isFinite(v.duration)?seconds%v.duration:0;if(Math.abs(v.currentTime-time)>.001)await new Promise(resolve=>{let timer;const done=ok=>{clearTimeout(timer);v.removeEventListener('seeked',onSeek);v.removeEventListener('error',onError);if(!ok)evidence.reviewSeekTimeouts=(evidence.reviewSeekTimeouts||0)+1;resolve()};const onSeek=()=>done(true),onError=()=>done(false);v.addEventListener('seeked',onSeek,{once:true});v.addEventListener('error',onError,{once:true});timer=setTimeout(()=>done(false),1500);v.currentTime=time});window.FRI_MOTION?.render(seconds,true)},resume(){reviewFrozen=false;if(!paused)$('#surf').play().catch(()=>{})},chapter:setChapter};
   requestAnimationFrame(frame);
   if(location.pathname.includes('/pricing')||location.hash==='#pricing')enterSite();else startIntro();

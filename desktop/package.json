@@ -1,7 +1,7 @@
 {
   "name": "fri-desktop",
   "productName": "FRI",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "A local calendar with a native glass workspace.",
   "author": "FRI contributors",
   "license": "UNLICENSED",
@@ -10,7 +10,7 @@
   "scripts": {
     "prepare:ui": "node prepare.cjs",
     "start": "npm run prepare:ui && electron .",
-    "test": "node --test --test-concurrency=1 desktop.test.cjs core.test.cjs planning.test.cjs widget.test.cjs",
+    "test": "node --test --test-concurrency=1 desktop.test.cjs core.test.cjs planning.test.cjs widget.test.cjs brand.test.cjs",
     "pack": "npm run prepare:ui && electron-builder --dir",
     "dist": "npm run prepare:ui && electron-builder --publish never"
   },
@@ -40,7 +40,8 @@
       "package.json",
       "ocr.ps1",
       "maps.html",
-      "maps-renderer.js"
+      "maps-renderer.js",
+      "widget.css"
     ],
     "asar": true,
     "artifactName": "FRI-${version}-${os}-${arch}.${ext}",
@@ -98,6 +99,11 @@
     "asarUnpack": [
       "ocr.ps1",
       "node_modules/@hicccc77/electron-liquid-glass/**/*"
+    ],
+    "compression": "maximum",
+    "electronLanguages": [
+      "en-US",
+      "en-GB"
     ]
   },
   "overrides": {

@@ -3,9 +3,7 @@
   const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const site=$('#site'), intro=$('#intro'), noise=$('#noise'), quiet=$('#quiet');
-  const release='https://github.com/dakiemdarktharr/FRI/releases/download/v0.4.0/';
-  const releases='https://github.com/dakiemdarktharr/FRI/releases/tag/v0.4.0';
-  const evidence={spamDuration:1300,events:[],demoFrames:0,seaFrames:0,os:'',entered:false};
+  const evidence={spamDuration:1300,events:[],demoFrames:0,seaFrames:0,entered:false};
   window.FRI_WEBSITE={evidence};
   site.inert=true;
   let introTimers=[],introRun=0,entered=false;
@@ -94,38 +92,25 @@
   });
   $('.skip-link').addEventListener('click',()=>{if(!entered)enterSite()});
 
-  // Downloads use published v0.4.0 artifacts. CPU architecture is never guessed.
-  const platform=(navigator.userAgentData?.platform||navigator.platform||navigator.userAgent).toLowerCase();
-  const touchMac=platform.includes('mac')&&navigator.maxTouchPoints>1;
-  const os=platform.includes('win')?'windows':platform.includes('mac')&&!touchMac?'macos':'other';
-  evidence.os=os;
-  const iconWindows='<svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor"><path d="M1 3l8-1v7H1zm9-1 9-1v8h-9zM1 10h8v7l-8-1zm9 0h9v9l-9-1z"/></svg>';
-  const label=os==='windows'?'Download for Windows':os==='macos'?'Download for macOS':'Download Fri';
-  $$('.download').forEach(a=>{
-    a.querySelector('.download-label').textContent=label;
-    if(os==='windows'){a.href=release+'FRI-0.4.0-win-x64.exe';a.querySelector('.os-icon').innerHTML=iconWindows;a.querySelector('.os-icon').style.width='15px'}
-    else {a.href=releases;a.addEventListener('click',e=>{e.preventDefault();openDialog('download')})}
-  });
-  const dialog=$('#info-dialog');
-  function options(){
-    return '<div class="download-options"><a class="download-option" href="'+release+'FRI-0.4.0-win-x64.exe"><span>Windows<small>x64 · Unsigned</small></span><span>↓</span></a><a class="download-option" href="'+release+'FRI-0.4.0-mac-arm64.dmg"><span>macOS<small>Apple silicon · Development build</small></span><span>↓</span></a><a class="download-option" href="'+release+'FRI-0.4.0-mac-x64.dmg"><span>macOS<small>Intel · Development build</small></span><span>↓</span></a></div>';
-  }
-  function openDialog(type){
-    if(type==='pricing'){
-      $('#dialog-title').textContent='A little more time.';
-      $('#dialog-content').innerHTML='<p>Pricing is still taking shape.</p><a class="pill dark" href="'+releases+'" target="_blank" rel="noopener noreferrer">Explore the preview <span>↗</span></a>';
-    }else if(type==='signup'){
-      $('#dialog-title').textContent='Your space. Soon.';
-      $('#dialog-content').innerHTML='<p>Accounts aren’t open yet. The desktop app works without one.</p><button class="pill dark" id="choose-download">Get Fri <span>↓</span></button>';
-      $('#choose-download').addEventListener('click',()=>openDialog('download'));
-    }else{
-      $('#dialog-title').textContent='Take a little space.';
-      $('#dialog-content').innerHTML=options()+'<a class="dialog-release" href="'+releases+'" target="_blank" rel="noopener noreferrer">Version 0.4.0 · Release notes ↗</a>';
-    }
+  const downloadPage=location.protocol==='file:'?'#downloads':'/#downloads';
+  $$('.download-jump').forEach(link=>link.href=downloadPage);
+  const dialog=$('#info-dialog'), dialogContent=$('#dialog-content');
+  function showDialog(title){
+    $('#dialog-title').textContent=title;
     if(!dialog.open)dialog.showModal();
     $('.dialog-close').focus();
   }
-  $$('[data-dialog]').forEach(b=>b.addEventListener('click',()=>openDialog(b.dataset.dialog)));
+  $('#mac-download').addEventListener('click',e=>{
+    if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;
+    e.preventDefault();
+    dialogContent.replaceChildren($('#mac-download-options').content.cloneNode(true));
+    showDialog('macOS');
+  });
+  $('[data-dialog="signup"]').addEventListener('click',()=>{
+    dialogContent.innerHTML='<p>Accounts aren’t open yet. The desktop app works without one.</p><a class="pill dark" id="choose-download" href="'+downloadPage+'">Download Fri <span aria-hidden="true">↓</span></a>';
+    $('#choose-download').addEventListener('click',()=>dialog.close());
+    showDialog('Your space. Soon.');
+  });
   $('.dialog-close').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('click',e=>{const r=dialog.getBoundingClientRect();if(e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))dialog.close()});
 
@@ -196,5 +181,5 @@
   reduced.addEventListener('change',()=>{if(reduced.matches){paused=true;syncVideo();updatePause()}});
   window.FRI_WEBSITE.review={async seek(seconds){reviewFrozen=true;elapsed=seconds*1000;lastKey='';renderDemo();const v=$('#surf');v.pause();if(v.readyState<2)await Promise.race([new Promise(r=>v.addEventListener('loadeddata',r,{once:true})),new Promise(r=>setTimeout(r,1500))]);if(v.readyState<2){window.FRI_MOTION?.render(seconds,true);return}const time=Number.isFinite(v.duration)?seconds%v.duration:0;if(Math.abs(v.currentTime-time)>.001)await new Promise(resolve=>{let timer;const done=ok=>{clearTimeout(timer);v.removeEventListener('seeked',onSeek);v.removeEventListener('error',onError);if(!ok)evidence.reviewSeekTimeouts=(evidence.reviewSeekTimeouts||0)+1;resolve()};const onSeek=()=>done(true),onError=()=>done(false);v.addEventListener('seeked',onSeek,{once:true});v.addEventListener('error',onError,{once:true});timer=setTimeout(()=>done(false),1500);v.currentTime=time});window.FRI_MOTION?.render(seconds,true)},resume(){reviewFrozen=false;if(!paused)$('#surf').play().catch(()=>{})},chapter:setChapter};
   requestAnimationFrame(frame);
-  if(location.pathname.includes('/pricing')||location.hash==='#pricing')enterSite();else startIntro();
+  if(location.pathname.includes('/pricing')||['#pricing','#downloads'].includes(location.hash))enterSite();else startIntro();
 })();

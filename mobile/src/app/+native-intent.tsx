@@ -1,0 +1,1 @@
+export function redirectSystemPath({path}:{path:string;initial:boolean}){try{const url=new URL(path);if(url.protocol==='fri:'){const route=url.hostname||url.pathname.replace(/^\//,'');if(['event','edit'].includes(route))return `/${route}${url.search}`;return `/${url.search}`}}catch{}return path}

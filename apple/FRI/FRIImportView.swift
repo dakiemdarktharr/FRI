@@ -1,5 +1,6 @@
 import EventKit
 import FRICore
+import FRIDesign
 import ImageIO
 import PDFKit
 import SwiftUI
@@ -53,7 +54,7 @@ struct FRIImportView: View {
                                 .font(.caption).foregroundStyle(.secondary)
                         } header: { Text("Source evidence") }
                         FRIPlanFields(draft: $items[binding])
-                        Button("Add to drafts") { accept() }.buttonStyle(.borderedProminent)
+                        Button("Add to drafts") { accept() }.buttonStyle(.borderedProminent).tint(FRIColors.marsala).foregroundStyle(FRIColors.cream)
                             .accessibilityIdentifier("fri.import.accept")
                         Button("Skip") { next() }
                     }

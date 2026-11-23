@@ -38,7 +38,7 @@ struct FRIDayAssistantView: View {
                             }
                             if let draftTitle {
                                 Button("Create this appointment") { createDraft(draftTitle) }
-                                    .buttonStyle(.borderedProminent)
+                                    .buttonStyle(.borderedProminent).tint(FRIColors.marsala).foregroundStyle(FRIColors.cream)
                                     .accessibilityIdentifier("fri.day.create")
                             }
                         }
@@ -52,7 +52,7 @@ struct FRIDayAssistantView: View {
                     VStack(alignment: .leading) { suggestions }
                 }
                 HStack {
-                    TextField("Message Day", text: $message).textFieldStyle(.roundedBorder)
+                    TextField("Message Day", text: $message).textFieldStyle(FRISheetTextFieldStyle())
                         .onSubmit(send).accessibilityIdentifier("fri.day.message")
                     Button("Send", systemImage: "arrow.up") { send() }
                         .labelStyle(.iconOnly).disabled(message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)

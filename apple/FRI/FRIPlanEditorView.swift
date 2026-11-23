@@ -11,16 +11,32 @@ struct FRISheetView<Content: View>: View {
         NavigationStack {
             content
                 .scrollContentBackground(.hidden)
-                .background(FRIColors.cream)
-                .foregroundStyle(FRIColors.ink)
+                .background(FRIColors.sidebar)
+                .foregroundStyle(FRIColors.cream)
+                .textFieldStyle(FRISheetTextFieldStyle())
                 .navigationTitle(title)
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
         }
-        .tint(FRIColors.marsala)
-        .preferredColorScheme(.light)
+        .tint(FRIColors.cream)
+        .preferredColorScheme(.dark)
         #if os(macOS)
         .frame(minWidth: 510, minHeight: 430)
         #endif
+    }
+}
+
+/// Desktop 0.5 pairs its brown dialogs with light, clearly bounded input fields.
+/// Keep native text editing and accessibility rather than drawing replacement controls.
+struct FRISheetTextFieldStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .textFieldStyle(.plain)
+            .padding(8)
+            .foregroundStyle(FRIColors.ink)
+            .tint(FRIColors.marsala)
+            .environment(\.colorScheme, .light)
+            .background(FRIColors.cream, in: RoundedRectangle(cornerRadius: 8))
+            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(FRIColors.line))
     }
 }
 
@@ -76,7 +92,7 @@ struct FRIPlanEditorView: View {
                         }.disabled(draft.title.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
                     Button("Done") { submitForm() }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.borderedProminent).tint(FRIColors.marsala).foregroundStyle(FRIColors.cream)
                         .accessibilityIdentifier("fri.editor.submit")
                 }
                 if let error { Text(error).foregroundStyle(.red) }

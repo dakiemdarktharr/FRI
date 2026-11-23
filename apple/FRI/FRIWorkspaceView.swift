@@ -86,7 +86,6 @@ struct FRIWorkspaceView: View {
         }
         .tint(FRIColors.marsala)
         .foregroundStyle(FRIColors.cream)
-        .environment(\.dynamicTypeSize, effectiveType)
         .background { FRIWindowBackdrop(enabled: glass).ignoresSafeArea() }
         .task {
             #if os(macOS)
@@ -121,28 +120,32 @@ struct FRIWorkspaceView: View {
                 searchedAppointment = nil
             }
         }) { panel in
-            switch panel {
-            case .draft: FRIPlanEditorView(calendar: calendar)
-            case .dayAssistant: FRIDayAssistantView(calendar: calendar)
-            case .collections: FRICollectionsView(calendar: calendar)
-            case .search: FRISearchView(tasks: calendar.state.tasks) { item in
-                searchedAppointment = item
-                calendar.panel = nil
+            Group {
+                switch panel {
+                case .draft: FRIPlanEditorView(calendar: calendar)
+                case .dayAssistant: FRIDayAssistantView(calendar: calendar)
+                case .collections: FRICollectionsView(calendar: calendar)
+                case .search: FRISearchView(tasks: calendar.state.tasks) { item in
+                    searchedAppointment = item
+                    calendar.panel = nil
+                }
+                case .manage: FRIManageView(tasks: dayTasks) { calendar.remove($0); calendar.panel = nil }
+                case .importPlans: FRIImportView(calendar: calendar)
+                case .widget: FRIWidgetHelpView(calendar: calendar)
+                case .appearance: FRIAppearanceView(calendar: calendar)
+                case .services: FRIServicesView(calendar: calendar)
+                case .planner: FRIPlannerView(calendar: calendar)
+                case .availability: FRIAvailabilityView { action in
+                    calendar.panel = nil
+                    calendar.fileAction = action
+                }
+                }
             }
-            case .manage: FRIManageView(tasks: dayTasks) { calendar.remove($0); calendar.panel = nil }
-            case .importPlans: FRIImportView(calendar: calendar)
-            case .widget: FRIWidgetHelpView(calendar: calendar)
-            case .appearance: FRIAppearanceView(calendar: calendar)
-            case .services: FRIServicesView(calendar: calendar)
-            case .planner: FRIPlannerView(calendar: calendar)
-            case .availability: FRIAvailabilityView { action in
-                calendar.panel = nil
-                calendar.fileAction = action
-            }
-            }
+            .environment(\.dynamicTypeSize, effectiveType)
         }
         .sheet(item: $calendar.appointment) { item in
             FRIPlanDetailView(item: item, calendar: calendar)
+                .environment(\.dynamicTypeSize, effectiveType)
         }
         .onChange(of: calendar.fileAction, initial: true) { _, action in
             guard let action else { return }
@@ -199,7 +202,10 @@ struct FRIWorkspaceView: View {
                     }
                 }
             }
+            .environment(\.dynamicTypeSize, effectiveType)
         }
+        // Keep the calendar aligned with the explicitly sized sheet content.
+        .environment(\.dynamicTypeSize, effectiveType)
     }
 
     private var sidebar: some View {
@@ -303,6 +309,7 @@ struct FRIWorkspaceView: View {
                 } label: {
                     Image("FRIMark").resizable().frame(width: 33, height: 33).accessibilityLabel("FRI navigation")
                 }
+                .accessibilityIdentifier("fri.navigation.menu")
                 Spacer(minLength: 0)
             }
             Button("Search", systemImage: "magnifyingglass") { calendar.panel = .search }.labelStyle(.iconOnly)
@@ -321,7 +328,7 @@ struct FRIWorkspaceView: View {
             } label: { Label("Calendar actions", systemImage: "ellipsis.circle").labelStyle(.iconOnly) }
                 .accessibilityIdentifier("fri.actions")
             if !wide {
-                newMenu.buttonStyle(.borderedProminent).tint(FRIColors.marsala)
+                newMenu.buttonStyle(.borderedProminent).tint(FRIColors.marsala).foregroundStyle(FRIColors.cream)
             }
 
         }
@@ -376,22 +383,16 @@ struct FRIWorkspaceView: View {
                     HStack { headingActions; Spacer(); ring }
                 }
             }
-            HStack {
-                Text("Appointments").font(.headline).accessibilityAddTraits(.isHeader)
-                Spacer()
-                Menu {
-                    Button("All collections") { calendar.collection = nil }
-                    ForEach(Array(Set(calendar.state.collections.compactMap(\.string))).sorted(), id: \.self) { name in
-                        Button(name) { calendar.collection = name }
-                    }
-                    Button("New collection…") { calendar.show(.collections) }
-                } label: { Label(calendar.collection ?? "Collections", systemImage: "folder") }
-                .accessibilityIdentifier("fri.collections")
-                Button(calendar.onlyPending ? "Still to do" : "All plans", systemImage: "line.3.horizontal.decrease") {
-                    calendar.onlyPending.toggle()
-                }.buttonStyle(.plain).padding(10)
-                    .background(FRIColors.sidebar, in: RoundedRectangle(cornerRadius: 12))
-                    .accessibilityIdentifier("fri.filter")
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    Text("Appointments").font(.headline).accessibilityAddTraits(.isHeader)
+                    Spacer()
+                    appointmentFilters
+                }
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Appointments").font(.headline).accessibilityAddTraits(.isHeader)
+                    appointmentFilters
+                }
             }
             if wide && !effectiveType.isAccessibilitySize {
                 HStack(alignment: .top, spacing: 20) {
@@ -405,6 +406,32 @@ struct FRIWorkspaceView: View {
         }
     }
 
+    private var appointmentFilters: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack { collectionFilter; pendingFilter }
+            VStack(alignment: .leading) { collectionFilter; pendingFilter }
+        }
+    }
+
+    private var collectionFilter: some View {
+        Menu {
+            Button("All collections") { calendar.collection = nil }
+            ForEach(Array(Set(calendar.state.collections.compactMap(\.string))).sorted(), id: \.self) { name in
+                Button(name) { calendar.collection = name }
+            }
+            Button("New collection…") { calendar.show(.collections) }
+        } label: { Label(calendar.collection ?? "Collections", systemImage: "folder") }
+        .accessibilityIdentifier("fri.collections")
+    }
+
+    private var pendingFilter: some View {
+        Button(calendar.onlyPending ? "Still to do" : "All plans", systemImage: "line.3.horizontal.decrease") {
+            calendar.onlyPending.toggle()
+        }.buttonStyle(.plain).padding(10)
+            .background(FRIColors.sidebar, in: RoundedRectangle(cornerRadius: 12))
+            .accessibilityIdentifier("fri.filter")
+    }
+
     @ViewBuilder private var appointments: some View {
         if visible.isEmpty {
             VStack(spacing: 16) {
@@ -414,11 +441,11 @@ struct FRIWorkspaceView: View {
                     Text("Start with one thing you would love to make time for.")
                         .foregroundStyle(FRIColors.muted).multilineTextAlignment(.center)
                     Button("Add an appointment") { calendar.newDraft(deadline: false) }
-                        .buttonStyle(.borderedProminent).tint(FRIColors.marsala)
+                        .buttonStyle(.borderedProminent).tint(FRIColors.marsala).foregroundStyle(FRIColors.cream)
                 } else {
                     Text("No appointments match this view.").foregroundStyle(FRIColors.muted)
                     Button("Show all plans") { calendar.onlyPending = false; calendar.collection = nil }
-                        .buttonStyle(.borderedProminent).tint(FRIColors.marsala)
+                        .buttonStyle(.borderedProminent).tint(FRIColors.marsala).foregroundStyle(FRIColors.cream)
                 }
             }
             .padding(30).frame(maxWidth: .infinity, minHeight: 245)
@@ -462,6 +489,7 @@ struct FRIWorkspaceView: View {
             }.padding(24).frame(maxWidth: .infinity, minHeight: 174, alignment: .leading)
                 .modifier(FRISurface(glass: glass, radius: 26))
         }.buttonStyle(.plain).accessibilityLabel("Open month calendar")
+            .accessibilityValue(Text(selected, format: .dateTime.weekday(.wide).month(.wide).day().year()))
     }
 
     private var upNext: some View {

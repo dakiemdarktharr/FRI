@@ -1,4 +1,5 @@
 import FRICore
+import FRIDesign
 import ImageIO
 import SwiftUI
 import WidgetKit
@@ -27,7 +28,7 @@ struct FRICollectionsView: View {
                         if !state.collections.contains(.string(value)) { state.collections.append(.string(value)) }
                     }) { calendar.panel = nil }
                     else { error = calendar.message }
-                }.buttonStyle(.borderedProminent)
+                }.buttonStyle(.borderedProminent).tint(FRIColors.marsala).foregroundStyle(FRIColors.cream)
             }.formStyle(.grouped)
         }
     }
@@ -42,7 +43,7 @@ struct FRISearchView: View {
         FRISheetView(title: "Search") {
             VStack {
                 TextField("Search appointments", text: $query)
-                    .textFieldStyle(.roundedBorder).padding()
+                    .textFieldStyle(FRISheetTextFieldStyle()).padding()
                     .accessibilityIdentifier("fri.search.field")
                 List {
                     ForEach(tasks.filter(matches).sorted { ($0.date, $0.time) < ($1.date, $1.time) }) { task in
@@ -186,7 +187,7 @@ struct FRIWidgetHelpView: View {
                     Text("Desktop widgets").font(.title2.bold())
                     Text("Add a Swift desktop widget, drag its top bar to move it, and drag the bottom-right corner to resize. Your position and size are restored when FRI reopens.")
                     Button("Create desktop widget", systemImage: "plus") { calendar.addDesktopWidget() }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.borderedProminent).tint(FRIColors.marsala).foregroundStyle(FRIColors.cream)
                     Button("Show desktop widgets") { calendar.showDesktopWidgets() }
                     Text("Desktop widgets use this app’s calendar. FRI must be running. The system WidgetKit gallery uses a separately configured shared store.")
                         .font(.caption).foregroundStyle(.secondary)
@@ -254,19 +255,18 @@ struct FRIAppearanceView: View {
     var body: some View {
         FRISheetView(title: "Settings") {
             Form {
+                Text("A space that feels like you")
+                    .font(.title2.weight(.semibold))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .listRowBackground(Color.clear)
                 Section("Appearance") {
-                    Toggle("Translucent surfaces", isOn: toggle("glass", initial: true))
-                    Toggle("Large text", isOn: toggle("large", initial: false))
-                    Toggle("Sidebar movement", isOn: toggle("motion", initial: true))
-                    Picker("Layout", selection: setting("layout", initial: "mosaic")) {
-                        Text("Duration mosaic").tag("mosaic")
-                        Text("List").tag("list")
+                    Picker("Sidebar background", selection: setting("sidebar", initial: "gradient")) {
+                        Text("Moving gradient").tag("gradient")
+                        Text("Solid charcoal").tag("solid")
+                        if calendar.state.settings["appleSidebarImage"] != nil { Text("My image").tag("image") }
                     }
-                    Picker("Sidebar", selection: setting("sidebar", initial: "gradient")) {
-                        Text("Gradient").tag("gradient")
-                        Text("Solid").tag("solid")
-                        if calendar.state.settings["appleSidebarImage"] != nil { Text("Photo").tag("image") }
-                    }
+                    Text("Soft movement, a still color, or your own image.")
+                        .font(.caption).foregroundStyle(.secondary)
                     Button("Choose sidebar photo…") { pickImage = true }
                     if calendar.state.settings["appleSidebarImage"] != nil {
                         Button("Remove sidebar photo", role: .destructive) {
@@ -276,18 +276,56 @@ struct FRIAppearanceView: View {
                             }
                         }
                     }
+                    LabeledContent("Palette") {
+                        HStack(spacing: 8) {
+                            ForEach([FRIColors.cream, FRIColors.ink, FRIColors.marsala], id: \.self) { color in
+                                Circle().fill(color).overlay(Circle().strokeBorder(FRIColors.line)).frame(width: 22, height: 22)
+                            }
+                        }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("Ivory, charcoal and Fri marsala")
+                    }
                 }
                 Section("Reminders") {
                     Toggle("Appointment reminders", isOn: Binding(get: { calendar.state.settings["reminders"]?.bool == true }, set: { value in
                         Task { await calendar.setReminders(value) }
-                    }))
+                    })).tint(FRIColors.marsala)
                     Text("A private reminder arrives five minutes before each appointment. Notifications hide appointment details.")
                         .font(.caption).foregroundStyle(.secondary)
+                }
+                Section("Comfort") {
+                    Toggle(isOn: toggle("glass", initial: true)) {
+                        Text("Liquid glass")
+                        Text("Turn off for solid, quieter surfaces.").font(.caption).foregroundStyle(.secondary)
+                    }.tint(FRIColors.marsala).accessibilityLabel("Liquid glass")
+                    Toggle(isOn: toggle("motion", initial: true)) {
+                        Text("Gentle motion")
+                        Text("Includes the moving sidebar. Respects Reduce Motion.").font(.caption).foregroundStyle(.secondary)
+                    }.tint(FRIColors.marsala).accessibilityLabel("Gentle motion")
+                    Toggle(isOn: toggle("large", initial: false)) {
+                        Text("Larger text")
+                        Text("A little more room to read.").font(.caption).foregroundStyle(.secondary)
+                    }.tint(FRIColors.marsala).accessibilityLabel("Larger text")
+                        .accessibilityIdentifier("fri.settings.largeText")
+                    Picker("Layout", selection: setting("layout", initial: "mosaic")) {
+                        Text("Duration mosaic").tag("mosaic")
+                        Text("List").tag("list")
+                    }
+                }
+                Button("Restore look") {
+                    _ = calendar.change {
+                        $0.settings["glass"] = .bool(true)
+                        $0.settings["motion"] = .bool(true)
+                        $0.settings["large"] = .bool(false)
+                        $0.settings["sidebar"] = .string("gradient")
+                        $0.settings["layout"] = .string("mosaic")
+                    }
                 }
                 if let error { Text(error).foregroundStyle(.red) }
                 if let message = calendar.message { Text(message).foregroundStyle(.red) }
             }
             .formStyle(.grouped)
+            .accessibilityIdentifier("fri.settings.form")
             .fileImporter(isPresented: $pickImage, allowedContentTypes: [.image]) { result in
                 Task {
                     do {

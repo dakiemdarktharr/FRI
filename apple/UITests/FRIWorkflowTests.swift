@@ -2,10 +2,75 @@ import XCTest
 
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
+    #if os(iOS)
+    func testLargerTextReachesEditorAndRestoresLook() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        let month = app.buttons["Open month calendar"]
+        XCTAssertFalse((month.value as? String ?? "").isEmpty, "The selected date must be available to assistive technology")
+        app.buttons["fri.new"].tap()
+        app.buttons["Schedule"].tap()
+        let title = app.textFields["fri.editor.title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        let ordinaryHeight = title.frame.height
+        app.buttons["Close"].firstMatch.tap()
+
+        app.buttons["fri.navigation.menu"].tap()
+        app.buttons["Settings"].tap()
+        let larger = app.switches["fri.settings.largeText"]
+        reveal(larger, in: app, form: "fri.settings.form")
+        larger.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        reveal(larger, in: app, form: "fri.settings.form")
+        XCTAssertEqual(larger.value as? String, "1")
+        app.buttons["Close"].firstMatch.tap()
+        app.buttons["fri.new"].tap()
+        app.buttons["One-time deadline"].tap()
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        XCTAssertGreaterThan(title.frame.height, ordinaryHeight * 1.1,
+                             "Larger text must apply inside presented editors")
+        title.tap()
+        title.typeText("Readable deadline")
+        reveal(app.buttons["fri.editor.submit"], in: app, form: "fri.editor.form")
+        app.buttons["fri.editor.submit"].tap()
+        let time = app.textFields["fri.editor.missingTime"]
+        XCTAssertTrue(time.waitForExistence(timeout: 5))
+        time.tap()
+        time.typeText("17:30")
+        app.buttons["fri.editor.continue"].tap()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 5))
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Calendar-with-larger-text"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+
+        app.buttons["fri.navigation.menu"].tap()
+        app.buttons["Settings"].tap()
+        reveal(app.buttons["Restore look"], in: app, form: "fri.settings.form")
+        app.buttons["Restore look"].tap()
+        reveal(larger, in: app, form: "fri.settings.form", upward: false)
+        XCTAssertEqual(larger.value as? String, "0")
+        app.buttons["Close"].firstMatch.tap()
+        app.buttons["fri.new"].tap()
+        app.buttons["Schedule"].tap()
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        XCTAssertEqual(title.frame.height, ordinaryHeight, accuracy: 1)
+    }
+    #endif
+
     private func reveal(_ element: XCUIElement, in app: XCUIApplication, form: String, upward: Bool = true) {
         let scroll = app.descendants(matching: .any)[form].firstMatch
         for _ in 0..<6 {
-            if element.exists && element.isHittable { return }
+            var visible = scroll.frame.intersection(app.frame).insetBy(dx: 0, dy: 12)
+            if app.keyboards.firstMatch.exists {
+                visible.size.height = max(0, min(visible.maxY, app.keyboards.firstMatch.frame.minY - 100) - visible.minY)
+            }
+            // A partially visible row can be hittable while its switch is below
+            // the viewport. Reveal the complete control before interacting.
+            if element.exists && element.isHittable && visible.contains(element.frame) { return }
             #if os(iOS)
             if app.keyboards.firstMatch.exists {
                 // The form's AX frame can extend behind the keyboard. Start the
@@ -43,7 +108,9 @@ final class FRIWorkflowTests: XCTestCase {
                 #if os(macOS)
                 app.checkBoxes["Preview large text"].click()
                 #else
-                app.switches["Preview large text"].tap()
+                let toggle = app.switches["Preview large text"]
+                toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+                XCTAssertEqual(toggle.value as? String, "1")
                 #endif
             }
             for size in ["Small", "Medium", "Large"] {

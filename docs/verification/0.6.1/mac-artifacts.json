@@ -1,0 +1,32 @@
+{
+  "ciRun": 45190376091,
+  "source": "2db7febc9fb30ab84374889d5f8920fb0f31df1c",
+  "manifestFilesVerified": [
+    "FRI-0.6.1-mac-x64.zip",
+    "FRI-0.6.1-mac-arm64.zip",
+    "FRI-0.6.1-mac-x64.dmg",
+    "FRI-0.6.1-mac-arm64.dmg"
+  ],
+  "artifacts": [
+    {
+      "name": "FRI-0.6.1-mac-arm64.dmg",
+      "bytes": 113435735,
+      "sha256": "2c935d2b360229c5b0c37e7c2646cc1159d0e95f21a1ce17d6b2f486892905fa"
+    },
+    {
+      "name": "FRI-0.6.1-mac-arm64.zip",
+      "bytes": 119436281,
+      "sha256": "f21283f4e59ee232e6473e4157696b02861678589d5c2845c1685d71336e60e3"
+    },
+    {
+      "name": "FRI-0.6.1-mac-x64.dmg",
+      "bytes": 116250979,
+      "sha256": "7373fd702be38ba0e1827507b8676d1e9f0802804c4019c0af72aa14ceca7511"
+    },
+    {
+      "name": "FRI-0.6.1-mac-x64.zip",
+      "bytes": 123482741,
+      "sha256": "609c566797b3be30d7d03ba5873655f5f6b0d7dddcf632ce2b4654fa07353df2"
+    }
+  ]
+}

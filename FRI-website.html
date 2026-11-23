@@ -138,8 +138,8 @@ body.motion-paused .scene *,body.motion-paused .scene{animation-play-state:pause
 </span></h1>
       <div class="download-panel" id="downloads" role="group" aria-label="Download Fri" tabindex="-1">
         <a class="pill light platform-download" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.6.1/FRI-0.6.1-win-x64.exe"><span aria-hidden="true">↓</span>Windows</a>
-        <a class="pill light platform-download" id="mac-download" href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.6.0" aria-haspopup="dialog" aria-controls="info-dialog"><span aria-hidden="true">↓</span>macOS</a>
-        <a class="pill light platform-download" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.6.0/FRI-liquid-glass.html"><span aria-hidden="true">↓</span>Linux</a>
+        <a class="pill light platform-download" id="mac-download" href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.6.1" aria-haspopup="dialog" aria-controls="info-dialog"><span aria-hidden="true">↓</span>macOS</a>
+        <a class="pill light platform-download" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.6.1/FRI-liquid-glass.html"><span aria-hidden="true">↓</span>Linux</a>
       </div>
     </div>
   </section>
@@ -182,10 +182,10 @@ body.motion-paused .scene *,body.motion-paused .scene{animation-play-state:pause
 <dialog id="info-dialog" aria-labelledby="dialog-title"><button class="dialog-close icon-button" aria-label="Close dialog">×</button><span class="pole"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 128" fill="currentColor"><path d="M30 21h13v99H30zM15 25h65v11H15zM26 60h43v10H26z"/><path d="M20 17h7v11h-7zM67 17h7v11h-7zM58 53h7v10h-7z"/></svg>
 </span><h2 id="dialog-title"></h2><div id="dialog-content"></div></dialog>
 <template id="mac-download-options">
-  <a class="pill dark" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.6.0/FRI-0.6.0-mac-arm64.dmg">Apple silicon</a>
-  <a class="pill dark" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.6.0/FRI-0.6.0-mac-x64.dmg">Intel</a>
+  <a class="pill dark" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.6.1/FRI-0.6.1-mac-arm64.dmg">Apple silicon</a>
+  <a class="pill dark" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.6.1/FRI-0.6.1-mac-x64.dmg">Intel</a>
 </template>
-<noscript><style>#intro{display:none}#site{display:block}.intro-active{overflow:auto}</style><div class="noscript-message">Enable JavaScript to watch the intro and demo. <a href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.6.0">Download Fri</a></div></noscript>
+<noscript><style>#intro{display:none}#site{display:block}.intro-active{overflow:auto}</style><div class="noscript-message">Enable JavaScript to watch the intro and demo. <a href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.6.1">Download Fri</a></div></noscript>
 <script>(() => {
   'use strict';
   const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -367,9 +367,11 @@ body.motion-paused .scene *,body.motion-paused .scene{animation-play-state:pause
     requestAnimationFrame(frame);
   }
   reduced.addEventListener('change',()=>{if(reduced.matches){paused=true;syncVideo();updatePause()}});
-  async function seekReviewFrame(seconds){
+  async function seekReviewFrame(seconds,{media=true}={}){
     reviewFrozen=true;elapsed=seconds*1000;lastKey='';renderDemo();
     const v=$('#surf');v.pause();
+    // Footer-only review does not decode an off-screen video that WebKit suspends.
+    if(!media){window.FRI_MOTION?.render(seconds,true);return}
     async function waitForMedia(event,predicate){
       if(predicate())return;
       await new Promise((resolve,reject)=>{

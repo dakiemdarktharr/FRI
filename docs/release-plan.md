@@ -4,7 +4,7 @@ Updated 23 November 2026. Current user instruction authorizes GitHub commits, pu
 
 ## Current milestone — v0.6.1 smart import
 
-Windows 0.6.1 adds optional OpenAI image/page extraction, isolated source sign-in, encrypted remembered cookies, missing-field cards, local deadline planning, past filtering and richer ICS handling. [Behavior and limits](smart-import.md). macOS download remains the separately tested 0.6.0 development build until its next artifacts are verified; Apple/Android import parity is not yet implemented.
+Windows 0.6.1 adds optional OpenAI image/page extraction, isolated source sign-in, encrypted remembered cookies, missing-field cards, local deadline planning, past filtering and richer ICS handling. [Behavior and limits](smart-import.md). macOS 0.6.1 artifacts passed the Intel CI suite and package checks; they remain unsigned development builds; Apple/Android import parity is not yet implemented.
 
 ## Previous milestone — v0.5.0 and Android local alpha
 

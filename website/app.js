@@ -179,9 +179,11 @@
     requestAnimationFrame(frame);
   }
   reduced.addEventListener('change',()=>{if(reduced.matches){paused=true;syncVideo();updatePause()}});
-  async function seekReviewFrame(seconds){
+  async function seekReviewFrame(seconds,{media=true}={}){
     reviewFrozen=true;elapsed=seconds*1000;lastKey='';renderDemo();
     const v=$('#surf');v.pause();
+    // Footer-only review does not decode an off-screen video that WebKit suspends.
+    if(!media){window.FRI_MOTION?.render(seconds,true);return}
     async function waitForMedia(event,predicate){
       if(predicate())return;
       await new Promise((resolve,reject)=>{

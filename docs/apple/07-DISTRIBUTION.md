@@ -37,4 +37,4 @@ xcodebuild -exportArchive -archivePath artifacts/FRIiOS.xcarchive -exportOptions
 
 Generate export options from current Xcode-supported keys. Upload via Organizer/current supported route, TestFlight on real devices, then App Review. Supply privacy details, screenshots, age rating, support/privacy URLs, export compliance and notes explaining local data/widgets/providers. [Distribution](https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases).
 
-Premium is50,000 VND/month, not purchasable yet. Future iOS digital subscriptions require compliant StoreKit setup/verified entitlements. No fake purchase or hard-coded premium status; review current rules before enabling payments.
+Premium is 50,000 VND/month, not purchasable yet. Future iOS digital subscriptions require compliant StoreKit setup/verified entitlements. No fake purchase or hard-coded premium status; review current rules before enabling payments.

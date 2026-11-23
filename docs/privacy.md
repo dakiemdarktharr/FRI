@@ -1,6 +1,6 @@
 # FRI privacy boundaries
 
-FRI 0.3 stores appointments, drafts, settings and widget layout on the device. There is no FRI calendar server, analytics SDK, advertising SDK, account database or billing collection in this release. Premium is coming soon.
+FRI 0.4 stores appointments, drafts, settings and widget layout on the device. There is no FRI calendar server, analytics SDK, advertising SDK, account database or billing collection in this release. Premium is advertised at 50,000 VND/month and remains unavailable for purchase.
 
 The desktop writes an atomic encrypted calendar file in Electron userData. Encryption uses Electron safeStorage's asynchronous OS key provider (Windows DPAPI / macOS Keychain). A failed unlock never resets the saved calendar. Existing v0.2 localStorage is migrated only after an encrypted write succeeds, then its active key is removed. This does not promise forensic erasure of older disk sectors or browser database remnants.
 
@@ -14,7 +14,7 @@ The main renderer has no Node access, runs in a sandbox with context isolation, 
 | Download / check for updates | Standard request metadata, update version request | GitHub release infrastructure |
 | Read public calendar link | Requested URL and IP, no cookies or calendar upload | The user-selected public HTTPS site; public DNS addresses pinned for the request; redirects/private addresses blocked |
 | Choose weather city | City search, then selected coordinates and IP | Open-Meteo; forecast refresh every 30 minutes while FRI runs; Disconnect stops refresh |
-| Explore maps | The region/search and browser metadata | Google Maps in the user's browser |
+| Explore maps | Manual city search, selected map area/tiles and IP; no automatic location tracking | Open-Meteo city lookup and OpenStreetMap tiles in an isolated map window |
 | Open Spotify player | Selected content URL, playback/account activity managed by Spotify | Spotify in an isolated, nonpersistent browser session, with no FRI bridge |
 | Export backup / free time | A local file, shared only if the user sends it | User-selected filesystem location |
 
@@ -26,4 +26,10 @@ Windows desktop collision handling reads icon coordinates, not file contents. A 
 
 OS encryption protects a copied file and other operating-system accounts. On Windows it does not isolate secrets from malicious software already running as the same signed-in user. An unlocked device, user-exported backups, screenshots, provider accounts and compromised operating systems remain outside that protection. FRI does not claim absolute privacy against those threats. Unsigned macOS builds can prompt for Keychain access again after an update; stable code signing is needed before a supported Mac release.
 
-Provider references: [Electron safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage), [Spotify Embeds](https://developer.spotify.com/documentation/embeds), [Google Maps URLs](https://developers.google.com/maps/documentation/urls/get-started), [Open-Meteo terms and pricing](https://open-meteo.com/en/pricing).
+Provider references: [Electron safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage), [Spotify Embeds](https://developer.spotify.com/documentation/embeds), [OpenStreetMap tile policy](https://operations.osmfoundation.org/policies/tiles/), [Open-Meteo terms and pricing](https://open-meteo.com/en/pricing).
+
+## Native refraction and service isolation (0.4)
+
+On supported Windows x64 hardware, desktop/glass.cjs uses a native Direct3D desktop-duplication/refraction layer. Desktop pixels remain in GPU memory; FRI does not persist them, expose them to renderer JavaScript or upload them. The separate lens panel excludes itself from captures to avoid recursion, so screen recordings may not include the visible lens. Disabling glass or hiding/minimizing the window suspends the panel. Unsupported systems retain an OS material or solid fallback; this is not Apple's native compositor.
+
+The map renderer has its own restricted preload and session, no calendar bridge, no geolocation permission and only OSM tile network access. Normal HTTP tile cache is stored locally in its isolated session; Disconnect Maps closes the map and clears that cache. Spotify uses a separate ephemeral session; Disconnect closes playback and clears session storage. Disconnect Weather invalidates an in-flight forecast so a late response cannot reconnect it.

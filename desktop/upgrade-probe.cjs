@@ -1,4 +1,4 @@
-const assert=require('node:assert/strict');
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {_electron}=require('../tests/node_modules/playwright');
 const [exe,profile,mode,version]=process.argv.slice(2);
 (async()=>{
@@ -15,7 +15,7 @@ const [exe,profile,mode,version]=process.argv.slice(2);
     }
     await p.evaluate(()=>FRI_PREVIEW.settled?.());
     const s=await p.evaluate(()=>FRI_PREVIEW.getState());
-    assert.equal(s.tasks.length,8);assert(s.tasks.some(t=>t.title==='Installer upgrade retained this deadline'));assert.equal(s.settings.large,true);
+    const expectedFile=path.join(profile,'upgrade-expectation.json');if(mode==='seed')fs.writeFileSync(expectedFile,JSON.stringify({tasks:s.tasks,large:s.settings.large}));const expected=JSON.parse(fs.readFileSync(expectedFile,'utf8'));assert.deepEqual(s.tasks,expected.tasks);assert.equal(s.settings.large,expected.large);assert(s.tasks.some(t=>t.title==='Installer upgrade retained this deadline'));assert.equal(s.settings.large,true);
     console.log(JSON.stringify({version,mode,appointments:s.tasks.length,deadlinePreserved:true,settingsPreserved:true,origin:await p.evaluate(()=>location.origin)}));
   }finally{await app.close();}
 })().catch(e=>{console.error(e);process.exit(1)});

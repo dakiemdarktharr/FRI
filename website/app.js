@@ -3,8 +3,8 @@
   const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const site=$('#site'), intro=$('#intro'), noise=$('#noise'), quiet=$('#quiet');
-  const release='https://github.com/dakiemdarktharr/FRI/releases/download/v0.3.0/';
-  const releases='https://github.com/dakiemdarktharr/FRI/releases/tag/v0.3.0';
+  const release='https://github.com/dakiemdarktharr/FRI/releases/download/v0.4.0/';
+  const releases='https://github.com/dakiemdarktharr/FRI/releases/tag/v0.4.0';
   const evidence={spamDuration:1300,events:[],demoFrames:0,seaFrames:0,os:'',entered:false};
   window.FRI_WEBSITE={evidence};
   site.inert=true;
@@ -94,7 +94,7 @@
   });
   $('.skip-link').addEventListener('click',()=>{if(!entered)enterSite()});
 
-  // Downloads use published v0.3.0 artifacts. CPU architecture is never guessed.
+  // Downloads use published v0.4.0 artifacts. CPU architecture is never guessed.
   const platform=(navigator.userAgentData?.platform||navigator.platform||navigator.userAgent).toLowerCase();
   const touchMac=platform.includes('mac')&&navigator.maxTouchPoints>1;
   const os=platform.includes('win')?'windows':platform.includes('mac')&&!touchMac?'macos':'other';
@@ -103,12 +103,12 @@
   const label=os==='windows'?'Download for Windows':os==='macos'?'Download for macOS':'Download Fri';
   $$('.download').forEach(a=>{
     a.querySelector('.download-label').textContent=label;
-    if(os==='windows'){a.href=release+'FRI-0.3.0-win-x64.exe';a.querySelector('.os-icon').innerHTML=iconWindows;a.querySelector('.os-icon').style.width='15px'}
+    if(os==='windows'){a.href=release+'FRI-0.4.0-win-x64.exe';a.querySelector('.os-icon').innerHTML=iconWindows;a.querySelector('.os-icon').style.width='15px'}
     else {a.href=releases;a.addEventListener('click',e=>{e.preventDefault();openDialog('download')})}
   });
   const dialog=$('#info-dialog');
   function options(){
-    return '<div class="download-options"><a class="download-option" href="'+release+'FRI-0.3.0-win-x64.exe"><span>Windows<small>x64 · Unsigned</small></span><span>↓</span></a><a class="download-option" href="'+release+'FRI-0.3.0-mac-arm64.dmg"><span>macOS<small>Apple silicon · Development build</small></span><span>↓</span></a><a class="download-option" href="'+release+'FRI-0.3.0-mac-x64.dmg"><span>macOS<small>Intel · Development build</small></span><span>↓</span></a></div>';
+    return '<div class="download-options"><a class="download-option" href="'+release+'FRI-0.4.0-win-x64.exe"><span>Windows<small>x64 · Unsigned</small></span><span>↓</span></a><a class="download-option" href="'+release+'FRI-0.4.0-mac-arm64.dmg"><span>macOS<small>Apple silicon · Development build</small></span><span>↓</span></a><a class="download-option" href="'+release+'FRI-0.4.0-mac-x64.dmg"><span>macOS<small>Intel · Development build</small></span><span>↓</span></a></div>';
   }
   function openDialog(type){
     if(type==='pricing'){
@@ -184,10 +184,13 @@
   $('#motion-access').addEventListener('click',()=>{paused=!paused;updatePause();if(paused)$('#surf').pause();else $('#surf').play().catch(()=>{})});
   updatePause();renderDemo();
 
-  let motionTime=0,reviewFrozen=false;
+  let motionTime=0,reviewFrozen=false,seaVisible=true,demoVisible=true;
+  const visibilityObserver=new IntersectionObserver(entries=>{for(const e of entries){if(e.target.id==='home')seaVisible=e.isIntersecting;else demoVisible=e.isIntersecting}syncVideo()},{rootMargin:'100px'});
+  function syncVideo(){const v=$('#surf');if(entered&&seaVisible&&!document.hidden&&!paused&&!reviewFrozen)v.play().catch(()=>{});else v.pause()}
+  visibilityObserver.observe($('#home'));visibilityObserver.observe($('#demo'));document.addEventListener('visibilitychange',syncVideo);
   function frame(now){
     const dt=Math.min(now-lastFrame,60);lastFrame=now;
-    if(entered&&!document.hidden&&!paused&&!reviewFrozen){elapsed+=dt;motionTime+=dt/1000;renderDemo();window.FRI_MOTION?.render(motionTime)}
+    if(entered&&!document.hidden&&!paused&&!reviewFrozen){elapsed+=dt;motionTime+=dt/1000;if(demoVisible)renderDemo();window.FRI_MOTION?.render(motionTime)}
     requestAnimationFrame(frame);
   }
   reduced.addEventListener('change',()=>{if(reduced.matches){paused=true;$('#surf').pause();updatePause()}});

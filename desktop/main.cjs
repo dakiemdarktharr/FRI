@@ -6,6 +6,7 @@ const os = require('node:os');
 const {createStore}=require('./store.cjs');
 const {createWidgets}=require('./widgets.cjs');
 const {createServices}=require('./services.cjs');
+const {nativeGlass, attachGlass}=require('./glass.cjs');
 const {autoUpdater} = require('electron-updater');
 
 // A stable origin and userData directory keep calendar storage across installations.
@@ -18,8 +19,9 @@ const startURL = 'app://fri/index.html';
 const uiPath = path.join(__dirname, 'ui');
 const isMac = process.platform === 'darwin';
 const supportsAcrylic = process.platform === 'win32' && Number(os.release().split('.')[2]) >= 22621;
-const material = isMac ? 'vibrancy' : supportsAcrylic ? 'acrylic' : 'solid';
+const material = nativeGlass ? 'liquid-glass' : isMac ? 'vibrancy' : supportsAcrylic ? 'acrylic' : 'solid';
 let store, widgets, services, quitting=false;
+let glassController;
 let win, checking = false, updateDialog = false;
 
 function trusted(event) {
@@ -43,6 +45,7 @@ function windowAction(action) {
 }
 function setGlass(enabled) {
   if(typeof enabled!=='boolean')throw new Error('Invalid material preference');
+  if(glassController){glassController.setEnabled(enabled);return;}
   if(supportsAcrylic)win.setBackgroundMaterial(enabled?'acrylic':'none');
   if(isMac)win.setVibrancy(enabled?'under-window':null);
   win.setBackgroundColor(enabled&&material!=='solid'?'#00000000':'#151515');
@@ -89,13 +92,14 @@ autoUpdater.on('update-available',async info=>{
 function createWindow(){
   const workArea=screen.getPrimaryDisplay().workAreaSize;
   win=new BrowserWindow({
-    width:Math.min(1440,Math.max(860,workArea.width-80)),height:Math.min(980,Math.max(640,workArea.height-80)),minWidth:860,minHeight:640,show:false,frame:false,roundedCorners:true,
+    width:Math.min(1440,Math.max(860,workArea.width-80)),height:Math.min(980,Math.max(640,workArea.height-80)),minWidth:640,minHeight:480,show:false,frame:false,roundedCorners:true,
     title:'FRI',autoHideMenuBar:true,backgroundColor:material==='solid'?'#151515':'#00000000',
-    ...(supportsAcrylic?{backgroundMaterial:'acrylic'}:{}),
+    ...(nativeGlass?{transparent:true}:supportsAcrylic?{backgroundMaterial:'acrylic'}:{}),
     ...(isMac?{vibrancy:'under-window',visualEffectState:'active'}:{}),
     webPreferences:{preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,webSecurity:true,allowRunningInsecureContent:false,
       additionalArguments:[`--fri-version=${app.getVersion()}`,`--fri-material=${material}`]}
   });
+  if(nativeGlass)glassController=attachGlass(win,store.read().state?.settings?.glass!==false);
   win.setMenuBarVisibility(false);
   win.webContents.setWindowOpenHandler(({url})=>{try{openExternal(url)}catch{}return {action:'deny'};});
   win.webContents.on('will-navigate',(event,url)=>{if(url!==startURL)event.preventDefault();});
@@ -112,7 +116,7 @@ if(!app.requestSingleInstanceLock()){app.quit();}else{
   app.whenReady().then(async()=>{
     nativeTheme.themeSource='dark';
     store=createStore(app.getPath('userData'),safeStorage);
-    try{await store.init()}catch(e){dialog.showErrorBox('FRI — Secure storage',e.message);app.quit();return}
+    try{await store.init()}catch(e){dialog.showErrorBox('FRI â€” Secure storage',e.message);app.quit();return}
     const csp=JSON.parse(fs.readFileSync(path.join(uiPath,'csp.json'),'utf8'));
     protocol.handle('app',request=>{
       const widgetFiles={'app://fri/widget.html':'widget.html','app://fri/widget-select.html':'widget-select.html'};
@@ -138,5 +142,5 @@ if(!app.requestSingleInstanceLock()){app.quit();}else{
     app.on('activate',()=>{if(!win)createWindow()});
   });
   app.on('window-all-closed',()=>{if(!isMac)app.quit()});
-  app.on('before-quit',e=>{if(quitting)return;e.preventDefault();quitting=true;widgets?.cleanup();services?.stop();Promise.resolve(store?.settled()).finally(()=>app.quit())});
+  app.on('before-quit',e=>{if(quitting)return;e.preventDefault();quitting=true;widgets?.cleanup();services?.stop();glassController?.destroy();nativeGlass?.shutdown();Promise.resolve(store?.settled()).finally(()=>app.quit())});
 }

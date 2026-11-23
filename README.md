@@ -1,6 +1,6 @@
 # FRI
 
-A local-first calendar with a native glass workspace and desktop widgets. **Premium is coming soon; no payments or account signup are enabled.**
+A local-first calendar with a native glass workspace and desktop widgets. **Premium: 50,000 VND/month, coming soon. No payments or account signup are enabled.**
 
 - **Website:** https://fri-acne-a6cd.vercel.app — XP-style opening, halftone surf, continuous app demo and Pricing.
 - **Installers:** [GitHub Releases](https://github.com/dakiemdarktharr/FRI/releases).
@@ -11,13 +11,13 @@ A local-first calendar with a native glass workspace and desktop widgets. **Prem
 
 Start with **New → Schedule** or **One-time deadline**. Name your plan, add details, choose **Add another**, then **Done**. FRI asks for missing information one card at a time and checks overlaps before saving. Complete each task to fill the day ring. Dates open in separate tabs; Calendar shows month and year views. Search, edit, bulk delete, undo, backup and restore are available from the sidebar and menus.
 
-**File → Create FRI widget on desktop** opens a drawing overlay. Drag out an area, then release. Move the widget by its header, resize from its edges, and complete the current task directly. Its content adapts to the available space. Windows Explorer icons move out of its area when Auto arrange icons is off, and unchanged positions are restored when the last widget closes. On macOS this is currently a floating window; Finder icon reflow and WidgetKit are not implemented.
+**File → Create FRI widget on desktop** opens a drawing overlay. Drag out an area, then release. Move the widget by its header, resize from its bottom-right grip (or use arrow keys on the focused header/grip), and complete the current task directly. Its content adapts to the available space. Windows Explorer icons move out of its area when Auto arrange icons is off, and unchanged positions are restored when the last widget closes. On macOS this is currently a floating window; Finder icon reflow and WidgetKit are not implemented.
 
 **File → Import plans** accepts text, ICS, images and public HTTPS calendar links. Windows OCR reads images locally with installed OCR languages. Review source evidence and dates before confirming. **Find time for a task** finds a contiguous free slot; **Find time together** compares explicitly shared free-time files without event details.
 
-Weather fetches a real Open-Meteo forecast for a chosen city. Spotify opens an isolated official Embed player; account playback depends on Spotify. Maps opens Google Maps search for a chosen area. Health is a manual step entry. These optional actions disclose the provider receiving the request. [Privacy boundaries](docs/privacy.md).
+Weather fetches a real Open-Meteo forecast for a chosen city. Spotify opens an isolated official Embed player; account playback depends on Spotify. Maps opens an interactive OpenStreetMap view for a city you choose. Health is a manual step entry. These optional actions disclose the provider receiving the request. [Privacy boundaries](docs/privacy.md).
 
-The main space uses Windows Acrylic or macOS under-window vibrancy to reveal real blurred wallpaper and windows. This is native translucency, not Apple's Liquid Glass compositor. The app palette is monochrome; the marketing website uses white and marsala.
+The Windows x64 workspace uses a guarded Direct3D desktop-refraction layer from @hicccc77/electron-liquid-glass, with OS-material/solid fallbacks. This samples the actual desktop locally on the GPU; it is not Apple's compositor. macOS currently uses under-window vibrancy; the native Apple implementation is specified in the handoff. The app palette is monochrome; the marketing website uses white and marsala.
 
 ## Develop and verify
 
@@ -53,8 +53,8 @@ docker compose down
 
 ## Release boundaries
 
-v0.3 is a Windows-first, keyless release. Calendar data is encrypted locally with OS-provided keys. No calendar-content server or telemetry exists. Windows installers replace old application files and retain user data; update installation happens after download succeeds. Builds are unsigned until signing certificates are supplied. Mac CI artifacts are development builds requiring signing, notarization and physical-device review before a supported Mac release.
+v0.4 is a Windows-first, keyless release. Calendar data is encrypted locally with OS-provided keys. No calendar-content server or telemetry exists. Windows installers replace old application files and retain user data; update installation happens after download succeeds. Builds are unsigned until signing certificates are supplied. Mac CI artifacts are development builds requiring signing, notarization and physical-device review before a supported Mac release.
 
 Premium entitlement, account signup, OAuth/Spotify Web Playback SDK, Google Places/Routes APIs, automatic shared-calendar linking, cloud/multimodal Day AI and an iOS app are not shipped. Day provides local planning shortcuts and on-device spoken playback when a system voice is available. Recurrence expansion, overnight schedules and nested travel/context planning are not exposed in the new desktop interface. The earlier research workspace and its richer domain tests remain in index.html; the current desktop reuses its ICS/JSON-LD parser, not its entire separate data model.
 
-[Current release scope](docs/release-plan.md) · [Technology](docs/technology.md) · [Ocean asset license](website/assets/NOTICE.md)
+[Apple build and parity guide](docs/apple/00-START-HERE.md) · [0.4 verification](docs/release-verification-0.4.0.md) · [Current release scope](docs/release-plan.md) · [Technology](docs/technology.md) · [Ocean asset license](website/assets/NOTICE.md)

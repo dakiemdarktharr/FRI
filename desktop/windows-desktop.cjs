@@ -1,7 +1,9 @@
 'use strict';
 // Windows Explorer owns desktop icon positions. Only the allocated POINT buffer
 // is read from Explorer; no file contents or unrelated process memory are read.
+let cached;
 function windowsDesktop(){
+ if(cached)return cached;
  if(process.platform!=='win32')return null;
  const k=require('koffi'),u=k.load('user32.dll'),kernel=k.load('kernel32.dll');
  const find=u.func('void * __stdcall FindWindowExW(void *, void *, str16, str16)');
@@ -10,6 +12,8 @@ function windowsDesktop(){
  const send=u.func('intptr_t __stdcall SendMessageTimeoutW(void *, uint32_t, uintptr_t, intptr_t, uint32_t, uint32_t, _Out_ uintptr_t *)');
  const getStyle=u.func('intptr_t __stdcall GetWindowLongPtrW(void *, int)');
  const setStyle=u.func('intptr_t __stdcall SetWindowLongPtrW(void *, int, intptr_t)');
+ const gdi=k.load('gdi32.dll'),roundRegion=gdi.func('void * __stdcall CreateRoundRectRgn(int,int,int,int,int,int)'),deleteObject=gdi.func('bool __stdcall DeleteObject(void *)'),setRegion=u.func('int __stdcall SetWindowRgn(void *,void *,bool)'),windowRect=u.func('bool __stdcall GetWindowRect(void *,_Out_ void *)');
+ const position=u.func('bool __stdcall SetWindowPos(void *,void *,int,int,int,int,uint32_t)');
  const setParent=u.func('void * __stdcall SetParent(void *, void *)');
  const pid=u.func('uint32_t __stdcall GetWindowThreadProcessId(void *, _Out_ uint32_t *)');
  const open=kernel.func('void * __stdcall OpenProcess(uint32_t, bool, uint32_t)');
@@ -26,7 +30,8 @@ function windowsDesktop(){
   const spacing=message(list,0x1033);return {icons,count,offset:{x:offset.readInt32LE(0),y:offset.readInt32LE(4)},cell:{width:spacing&0xffff,height:(spacing>>>16)&0xffff}};
  }
  function move(id,p){const {list}=host(),offset=Buffer.alloc(8);origin(list,offset);const x=Math.round(p.x-offset.readInt32LE(0)),y=Math.round(p.y-offset.readInt32LE(4));if(x<0||y<0||x>32767||y>32767)return false;return !!message(list,0x100f,id,(x&0xffff)|((y&0xffff)<<16))}
- function attach(win){const {view}=host(),handle=win.getNativeWindowHandle().readBigUInt64LE(0);const style=Number(getStyle(handle,-16));setStyle(handle,-16,(style&~0x80000000)|0x40000000);setParent(handle,view);return true}
- return {snapshot,move,attach};
+ function round(win){const handle=win.getNativeWindowHandle().readBigUInt64LE(0),screen=require('electron').screen,b=win.getBounds(),scale=screen.getDisplayMatching(b).scaleFactor,p=screen.dipToScreenRect(win,b),rect=Buffer.alloc(16);if(!windowRect(handle,rect))return;const x=p.x-rect.readInt32LE(0),y=p.y-rect.readInt32LE(4),r=Math.round(56*scale),region=roundRegion(x,y,x+p.width+1,y+p.height+1,r,r);if(region&&!setRegion(handle,region,true))deleteObject(region)}
+ function attach(win){const {view}=host(),handle=win.getNativeWindowHandle().readBigUInt64LE(0);const style=Number(getStyle(handle,-16));setStyle(handle,-16,(style&~0x80cf0000)|0x40000000);setParent(handle,view);position(handle,null,0,0,0,0,0x37);round(win);return true}
+ return cached={snapshot,move,attach,round};
 }
 module.exports={windowsDesktop};

@@ -1,0 +1,29 @@
+name: Android source verification
+on:
+  pull_request:
+    paths: ['mobile/**', '.github/workflows/android.yml']
+  push:
+    branches: [main]
+    paths: ['mobile/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci --prefix mobile
+      - run: npm run typecheck --prefix mobile
+      - run: npm run lint --prefix mobile
+      - run: npm audit --prefix mobile --audit-level=moderate
+# Native APK and launcher receipts are documented separately in mobile/docs/verification.md.
+# This job deliberately does not call static checks a device/widget test.

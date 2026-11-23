@@ -1,0 +1,20 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+ <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+ <application>
+  <activity android:name=".FriWidgetEditorActivity" android:exported="true" android:label="Configure Fri widget">
+   <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
+  </activity>
+  <receiver android:name=".TodayAgendaWidgetReceiver" android:exported="false" android:label="Fri · Today's agenda">
+   <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+   <meta-data android:name="android.appwidget.provider" android:resource="@xml/fri_agenda_widget" />
+  </receiver>
+  <receiver android:name=".NextEventWidgetReceiver" android:exported="false" android:label="Fri · Up next">
+   <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+   <meta-data android:name="android.appwidget.provider" android:resource="@xml/fri_next_widget" />
+  </receiver>
+  <receiver android:name=".WidgetPinSuccessReceiver" android:exported="false" />
+  <receiver android:name=".WidgetTimeReceiver" android:exported="false">
+   <intent-filter><action android:name="android.intent.action.DATE_CHANGED"/><action android:name="android.intent.action.TIME_SET"/><action android:name="android.intent.action.TIMEZONE_CHANGED"/><action android:name="android.intent.action.BOOT_COMPLETED"/><action android:name="android.intent.action.MY_PACKAGE_REPLACED"/></intent-filter>
+  </receiver>
+ </application>
+</manifest>

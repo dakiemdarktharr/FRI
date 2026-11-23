@@ -1,0 +1,5 @@
+import {Alert} from 'react-native';
+import {Page,Label,Card,Button} from '../../components/ui';
+import {useFri} from '../../lib/store';
+import {call} from '../../lib/fri';
+export default function Settings(){const{data}=useFri();const save=(key:string,value:string)=>void call('preferences',{[key]:value}).catch(e=>Alert.alert('Settings',e.message));return <Page><Label large>Make it yours.</Label><Card><Label>Appearance</Label>{['system','light','dark'].map(v=><Button key={v} title={`${(data?.preferences.theme??'system')===v?'✓ ':''}${v}`} secondary onPress={()=>save('theme',v)}/>)}</Card><Card><Label>Time format</Label>{['system','12h','24h'].map(v=><Button key={v} title={`${(data?.preferences.hourFormat??'system')===v?'✓ ':''}${v}`} secondary onPress={()=>save('hourFormat',v)}/>)}</Card><Card><Label>Local by design.</Label><Label muted>Your events and widget settings stay in Fri’s private storage. No account, analytics, or cloud sync.</Label><Label muted>Widget appearance is configured separately for each widget.</Label></Card></Page>}

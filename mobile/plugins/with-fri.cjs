@@ -1,0 +1,7 @@
+const {withAndroidManifest,withGradleProperties,withAppBuildGradle}=require('expo/config-plugins');
+module.exports=function(config){
+ config=withAndroidManifest(config,c=>{const app=c.modResults.manifest.application[0];app.$['android:allowBackup']='false';app.$['android:fullBackupContent']='false';return c});
+ config=withAppBuildGradle(config,c=>{if(!c.modResults.contents.includes('// Fri java.time compatibility'))c.modResults.contents+='\n// Fri java.time compatibility\nandroid { compileOptions { coreLibraryDesugaringEnabled true } }\ndependencies { coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5" }\n';return c});
+ config=withAppBuildGradle(config,c=>{const marker='// Fri native path limits';c.modResults.contents=c.modResults.contents.replace(/-DCMAKE_OBJECT_PATH_MAX=180/g,'-DCMAKE_OBJECT_PATH_MAX=250');if(!c.modResults.contents.includes(marker))c.modResults.contents+='\n'+marker+'\nandroid {\n defaultConfig { externalNativeBuild { cmake { arguments "-DCMAKE_OBJECT_PATH_MAX=250" } } }\n externalNativeBuild { cmake { if (System.getenv("FRI_NATIVE_BUILD_ROOT")) buildStagingDirectory System.getenv("FRI_NATIVE_BUILD_ROOT") } }\n}\n';return c});
+ return withGradleProperties(config,c=>{for(const [key,value]of Object.entries({'org.gradle.jvmargs':'-Xmx2048m -XX:MaxMetaspaceSize=768m','org.gradle.workers.max':'2','org.gradle.parallel':'false','kotlin.daemon.jvm.options':'-Xmx1024m'})){c.modResults=c.modResults.filter(x=>x.key!==key);c.modResults.push({type:'property',key,value})}return c});
+};

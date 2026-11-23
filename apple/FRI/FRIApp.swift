@@ -95,6 +95,7 @@ final class FRICalendarSession {
     var appointment: Appointment?
     var draftDeadline = false
     var draftReviewIDs: Set<String>?
+    var draftStartingID: String?
     var onlyPending = false
     var collection: String?
     var restoreCandidate: CalendarState?
@@ -224,15 +225,17 @@ final class FRICalendarSession {
         }
     }
 
-    func newDraft(deadline: Bool) {
+    func newDraft(deadline: Bool, startingID: String? = nil) {
         guard ready else { return }
         draftReviewIDs = nil
+        draftStartingID = startingID
         draftDeadline = deadline
         show(.draft)
     }
 
     func reviewDrafts(_ ids: Set<String>) {
         guard ready, !ids.isEmpty else { return }
+        draftStartingID = nil
         draftReviewIDs = ids
         show(.draft)
     }

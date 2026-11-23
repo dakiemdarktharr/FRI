@@ -106,6 +106,6 @@ struct FRIDayAssistantView: View {
         item.date = calendar.state.active
         item.kind = "schedule"
         guard calendar.addDrafts([item]) else { error = calendar.message; return }
-        calendar.newDraft(deadline: false)
+        calendar.newDraft(deadline: false, startingID: item.id)
     }
 }

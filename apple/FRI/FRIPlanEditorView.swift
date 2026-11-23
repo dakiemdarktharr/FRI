@@ -70,14 +70,17 @@ struct FRIPlanEditorView: View {
                         Section("Saved drafts") {
                             ForEach(calendar.state.drafts) { item in
                                 HStack {
-                                    Button(item.title) {
+                                    Button {
                                         if !draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                                            draft.id != item.id, !stashDraft() { return }
                                         draft = item
+                                    } label: {
+                                        Text(item.title)
+                                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                            .contentShape(Rectangle())
                                     }
                                     .buttonStyle(.plain)
                                     .accessibilityIdentifier("fri.draft.\(item.id)")
-                                    Spacer()
                                     Button("Remove draft", systemImage: "trash", role: .destructive) {
                                         if calendar.change({ $0.drafts.removeAll { $0.id == item.id } }), draft.id == item.id { resetDraft() }
                                     }.labelStyle(.iconOnly).buttonStyle(.borderless)
@@ -104,6 +107,12 @@ struct FRIPlanEditorView: View {
             if let editing { draft = editing }
             else {
                 resetDraft()
+                if let id = calendar.draftStartingID {
+                    calendar.draftStartingID = nil
+                    if let savedDraft = calendar.state.drafts.first(where: { $0.id == id }) {
+                        draft = savedDraft
+                    }
+                }
                 if let ids = calendar.draftReviewIDs {
                     calendar.draftReviewIDs = nil
                     let imported = calendar.state.drafts.filter { ids.contains($0.id) }

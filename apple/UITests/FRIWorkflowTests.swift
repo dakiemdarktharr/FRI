@@ -3,6 +3,61 @@ import XCTest
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
     #if os(iOS)
+    func testDayDraftHandoffAndRotation() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        XCUIDevice.shared.orientation = .portrait
+        defer { XCUIDevice.shared.orientation = .portrait }
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        app.buttons["fri.new"].tap(); app.buttons["Schedule"].tap()
+        let title = app.textFields["fri.editor.title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 8))
+        title.tap(); title.typeText("Keep separate from Day")
+        app.buttons["Close"].firstMatch.tap()
+        let talk = app.buttons["Talk to Day"]
+        reveal(talk, in: app, form: "fri.calendar.content")
+        talk.tap()
+        XCTAssertTrue(app.buttons["Make time for a walk"].waitForExistence(timeout: 8))
+        app.buttons["Make time for a walk"].tap()
+        app.buttons["fri.day.create"].tap()
+        XCTAssertTrue(title.waitForExistence(timeout: 8))
+        XCTAssertEqual(title.value as? String, "A little walk", "Day must open the suggested draft, not a blank composition")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        XCTAssertEqual(title.value as? String, "A little walk")
+        let shot = XCTAttachment(screenshot: app.screenshot())
+        shot.name = "Day-draft-landscape"; shot.lifetime = .keepAlways; add(shot)
+        app.buttons["Close"].firstMatch.tap()
+        app.buttons["fri.new"].tap(); app.buttons["Resume drafts"].tap()
+        let saved = app.buttons["A little walk"]
+        reveal(saved, in: app, form: "fri.editor.form")
+        XCTAssertEqual(app.buttons.matching(identifier: "A little walk").count, 1)
+        // The whole selection row must respond, including the space after its title.
+        saved.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.5)).tap()
+        reveal(title, in: app, form: "fri.editor.form", upward: false)
+        XCTAssertEqual(title.value as? String, "A little walk")
+        let time = app.textFields["fri.editor.time"]
+        reveal(time, in: app, form: "fri.editor.form")
+        time.tap(); time.typeText("09:30\n")
+        let duration = app.textFields["fri.editor.duration"]
+        reveal(duration, in: app, form: "fri.editor.form")
+        duration.tap(); duration.typeText("25\n")
+        let done = app.buttons["fri.editor.submit"]
+        reveal(done, in: app, form: "fri.editor.form"); done.tap()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 10))
+        let walk = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "A little walk")).firstMatch
+        XCTAssertTrue(walk.waitForExistence(timeout: 8))
+        let calendarShot = XCTAttachment(screenshot: app.screenshot())
+        calendarShot.name = "Day-plan-landscape"; calendarShot.lifetime = .keepAlways; add(calendarShot)
+        app.buttons["fri.new"].tap(); app.buttons["Resume drafts"].tap()
+        let unrelated = app.buttons["Keep separate from Day"]
+        reveal(unrelated, in: app, form: "fri.editor.form")
+        XCTAssertTrue(unrelated.exists)
+        XCTAssertFalse(app.buttons["A little walk"].exists)
+    }
+
     func testSpotifyEmbeddedPlayerAndDisconnect() throws {
         guard ProcessInfo.processInfo.environment["FRI_SPOTIFY_NETWORK_TEST"] == "1" else {
             throw XCTSkip("Opt-in live Spotify embed; no account sign-in or paid subscription is used.")

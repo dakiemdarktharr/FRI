@@ -1,4 +1,8 @@
-# Desktop ground truth — v0.5.0
+# Desktop ground truth — v0.6.0
+
+Day now offers proactive calendar suggestions with optional OpenAI Luna Max ranking, and the title bar has a stateful update button. Windows fractional-DPI widget drift is fixed. See [0.6 verification](release-verification-0.6.0.md), [Day setup](day-ai.md), and [updater behavior](updater.md). Older records below retain their original version scope.
+
+## Historical v0.5 record
 
 Updated 2026-11-23. Current behavior supersedes the historical records below.
 

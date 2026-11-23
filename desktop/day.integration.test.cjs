@@ -6,7 +6,7 @@ test('Day receives native state changes, applies through IPC, and persists acros
  const results=path.join(__dirname,'test-results');fs.mkdirSync(results,{recursive:true});
  const profile=fs.mkdtempSync(path.join(results,'day-profile-'));
  const env={...process.env,FRI_TEST_MODE:'1',FRI_TEST_USER_DATA:profile};delete env.ELECTRON_RUN_AS_NODE;
- const options={executablePath:require('electron'),args:[__dirname],env};let app=await electron.launch(options);
+ const options={executablePath:process.env.FRI_TEST_EXE||require('electron'),args:process.env.FRI_TEST_EXE?[]:[__dirname],env};let app=await electron.launch(options);
  try{
   const p=await app.firstWindow(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.waitForFunction(()=>window.FRI_PREVIEW);
   await p.evaluate(async()=>{

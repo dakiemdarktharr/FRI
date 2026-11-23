@@ -12,7 +12,7 @@ const native=await readFile(path.join(here,'native.js'),'utf8');
 const dayCore=await readFile(path.join(here,'../desktop/day-core.cjs'),'utf8'),day=await readFile(path.join(here,'day.js'),'utf8');
 const chrome=await readFile(path.join(here,'chrome.js'),'utf8');
 let html = await readFile(path.join(here,'shell.html'),'utf8');
-const css=(await readFile(path.join(here,'style.css'),'utf8'))+'\n'+(await readFile(path.join(here,'brand.css'),'utf8'))+'\n'+(await readFile(path.join(here,'day.css'),'utf8')),app=await readFile(path.join(here,'app.js'),'utf8');
+const css=(await readFile(path.join(here,'style.css'),'utf8'))+'\n'+(await readFile(path.join(here,'brand.css'),'utf8'))+'\n'+(await readFile(path.join(here,'day.css'),'utf8'))+'\n'+(await readFile(path.join(here,'updates.css'),'utf8')),app=await readFile(path.join(here,'app.js'),'utf8');
 html=html.replace('/*__CSS__*/',()=>css)
   .replace('/*__APP__*/',()=>domain+'\n'+planning+'\n'+intake+'\n'+native+'\n'+dayCore+'\n'+day+'\n'+app)
   .replace('/*__CHROME__*/',()=>chrome)

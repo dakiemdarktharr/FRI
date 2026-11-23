@@ -2,9 +2,9 @@ const {test,before,after}=require('node:test');
 const assert=require('node:assert/strict');
 const path=require('node:path');
 const {pathToFileURL}=require('node:url');
-const {chromium}=require('../tests/node_modules/playwright');
+const {chromium,webkit}=require('../tests/node_modules/playwright');
 let browser;
-before(async()=>{browser=await chromium.launch()});
+before(async()=>{browser=await (process.env.FRI_BROWSER==='webkit'?webkit:chromium).launch()});
 after(async()=>{await browser?.close()});
 const task=(id,title,time,duration,extra={})=>({id,title,date:'2030-01-01',time,duration,kind:'schedule',done:false,category:'Work',location:'',notes:'',...extra});
 async function fresh(t,width=1200){

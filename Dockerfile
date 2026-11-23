@@ -3,6 +3,7 @@ WORKDIR /build
 COPY preview/package*.json preview/
 RUN npm ci --prefix preview
 COPY preview/ preview/
+COPY desktop/day-core.cjs desktop/day-core.cjs
 COPY index.html index.html
 RUN npm run build --prefix preview
 

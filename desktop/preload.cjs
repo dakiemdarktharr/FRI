@@ -17,7 +17,9 @@ contextBridge.exposeInMainWorld('friDesktop', {
   createWidget:()=>ipcRenderer.invoke('fri:widget'),
   service:(action,input)=>ipcRenderer.invoke('fri:service',action,input),
   onState:callback=>subscribe('fri:state',callback),
-  checkUpdates: () => ipcRenderer.invoke('fri:updates'),
+  checkUpdates: () => ipcRenderer.invoke('fri:updates','check'),
+  updateAction: action => ipcRenderer.invoke('fri:updates',action),
+  onUpdateState: callback => subscribe('fri:update-state', callback),
   onCommand: callback => subscribe('fri:command', callback),
   onWindowState: callback => subscribe('fri:window-state', callback)
 });

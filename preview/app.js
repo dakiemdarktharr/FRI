@@ -155,7 +155,7 @@ function updateLens(){if(!/Chrome|Chromium|Edg/.test(navigator.userAgent))return
 let resizeTimer;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(view==='day')renderMosaic();updateLens()},150)});document.addEventListener('visibilitychange',()=>window.syncGradient());reduced.addEventListener('change',()=>window.syncGradient());
 applySettings(false);render();updateLens();
 setInterval(()=>{const next=dateKey(new Date());if(next!==today){const following=state.active===today;today=next;if(following)openDay(today);else render()}},30000);
-window.FRI_PREVIEW={getState:()=>JSON.parse(JSON.stringify(state)),openDay,render,settled:()=>saveQueue};
+window.FRI_PREVIEW={getState:()=>JSON.parse(JSON.stringify(state)),openDay,render,settled:()=>saveQueue,flush:async()=>{await saveQueue;if(pendingSaves)throw Error('Calendar changes are not saved yet. Keep FRI open and retry.')}};
 window.friDesktop?.onState(payload=>{if(!pendingSaves&&payload.state){state=payload.state;baseline=JSON.parse(JSON.stringify(state));render();dayController?.changed()}});
 dayController=window.setupDay?.({getState:()=>state,save,settled:async()=>{await saveQueue;if(pendingSaves)throw Error('Hãy đợi lịch lưu xong rồi thử lại.')},replaceState:next=>{state=next;baseline=JSON.parse(JSON.stringify(next));render()},openModal,toast,escape,detail});
 window.addEventListener('storage',e=>{if(!window.friDesktop&&e.key==='fri-liquid-preview-v1'&&e.newValue){try{const next=JSON.parse(e.newValue);if(next.version===1&&Array.isArray(next.tasks)&&next.settings){state=next;render();dayController?.changed(true)}}catch{}}});

@@ -12,6 +12,37 @@
     view:[['My day','day'],['Month','month'],['Year','year'],null,['Toggle sidebar','sidebar','Ctrl/⌘ B'],['Toggle full screen','fullscreen']],
     help:[['Keyboard shortcuts','shortcuts'],['Check for updates…','updates'],['About FRI','about']]
   };
+  const updateButton=$('#fri-update'), updateAnnouncement=$('#fri-update-status');
+  let updateState=null, updateBusy=false, lastUpdatePhase='';
+  function updateToast(message){$('#toast').textContent=message;$('#toast').hidden=false;}
+  function renderUpdate(next){
+    if(!next||typeof next.phase!=='string')return;updateState=next;
+    const labels={checking:'Checking…',available:'Update v'+next.latestVersion,manual:'Download v'+next.latestVersion,downloading:'Downloading '+Math.floor(next.percent||0)+'%',ready:'Restart to update',installing:'Preparing restart…',error:'Retry update'};
+    updateButton.hidden=!bridge||!labels[next.phase];updateButton.dataset.phase=next.phase;
+    updateButton.disabled=updateBusy||['checking','downloading','installing'].includes(next.phase);
+    updateButton.querySelector('.fri-update-label').textContent=labels[next.phase]||'Check for updates';
+    updateButton.title=next.message||labels[next.phase]||'';
+    updateButton.setAttribute('aria-label',(labels[next.phase]||'Check for updates')+(next.message?'. '+next.message:''));
+    if(next.phase!==lastUpdatePhase){updateAnnouncement.textContent=next.phase==='downloading'?'Downloading the Fri update':next.message||labels[next.phase]||'';lastUpdatePhase=next.phase;}
+  }
+  async function updateAction(action){
+    if(!bridge?.updateAction||updateBusy)return;updateBusy=true;if(updateState)renderUpdate(updateState);
+    try{
+      if(action==='install'){
+        if(typeof window.FRI_PREVIEW?.flush!=='function')throw Error('Not ready');
+        await window.FRI_PREVIEW.flush();
+      }
+      const next=await bridge.updateAction(action);renderUpdate(next);
+      if(['current','unavailable','error'].includes(next.phase)||(next.phase==='ready'&&action==='install'))updateToast(next.message);
+    }catch{updateToast(action==='install'?'Your latest changes are not saved yet. Keep Fri open and retry.':'Could not check for an update. Try again later.');}
+    finally{updateBusy=false;if(updateState)renderUpdate(updateState);}
+  }
+  if(bridge?.updateAction){
+    const unsubscribe=bridge.onUpdateState(renderUpdate);
+    bridge.updateAction('status').then(renderUpdate).catch(()=>{});
+    updateButton.addEventListener('click',()=>{const actions={available:'download',manual:'open-releases',ready:'install',error:'check'};const action=actions[updateState?.phase];if(action)void updateAction(action)});
+    window.addEventListener('beforeunload',()=>unsubscribe?.(),{once:true});
+  }
   function closeMenu(focus=false){popover.hidden=true;trigger?.setAttribute('aria-expanded','false');if(focus)trigger?.focus();trigger=null;}
   async function command(action){
     if(['close','fullscreen'].includes(action)){
@@ -21,7 +52,7 @@
       return;
     }
     if(action==='updates'){
-      if(bridge)await bridge.checkUpdates();
+      if(bridge)await updateAction('check');
       else {$('#toast').textContent='Install the FRI desktop app to check for updates.';$('#toast').hidden=false;}
       return;
     }

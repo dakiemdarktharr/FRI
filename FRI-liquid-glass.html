@@ -89,6 +89,16 @@ dialog,#modal{background:#302929;color:#faf7f2;backdrop-filter:none;-webkit-back
 .day-count[hidden]{display:none}
 .flexible-option{display:flex;align-items:flex-start;gap:10px;margin:14px 0;font-size:13px;line-height:1.5}
 .flexible-option small{display:block;color:#d7cec5}
+
+.app-titlebar .fri-update{display:inline-flex;align-items:center;justify-content:center;gap:6px;order:8;margin-left:auto;padding:0 11px;min-height:26px;height:26px;border:1px solid #9f716c;border-radius:7px;background:#543633;color:#fff6ed;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;-webkit-app-region:no-drag;app-region:no-drag}
+.app-titlebar .fri-update:hover{background:#704944}.app-titlebar .fri-update:disabled{cursor:default;opacity:.85}.app-titlebar .fri-update:focus-visible{outline:2px solid #f3d7b5;outline-offset:2px}.app-titlebar .fri-update[hidden]{display:none}
+.fri-update:not([hidden])~.window-controls{margin-left:0}.app-titlebar:has(.fri-update:not([hidden])) .window-controls{margin-left:4px}.app-titlebar:has(.fri-update:not([hidden])) .titlebar-name{display:none}
+.fri-update-symbol{font-size:14px;line-height:1}.fri-update[data-phase=checking] .fri-update-symbol,.fri-update[data-phase=downloading] .fri-update-symbol,.fri-update[data-phase=installing] .fri-update-symbol{animation:fri-update-turn 1.4s linear infinite}
+.fri-update-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+[data-platform=darwin] .app-titlebar .fri-update{order:8;margin-right:12px}
+@keyframes fri-update-turn{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.fri-update .fri-update-symbol{animation:none!important}}
+@media(max-width:640px){.app-titlebar .fri-update{padding:0 7px;font-size:10px;max-width:170px}.fri-update-label{overflow:hidden;text-overflow:ellipsis}}
 </style></head>
 <body>
 <div class="desktop" aria-hidden="true"><svg viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice"><rect width="1600" height="1000" fill="#eeeeee"/><path d="M0 820C330 500 200 100 700 0H1600V1000H0" fill="#bbbbbb"/><path d="M600 1000C230 630 600 130 1170 0H1600V1000" fill="#444444"/><path d="M800 1000C510 660 940 100 1600 190V1000" fill="#888888"/><path d="M1100 1000C760 590 1400 410 1600 500V1000" fill="#171717"/><path d="M1260 1000C1070 760 1430 590 1600 660V1000" fill="#bbbbbb"/></svg></div>
@@ -99,6 +109,7 @@ dialog,#modal{background:#302929;color:#faf7f2;backdrop-filter:none;-webkit-back
     <button class="titlebar-toggle" data-action="sidebar" aria-label="Toggle sidebar" title="Toggle sidebar"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M9 5v14"/></svg></button>
     <nav class="app-menus" aria-label="App menus"><button data-menu="file" aria-haspopup="menu" aria-expanded="false">File</button><button data-menu="edit" aria-haspopup="menu" aria-expanded="false">Edit</button><button data-menu="view" aria-haspopup="menu" aria-expanded="false">View</button><button data-menu="help" aria-haspopup="menu" aria-expanded="false">Help</button></nav>
     <span class="titlebar-name">FRI</span>
+    <button class="fri-update" id="fri-update" type="button" hidden><span class="fri-update-symbol" aria-hidden="true">↻</span><span class="fri-update-label">Check for updates</span></button><span class="fri-update-status" id="fri-update-status" role="status" aria-live="polite"></span>
   </header>
   <aside class="sidebar" id="sidebar" aria-label="Navigation">
     <div id="shader" aria-hidden="true"></div><div class="sidebar-tint" aria-hidden="true"></div>
@@ -1183,7 +1194,7 @@ function updateLens(){if(!/Chrome|Chromium|Edg/.test(navigator.userAgent))return
 let resizeTimer;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(view==='day')renderMosaic();updateLens()},150)});document.addEventListener('visibilitychange',()=>window.syncGradient());reduced.addEventListener('change',()=>window.syncGradient());
 applySettings(false);render();updateLens();
 setInterval(()=>{const next=dateKey(new Date());if(next!==today){const following=state.active===today;today=next;if(following)openDay(today);else render()}},30000);
-window.FRI_PREVIEW={getState:()=>JSON.parse(JSON.stringify(state)),openDay,render,settled:()=>saveQueue};
+window.FRI_PREVIEW={getState:()=>JSON.parse(JSON.stringify(state)),openDay,render,settled:()=>saveQueue,flush:async()=>{await saveQueue;if(pendingSaves)throw Error('Calendar changes are not saved yet. Keep FRI open and retry.')}};
 window.friDesktop?.onState(payload=>{if(!pendingSaves&&payload.state){state=payload.state;baseline=JSON.parse(JSON.stringify(state));render();dayController?.changed()}});
 dayController=window.setupDay?.({getState:()=>state,save,settled:async()=>{await saveQueue;if(pendingSaves)throw Error('Hãy đợi lịch lưu xong rồi thử lại.')},replaceState:next=>{state=next;baseline=JSON.parse(JSON.stringify(next));render()},openModal,toast,escape,detail});
 window.addEventListener('storage',e=>{if(!window.friDesktop&&e.key==='fri-liquid-preview-v1'&&e.newValue){try{const next=JSON.parse(e.newValue);if(next.version===1&&Array.isArray(next.tasks)&&next.settings){state=next;render();dayController?.changed(true)}}catch{}}});
@@ -1228,6 +1239,37 @@ $('#backup-file').addEventListener('change',async e=>{
     view:[['My day','day'],['Month','month'],['Year','year'],null,['Toggle sidebar','sidebar','Ctrl/⌘ B'],['Toggle full screen','fullscreen']],
     help:[['Keyboard shortcuts','shortcuts'],['Check for updates…','updates'],['About FRI','about']]
   };
+  const updateButton=$('#fri-update'), updateAnnouncement=$('#fri-update-status');
+  let updateState=null, updateBusy=false, lastUpdatePhase='';
+  function updateToast(message){$('#toast').textContent=message;$('#toast').hidden=false;}
+  function renderUpdate(next){
+    if(!next||typeof next.phase!=='string')return;updateState=next;
+    const labels={checking:'Checking…',available:'Update v'+next.latestVersion,manual:'Download v'+next.latestVersion,downloading:'Downloading '+Math.floor(next.percent||0)+'%',ready:'Restart to update',installing:'Preparing restart…',error:'Retry update'};
+    updateButton.hidden=!bridge||!labels[next.phase];updateButton.dataset.phase=next.phase;
+    updateButton.disabled=updateBusy||['checking','downloading','installing'].includes(next.phase);
+    updateButton.querySelector('.fri-update-label').textContent=labels[next.phase]||'Check for updates';
+    updateButton.title=next.message||labels[next.phase]||'';
+    updateButton.setAttribute('aria-label',(labels[next.phase]||'Check for updates')+(next.message?'. '+next.message:''));
+    if(next.phase!==lastUpdatePhase){updateAnnouncement.textContent=next.phase==='downloading'?'Downloading the Fri update':next.message||labels[next.phase]||'';lastUpdatePhase=next.phase;}
+  }
+  async function updateAction(action){
+    if(!bridge?.updateAction||updateBusy)return;updateBusy=true;if(updateState)renderUpdate(updateState);
+    try{
+      if(action==='install'){
+        if(typeof window.FRI_PREVIEW?.flush!=='function')throw Error('Not ready');
+        await window.FRI_PREVIEW.flush();
+      }
+      const next=await bridge.updateAction(action);renderUpdate(next);
+      if(['current','unavailable','error'].includes(next.phase)||(next.phase==='ready'&&action==='install'))updateToast(next.message);
+    }catch{updateToast(action==='install'?'Your latest changes are not saved yet. Keep Fri open and retry.':'Could not check for an update. Try again later.');}
+    finally{updateBusy=false;if(updateState)renderUpdate(updateState);}
+  }
+  if(bridge?.updateAction){
+    const unsubscribe=bridge.onUpdateState(renderUpdate);
+    bridge.updateAction('status').then(renderUpdate).catch(()=>{});
+    updateButton.addEventListener('click',()=>{const actions={available:'download',manual:'open-releases',ready:'install',error:'check'};const action=actions[updateState?.phase];if(action)void updateAction(action)});
+    window.addEventListener('beforeunload',()=>unsubscribe?.(),{once:true});
+  }
   function closeMenu(focus=false){popover.hidden=true;trigger?.setAttribute('aria-expanded','false');if(focus)trigger?.focus();trigger=null;}
   async function command(action){
     if(['close','fullscreen'].includes(action)){
@@ -1237,7 +1279,7 @@ $('#backup-file').addEventListener('change',async e=>{
       return;
     }
     if(action==='updates'){
-      if(bridge)await bridge.checkUpdates();
+      if(bridge)await updateAction('check');
       else {$('#toast').textContent='Install the FRI desktop app to check for updates.';$('#toast').hidden=false;}
       return;
     }

@@ -1,0 +1,12 @@
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const wrap=body=>['BEGIN:VCALENDAR','VERSION:2.0',...body,'END:VCALENDAR'].join('\r\n');
+const event=lines=>['BEGIN:VEVENT',...lines,'END:VEVENT'];
+test('calendar recurrence respects exclusions, exceptions, canceled dates and UTC',async()=>{
+ const {parseCalendar}=await import('./calendar-source.js');const text=wrap([...event(['UID:series','SUMMARY:Class','DTSTART:20261123T030000Z','DTEND:20261123T040000Z','RRULE:FREQ=DAILY;COUNT=4','EXDATE:20261124T030000Z']),...event(['UID:series','RECURRENCE-ID:20261125T030000Z','SUMMARY:Moved class','DTSTART:20261125T050000Z','DTEND:20261125T060000Z']),...event(['UID:series','RECURRENCE-ID:20261126T030000Z','STATUS:CANCELLED','SUMMARY:Canceled class','DTSTART:20261126T030000Z','DTEND:20261126T040000Z'])]);
+ const result=parseCalendar(text,{from:new Date('2026-11-22T00:00:00Z'),until:new Date('2026-11-30T00:00:00Z')});assert.equal(result.events.length,2);assert.equal(result.events[1].title,'Moved class');assert.equal(result.events[0].duration,60);assert.ok(result.warnings.some(w=>w.includes('expanded through')));
+});
+test('IANA zone without VTIMEZONE, multi-day all-day, overnight and past filtering',async()=>{
+ const {parseCalendar}=await import('./calendar-source.js');const text=wrap([...event(['UID:zone','SUMMARY:New York call','DTSTART;TZID=America/New_York:20261125T090000','DTEND;TZID=America/New_York:20261125T100000']),...event(['UID:allday','SUMMARY:Conference','DTSTART;VALUE=DATE:20261123','DTEND;VALUE=DATE:20261126']),...event(['UID:night','SUMMARY:Night work','DTSTART:20261124T233000','DTEND:20261125T010000'])]);
+ const r=parseCalendar(text,{from:new Date('2026-11-24T12:00:00')});assert.equal(r.events.find(e=>e.title==='New York call').time,new Date('2026-11-25T14:00:00Z').toTimeString().slice(0,5));assert.deepEqual(r.events.filter(e=>e.allDay).map(e=>e.date),['2026-11-24','2026-11-25']);assert.deepEqual(r.events.filter(e=>e.title==='Night work').map(e=>e.duration),[30,60]);
+});
+test('date-only task asks for due time and work effort; malformed calendar fails',async()=>{const {parseCalendar}=await import('./calendar-source.js');const r=parseCalendar(wrap(['BEGIN:VTODO','UID:task','SUMMARY:Essay','DUE;VALUE=DATE:20261129','END:VTODO']));assert.equal(r.events[0].dueTime,'');assert.equal(r.events[0].effortMinutes,0);assert.throws(()=>parseCalendar('broken'));});

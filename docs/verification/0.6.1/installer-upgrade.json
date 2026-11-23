@@ -1,0 +1,13 @@
+{
+  "from": "0.6.0 local import candidate",
+  "to": "0.6.1",
+  "installerExitCode": 0,
+  "existingCalendarPreserved": true,
+  "settingsPreserved": true,
+  "apiKeyUsable": true,
+  "uehSessionRestored": true,
+  "timetableEventsPreserved": 6,
+  "checkedAt": "2026-11-23T14:03:15.271Z",
+  "installerBytes": 116991386,
+  "sha256": "3500fe65dce33514bddf8f059cd192e00267d3ba1e617235ed0a6f59c378ecf6"
+}

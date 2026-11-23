@@ -1,0 +1,14 @@
+{
+  "from": "0.5.0",
+  "to": "0.6.0",
+  "installerExitCode": 0,
+  "existingCalendarPreserved": true,
+  "settingsPreservedExceptExistingBrandMigration": true,
+  "appearanceMigration": "mono-v1 to fri-v2 when needed",
+  "apiKeyUsable": true,
+  "uehSessionRestored": true,
+  "actualTimetableAdded": 6,
+  "checkedAt": "2026-11-23T13:44:46.839Z",
+  "installerBytes": 116980487,
+  "sha256": "193d3156129962ffa3c93ff4448333f1629fa6886153aca3f0722b95438fd527"
+}

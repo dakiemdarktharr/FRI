@@ -23,3 +23,6 @@ button:focus-visible,a:focus-visible{outline:3px solid #c78885;outline-offset:3p
 
 .widget .next-open{background:#faf7f2;color:#262323}.widget .widget-caption{color:#62544e;opacity:1}.widget .widget-progress{background:#ded2c9}.widget .widget-progress span{background:var(--marsala)}.menu-option,.form-card,.plan-choice{background:#403635;color:#faf7f2}
 dialog,#modal{background:#302929;color:#faf7f2;backdrop-filter:none;-webkit-backdrop-filter:none}.icon-button,.tiny-button,.subtle-button{background:#403635;color:#faf7f2}.calendar-toolbar .icon-button{background:#403635}.modal-heading .icon-button{background:#534440}.app-titlebar button{background:#262323}.app-menus>button:hover,.app-menus>button[aria-expanded=true],.window-controls>button:hover{background:#534440}.day-complete{backdrop-filter:none}.up-next .next-open{background:#faf7f2;color:#262323}
+
+/* Import review stays readable without making the entire dialog grow. */
+#import-summary .import-plan-list{max-height:48vh;overflow:auto;margin-top:16px;padding-right:8px}#import-summary .selection-row strong{font-size:14px;overflow-wrap:anywhere}#import-summary .selection-row small{font-size:12px}#import-summary details{margin:16px 0}#import-summary summary{cursor:pointer;font-size:14px;padding:8px 0}#source-intake summary{cursor:pointer;padding:12px 0}#clarify-import .form-hint{font-size:13px}

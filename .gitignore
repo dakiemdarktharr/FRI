@@ -8,6 +8,12 @@ desktop/test-results/
 
 website/public/
 
+# Private integration credentials and device profiles
+*.encrypted
+ai-config.json
+source-sessions.json
+.env
+.env.local
 # Local Day provider credentials; the example contains no key.
 .env.day
 day.env

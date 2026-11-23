@@ -25,3 +25,7 @@ Also read ../fri_design_guidebook.pdf, ../privacy.md, ../../desktop/store.cjs, .
 - Native Apple release: SwiftUI apps, shared Swift package and native extensions. A WKWebView wrapper alone does not supply native widgets or protected shared storage.
 
 No Xcode project, provisioned App IDs, distribution certificates or physical-device validation exist in this Windows handoff. Create and verify them on the Mac. Commands in these guides are instructions, not execution receipts.
+
+## 0.6 import parity update
+
+Read [smart import](../smart-import.md) before building the next Apple client. Port the normalized records, missing-field cards, fixed-time conflict rules, deadline preparation planning, past filtering, ICS recurrence and synthetic tests. Native source access needs WKWebView/WKWebsiteDataStore with explicit user sign-in; keep cookies and API credentials in appropriate Keychain/App Group boundaries. Do not copy Windows ciphertext into a Mac/iOS keychain. On macOS Electron, verify source-browser menu access and repeated authenticated reads; Windows verification alone does not establish Apple support. No SwiftUI/WidgetKit/Android implementation of this new import flow is claimed.

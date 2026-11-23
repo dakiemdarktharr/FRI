@@ -30,25 +30,24 @@ struct FRIDayProvider: AppIntentTimelineProvider {
     }
 
     func timeline(for configuration: FRIDayConfiguration, in context: Context) async -> Timeline<FRIDayEntry> {
-        let entries = entries(configuration)
+        let now = Date.now
+        let entries = entries(configuration, now: now)
         let calendar = CalendarClock.local
-        let nextDay = calendar.dateInterval(of: .day, for: .now)?.end ?? .now.addingTimeInterval(3600)
-        let retry = Date.now.addingTimeInterval(900)
+        let nextDay = calendar.dateInterval(of: .day, for: now)?.end ?? now.addingTimeInterval(3600)
+        let retry = now.addingTimeInterval(900)
         let refresh = entries.first?.snapshot.locked == true ? retry : min(nextDay, entries.last?.date ?? nextDay)
         let nextRefresh = entries.count > 1 ? refresh : (entries.first?.snapshot.locked == true ? retry : nextDay)
         return Timeline(entries: entries, policy: .after(nextRefresh))
     }
 
-    private func entries(_ settings: FRIDayConfiguration) -> [FRIDayEntry] {
-        let now = Date.now
+    private func entries(_ settings: FRIDayConfiguration, now: Date = .now) -> [FRIDayEntry] {
         let day = settings.selectedDate ?? now
         guard let revision = try? CalendarStore.shared().read() else {
             return [FRIDayEntry(date: now, snapshot: WidgetSnapshot(day: day, locked: true))]
         }
-        return WidgetSnapshot.refreshDates(state: revision.state, day: day, now: now).map { moment in
-            FRIDayEntry(date: moment, snapshot: WidgetSnapshot(
-                state: revision.state, day: day, now: moment, showServices: settings.showServices
-            ))
+        return WidgetSnapshot.timeline(state: revision.state, selectedDay: settings.selectedDate,
+                                       now: now, showServices: settings.showServices).map { entry in
+            FRIDayEntry(date: entry.date, snapshot: entry.snapshot)
         }
     }
 }

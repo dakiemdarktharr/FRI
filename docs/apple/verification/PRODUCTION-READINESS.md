@@ -19,7 +19,7 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 | Gate | Status / evidence |
 |---|---|
 | Native macOS debug build | PASS with window-material lifetime correction, `/tmp/fri-window-backdrop-mac.log`; separate AppKit lifecycle checks below passed, but this is not a new full-app Mac UI pass |
-| Native iOS build after current edits | PASS, iPad build/run 2026-11-23 20:13 UTC after moving the backdrop into the shared design module. Photo picker workflow 20:07 UTC and earlier iPhone/iPad UI passes are recorded below |
+| Native iOS build after current edits | PASS, iPad build/run including WidgetKit target 2026-11-23 20:18 UTC after adding prepared midnight entries. Photo picker workflow 20:07 UTC and earlier iPhone/iPad UI passes are recorded below |
 | Core data regression | Current full run: 35 core tests and 8 AppKit design/placement tests passed; 1 opt-in network test skipped. Live network passed separately earlier. Includes imported-draft recovery, invalid-restore preservation, cross-platform caches and photo backup compatibility; `/tmp/fri-sidebar-photo-core-full.log` |
 | Mac create/edit/delete/undo | PASS via CUA with isolated synthetic store: create 10:00/60 min, edit Unicode title, delete 11:00/30 min appointment, Cmd-Z restores it |
 | Mac search and bulk actions | PASS: title/place/notes/category search, no-result feedback, Enter opens detail on correct date, Escape, two-item delete/Cancel/Undo, Finish day and reopening a completed item |
@@ -28,7 +28,7 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 | Mac relaunch persistence | PASS for three synthetic appointments after quit/relaunch |
 | App and widget real shared store | Pending developer team, App Group and Keychain entitlements; synthetic store is not equivalent |
 | Signed standalone Mac widget | Small/Large presets and Done PASS on local ad-hoc signed sandbox; free drag/grip resize PASS by direct user confirmation |
-| Widget timeline/midnight/lock/long text | Mac long-title/larger-text Small, Medium, Large and Done observed; normal Quit/relaunch retained widget identity and Large frame. Midnight/lock runtime remains pending |
+| Widget timeline/midnight/lock/long text | Mac long-title/larger-text Small, Medium, Large and Done observed; normal Quit/relaunch retained widget identity and Large frame. Prepared WidgetKit midnight-entry logic passed five targeted tests; actual system-scheduled midnight/lock runtime remains pending |
 | Mac all views, keyboard, accessibility | Pending full matrix; duplicate View menu and low-contrast toolbar found during current visual pass |
 | Full visual equivalence to 0.5 | In progress; first native cream/marsala render observed. Sidebar artwork, card variants, service rail, Day and some layout details remain |
 | Imports | Mac ICS, CSV, text PDF, scanned PDF and PNG file-picker → review → save PASS; iOS pasted text / missing-date clarification PASS. Public calendar URL and EventKit runtime pending |
@@ -43,6 +43,15 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 ## Current runtime isolation
 
 The native debug Mac run uses `FRI_SYNTHETIC_PREVIEW=1` and UUID-scoped `FRI_TEST_STORE_ID`. It does not touch the installed Electron application's calendar. Preview mode is excluded from Release. The fixed synthetic key must never be used for customer calendar data.
+
+## Prepared widget date rollover — 2026-11-23 20:18 UTC
+
+- Found WidgetKit relied entirely on a midnight reload request: all prepared entries still referred to the original day and there was no new-day entry. A reload policy is an earliest request time, not a guarantee the provider runs then. Added the next local calendar-day boundary to the bounded timeline and generate each Follow today snapshot using its entry date. A pinned date stays pinned. The provider now uses one captured `now` for entries and reload policy, avoiding inconsistent day calculations if generation straddles midnight.
+- Five targeted widget tests passed (`/tmp/fri-widget-midnight-core.log`): active/upcoming order; start/end/cache boundaries and 31-entry bound; services; no future-weather claim; new Dec 31 → Jan 1 prepared snapshots, empty calendars, old-day activity removal, pinned date retention and the next day's appointment-end boundary. An initial test incorrectly assumed `CalendarClock.date` returns midnight; it deliberately returns noon. Corrected test expectations to use `startOfDay`, without changing that production date parser.
+- Built macOS app plus WidgetKit extension successfully, unsigned Debug (`/tmp/fri-widget-midnight-mac.log`). iOS app plus extension built and the app launched on iPad Simulator (`build_run_sim_2026-11-23T20-18-07-410Z_pid22065_28fc3745.log`). No physical device or system clock was changed. No claim is made that the signed extension executed or that the OS rendered an entry at an exact instant; Apple may delay both entry presentation and reloads.
+- At most 30 future boundaries are prepared. If a busy day fills this limit before midnight, the existing policy requests another timeline at the last prepared boundary. This retains the bounded scheduling behavior instead of silently dropping later same-day changes until midnight.
+- The standalone AppKit widget continues to calculate Follow today from its TimelineView clock. Its actual midnight/lock behavior, signed WidgetKit store access and distribution remain open gates. Reference: [Apple timeline planning and reload budgets](https://developer.apple.com/documentation/widgetkit/keeping-a-widget-up-to-date), [Timeline timing](https://developer.apple.com/documentation/widgetkit/timeline).
+- Review follow-up: reminder reconciliation currently skips unchanged appointment arrays. The 48-notification planning cap may therefore need replenishment while time advances without edits; investigate this before declaring reminder readiness.
 
 ## Window material lifetime — 2026-11-23 20:13 UTC
 

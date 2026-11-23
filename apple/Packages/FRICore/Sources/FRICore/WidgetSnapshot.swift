@@ -49,10 +49,20 @@ public struct WidgetSnapshot: Sendable {
         }
     }
 
-    /// Start and end boundaries keep the next task correct without a polling timer.
+    /// Prepare date-specific content as well as a reload request: WidgetKit may
+    /// defer asking the provider for another timeline at the end of the day.
+    public static func timeline(state: CalendarState, selectedDay: Date?, now: Date,
+                                showServices: Bool = true) -> [(date: Date, snapshot: Self)] {
+        refreshDates(state: state, day: selectedDay ?? now, now: now).map { moment in
+            (moment, Self(state: state, day: selectedDay ?? moment, now: moment, showServices: showServices))
+        }
+    }
+
+    /// Start/end boundaries and the next calendar day keep time-based content current.
     public static func refreshDates(state: CalendarState, day: Date, now: Date) -> [Date] {
         let calendar = CalendarClock.local
-        guard calendar.isDate(day, inSameDayAs: now) else { return [now] }
+        let nextDay = calendar.dateInterval(of: .day, for: now)?.end
+        guard calendar.isDate(day, inSameDayAs: now) else { return [now] + [nextDay].compactMap { $0 } }
         var boundaries = state.tasks(on: CalendarClock.day(day)).filter { !$0.done }.flatMap { task in
             [CalendarClock.minutes(task.time), task.endMinute].compactMap { minute -> Date? in
                 guard let minute, minute < 1440,
@@ -66,6 +76,7 @@ public struct WidgetSnapshot: Sendable {
             let expires = fetched.addingTimeInterval(3600)
             if expires > now, calendar.isDate(expires, inSameDayAs: day) { boundaries.append(expires) }
         }
+        if let nextDay { boundaries.append(nextDay) }
         return [now] + Set(boundaries).sorted().prefix(30)
     }
 }

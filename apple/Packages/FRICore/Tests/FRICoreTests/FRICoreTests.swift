@@ -344,13 +344,42 @@ func directPublicHTTPSConnectsUsingTheVerifiedHostname() async throws {
     var state = CalendarState()
     state.tasks = [task("Read", time: "09:00", duration: 60), task("Walk", time: "10:00", duration: 30)]
     let dates = WidgetSnapshot.refreshDates(state: state, day: day, now: now)
-    #expect(dates.map { CalendarClock.local.component(.hour, from: $0) } == [8, 9, 10, 10])
+    #expect(dates.map { CalendarClock.local.component(.hour, from: $0) } == [8, 9, 10, 10, 0])
     #expect(dates.count == Set(dates).count)
     let tomorrow = try #require(CalendarClock.local.date(byAdding: .day, value: 1, to: day))
-    #expect(WidgetSnapshot.refreshDates(state: state, day: tomorrow, now: now) == [now])
+    #expect(WidgetSnapshot.refreshDates(state: state, day: tomorrow, now: now) == [now, CalendarClock.local.startOfDay(for: tomorrow)])
     state.tasks = (0..<100).map { task("Task \($0)", time: CalendarClock.time(500 + $0 * 5), duration: 2) }
     #expect(WidgetSnapshot.refreshDates(state: state, day: day, now: now).count == 31)
     #expect(WidgetSnapshot(state: state, day: day, now: now).tasks.count == 5)
+}
+
+@Test func widgetTimelinePreparesNewDayWithoutChangingPinnedDate() throws {
+    let today = try #require(CalendarClock.date("2026-12-31"))
+    let tomorrow = CalendarClock.local.startOfDay(for: try #require(CalendarClock.date("2027-01-01")))
+    let now = try #require(CalendarClock.local.date(bySettingHour: 23, minute: 59, second: 0, of: today))
+    var yesterdayTask = task("Finish this year", time: "23:50", duration: 10)
+    yesterdayTask.date = "2026-12-31"
+    var newTask = task("Begin the new year", time: "00:00", duration: 30)
+    newTask.date = "2027-01-01"
+    var state = CalendarState()
+    state.tasks = [yesterdayTask, newTask]
+    state.settings["activity"] = .object(["date": .string("2026-12-31"), "steps": .number(3200)])
+    let following = WidgetSnapshot.timeline(state: state, selectedDay: nil, now: now)
+    #expect(following.map(\.date) == [now, tomorrow])
+    #expect(following[0].snapshot.tasks.map(\.id) == [yesterdayTask.id])
+    #expect(following[0].snapshot.service == "3200 steps")
+    #expect(following[1].snapshot.tasks.map(\.id) == [newTask.id])
+    #expect(CalendarClock.day(following[1].snapshot.day) == "2027-01-01")
+    #expect(following[1].snapshot.service == nil)
+    let pinned = WidgetSnapshot.timeline(state: state, selectedDay: today, now: now)
+    #expect(pinned.map(\.date) == [now, tomorrow])
+    #expect(pinned.allSatisfy { CalendarClock.day($0.snapshot.day) == "2026-12-31" })
+    #expect(pinned[1].snapshot.tasks.map(\.id) == [yesterdayTask.id])
+    let empty = WidgetSnapshot.timeline(state: CalendarState(), selectedDay: nil, now: now)
+    #expect(empty.map(\.date) == [now, tomorrow])
+    #expect(empty.allSatisfy { $0.snapshot.tasks.isEmpty && !$0.snapshot.locked })
+    let nextTimeline = WidgetSnapshot.timeline(state: state, selectedDay: tomorrow, now: tomorrow)
+    #expect(nextTimeline.contains { $0.date == tomorrow.addingTimeInterval(1800) })
 }
 
 @Test func widgetServicesRespectOptOutAndCachedAge() throws {

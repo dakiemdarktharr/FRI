@@ -19,38 +19,36 @@
   <button class="intro-skip" id="skip-intro">Skip intro <span>↗</span></button>
   <div id="quiet-backdrop"></div>
   <div id="quiet" role="dialog" aria-modal="true" aria-labelledby="quiet-title" hidden>
-    <span class="pole">__POLE__</span>
-    <h2 id="quiet-title">Everything wants<br>your attention.<br><em>Your life deserves it.</em></h2>
-    <button class="pill dark" id="enter">Make room <span>↗</span></button>
+    <div class="xp-title"><span class="pole">__POLE__</span>Fri — A little clarity</div>
+    <div class="xp-body"><span class="xp-info" aria-hidden="true">i</span><h2 id="quiet-title">Everything wants your attention.<br><em>Your life deserves it.</em></h2></div>
+    <div class="xp-actions"><button id="enter">Make room</button></div>
   </div>
 </div>
 <div id="site">
 <header class="topbar">
   <a href="#home" class="brand" aria-label="Fri home"><span class="pole">__POLE__</span><span>fri.</span></a>
   <nav aria-label="Main navigation">
-    <button class="nav-link" data-dialog="pricing">Pricing</button>
+    <a class="nav-link" href="/pricing/" data-route="pricing">Pricing</a>
     <a class="nav-link" href="#what">Service</a>
     <button class="signup" data-dialog="signup">Sign up <span>↗</span></button>
   </nav>
 </header>
 <main id="main">
+<div id="home-page">
   <section class="hero" id="home" aria-labelledby="hero-title">
-    <div class="ocean" aria-hidden="true"><img id="ocean-image" src="__OCEAN__" alt=""><canvas id="sea"></canvas></div>
+    <div class="ocean" aria-hidden="true"><video id="surf" src="__SURF__" muted playsinline loop preload="auto" tabindex="-1"></video><canvas id="sea"></canvas><div class="sea-fallback"></div></div>
     <div class="hero-copy">
-      <h1 id="hero-title">Fri.</h1>
-      <a class="pill light download" href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.2.0"><span class="os-icon" aria-hidden="true">↓</span><span class="download-label">Download Fri</span><span>↗</span></a>
+      <h1 id="hero-title" tabindex="-1" aria-label="Fri. Make time for your life."><span id="hero-word" aria-hidden="true">Fri.</span><span id="hero-mark" class="pole" aria-hidden="true" hidden>__POLE__</span></h1>
+      <a class="pill light download" href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.2.0"><span class="os-icon" aria-hidden="true">↓</span><span class="download-label">Download Fri</span></a>
     </div>
-    <div class="hero-app-wrap" aria-hidden="true"><div id="hero-app" class="app-window miniature"></div></div>
-    <div class="hero-bottom"><a href="#demo" class="icon-button" aria-label="Explore the Fri demo">↓</a><button class="sea-control icon-button" aria-label="Pause ocean motion" aria-pressed="false">Ⅱ</button></div>
   </section>
   <section class="demo-section section-pad" id="demo" aria-labelledby="demo-title">
-    <div class="section-heading"><span class="eyebrow">01 / THE DEMO</span><h2 id="demo-title">A day.<br>Coming together.</h2><div class="heading-controls"><button id="replay-demo" class="icon-button" aria-label="Replay demo">↻</button><button id="pause-demo" class="icon-button" aria-label="Pause demo" aria-pressed="false">Ⅱ</button></div></div>
+    <h2 id="demo-title" class="sr-only">A day. Coming together.</h2>
     <div class="demo-stage"><div id="live-app" class="app-window"></div></div>
-    <div class="demo-steps" role="group" aria-label="Demo chapters"><button data-step="0" class="active" aria-pressed="true"><span>01</span> Add it.</button><button data-step="1" aria-pressed="false"><span>02</span> Clear it up.</button><button data-step="2" aria-pressed="false"><span>03</span> Live your day.</button></div>
     <p id="demo-status" class="sr-only" aria-live="polite"></p>
   </section>
   <section id="what" class="what-section section-pad" aria-labelledby="what-title">
-    <div class="section-heading"><span class="eyebrow">02 / WHAT IT DOES</span><h2 id="what-title">Space for<br>what matters.</h2></div>
+    <div class="section-heading"><h2 id="what-title">Space for<br>what matters.</h2></div>
     <div class="feature-grid">
       <article class="feature feature-capture"><div class="feature-art capture-art" aria-hidden="true"><div class="floating-note">Coffee with Jamie <span>↗</span></div><div class="floating-note">The thing due Friday <span>↗</span></div><div class="floating-note">A little time to think <span>↗</span></div><span class="collector">＋</span></div><h3>Get it out<br>of your head.</h3><span class="feature-number">01</span></article>
       <article class="feature feature-clarity"><div class="feature-art clarity-art" aria-hidden="true"><span class="mini-question">What time works?</span><div class="time-picks"><span>9:00</span><span class="selected">10:30 <i>✓</i></span><span>14:00</span></div></div><h3>Give every plan<br>a place.</h3><span class="feature-number">02</span></article>
@@ -58,24 +56,37 @@
     </div>
   </section>
   <section class="how-section section-pad" id="how" aria-labelledby="how-title">
-    <div class="section-heading"><span class="eyebrow">03 / HOW FRI WORKS</span><h2 id="how-title">Less to manage.<br>More to live.</h2></div>
+    <div class="section-heading"><h2 id="how-title">Less to manage.<br>More to live.</h2></div>
     <div class="how-list">
-      <button data-demo-jump="0"><span class="how-number">01</span><span>Name your plans.</span><span class="how-icon">＋</span></button>
-      <button data-demo-jump="1"><span class="how-number">02</span><span>Fill in the gaps.</span><span class="how-icon">↗</span></button>
-      <button data-demo-jump="2"><span class="how-number">03</span><span>Find your flow.</span><span class="how-icon">✓</span></button>
+      <button data-demo-jump="0"><span class="how-number">01</span><span>Name your plans.</span></button>
+      <button data-demo-jump="1"><span class="how-number">02</span><span>Fill in the gaps.</span></button>
+      <button data-demo-jump="2"><span class="how-number">03</span><span>Find your flow.</span></button>
     </div>
   </section>
+</div>
+<section id="pricing-page" hidden aria-labelledby="pricing-title">
+  <h1 id="pricing-title" tabindex="-1">A little space.<br>Yours to shape.</h1>
+  <div class="pricing-grid">
+    <article class="plan-card free-plan"><div class="plan-label">Free</div><div class="plan-price">$0</div><h2>Find your everyday rhythm.</h2><ul><li>Appointments and one-time deadlines</li><li>A clear view of your day</li><li>Daily progress</li><li>Essential appearance controls</li><li>Your calendar stays on your device</li></ul><a class="pill dark download" href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.2.0"><span class="os-icon" aria-hidden="true">↓</span><span class="download-label">Download Fri</span></a></article>
+    <article class="plan-card premium-plan"><div class="plan-label">Premium <span>Coming soon</span></div><div class="plan-symbol pole" aria-hidden="true">__POLE__</div><h2>Your space.<br>Your kind of day.</h2><ul><li>Everything in Free</li><li>Bring your own background images</li><li>Fine-tune glass, motion and effects</li><li>Find time together with linked availability</li><li>Share free time, not private calendar details</li></ul><button class="pill light" disabled>Coming soon</button></article>
+  </div>
+</section>
 </main>
+<div class="footer-reveal">
 <footer id="footer">
-  <div class="footer-top"><span class="brand"><span class="pole">__POLE__</span><span>fri.</span></span><a href="#home" class="icon-button" aria-label="Back to top">↑</a></div>
-  <h2>Less noise.<br>More life.</h2>
-  <a class="pill light download" href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.2.0"><span class="os-icon" aria-hidden="true">↓</span><span class="download-label">Download Fri</span><span>↗</span></a>
-  <figure class="quote"><blockquote>“Our life is frittered away by detail.”</blockquote><figcaption><a href="https://www.gutenberg.org/cache/epub/205/pg205-images.html" target="_blank" rel="noopener noreferrer">Henry David Thoreau · Walden, 1854 ↗</a></figcaption></figure>
-  <div class="footer-bottom"><span>© 2026 Fri.</span><button id="replay-intro">Replay the beginning ↻</button><a href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.2.0" target="_blank" rel="noopener noreferrer">Release notes ↗</a></div>
+  <div id="footer-gallery" aria-hidden="true"></div>
+  <div class="footer-top footer-safe"><span class="brand"><span class="pole">__POLE__</span><span>fri.</span></span></div>
+  <h2 class="footer-safe">Less noise.<br>More life.</h2>
+  <a class="pill light download footer-safe" href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.2.0"><span class="os-icon" aria-hidden="true">↓</span><span class="download-label">Download Fri</span></a>
+  <figure class="quote footer-safe"><blockquote>“Your time is limited, so don’t waste it living someone else’s life.”</blockquote><figcaption><a href="https://news.stanford.edu/stories/2005/06/steve-jobs-2005-graduates-stay-hungry-stay-foolish" target="_blank" rel="noopener noreferrer">Steve Jobs · Stanford, 2005</a></figcaption></figure>
 </footer>
 </div>
+</div>
+<div id="curtains" aria-hidden="true"><div class="door left-door"></div><div class="door right-door"></div><span class="pole">__POLE__</span></div>
+<button id="motion-access" class="skip-link">Pause animations</button>
 <dialog id="info-dialog" aria-labelledby="dialog-title"><button class="dialog-close icon-button" aria-label="Close dialog">×</button><span class="pole">__POLE__</span><h2 id="dialog-title"></h2><div id="dialog-content"></div></dialog>
 <noscript><style>#intro{display:none}#site{display:block}.intro-active{overflow:auto}</style><div class="noscript-message">Enable JavaScript to watch the intro and demo. <a href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.2.0">Download Fri</a></div></noscript>
 <script>/*__SCRIPT__*/</script>
+<script>/*__MOTION__*/</script>
 </body>
 </html>

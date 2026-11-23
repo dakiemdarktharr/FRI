@@ -1,5 +1,14 @@
 # FRI
 
+A local-first calendar and desktop workspace. The current website design uses halftone surf, an XP-style intro and a continuous app demo. Premium is coming soon; no subscriptions are being sold.
+
+- Website preview: `FRI-website.html`; source and build: `website/`.
+- Desktop UI: `FRI-liquid-glass.html`; source: `preview/`; native shell: `desktop/`.
+- Design handoff: [FRI design guidebook](docs/fri_design_guidebook.pdf).
+- Current verification: [website revision 2](docs/web-verification-2026-11-23.md).
+- Active scope and external dependencies: [release plan](docs/release-plan.md).
+
+
 Fri is a personal calendar that makes room for appointments, focused work, and the everyday things that matter.
 
 **Website design preview:** open [FRI-website.html](FRI-website.html) for the overload-to-calm intro, animated ocean, staged app demo and platform-aware installer links. It is a self-contained design review. [Website notes and verification](website/README.md) describe its scope; Pricing and Sign up are preview states.

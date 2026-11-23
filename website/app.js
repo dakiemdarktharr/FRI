@@ -71,7 +71,8 @@
     document.body.classList.add('intro-active');site.inert=true;window.scrollTo(0,0);stamp('loading');
     const progress=v=>{$('#load-progress').style.width=v+'%';$('#load-value').textContent=v+'%'};
     progress(10);
-    const ready=$('#ocean-image').decode().catch(()=>{});
+    const surf=$('#surf');
+    const ready=surf.readyState>=2?Promise.resolve():new Promise(resolve=>{surf.addEventListener('loadeddata',resolve,{once:true});surf.addEventListener('error',resolve,{once:true});setTimeout(resolve,8000)});
     const fonts=document.fonts.ready;
     await Promise.all([ready.then(()=>progress(65)),fonts.then(()=>progress(35)),new Promise(r=>setTimeout(r,reduced.matches?150:950))]);
     if(run!==introRun||entered)return;
@@ -84,13 +85,13 @@
     setTimeout(()=>{intro.hidden=true;intro.inert=false},reduced.matches?0:850);
     $('#hero-title').setAttribute('tabindex','-1');$('#hero-title').focus({preventScroll:true});
     startTime=performance.now();lastFrame=startTime;
+    if(!reduced.matches)$('#surf').play().catch(()=>{});
   }
   $('#enter').addEventListener('click',enterSite);$('#skip-intro').addEventListener('click',enterSite);
   document.addEventListener('keydown',e=>{
     if(!entered&&e.key==='Escape'){e.preventDefault();enterSite()}
     if(!entered&&!quiet.hidden&&e.key==='Tab'){e.preventDefault();$('#enter').focus()}
   });
-  $('#replay-intro').addEventListener('click',()=>{intro.inert=false;startIntro();$('#skip-intro').focus({preventScroll:true})});
   $('.skip-link').addEventListener('click',()=>{if(!entered)enterSite()});
 
   // Downloads use published v0.2.0 artifacts. CPU architecture is never guessed.
@@ -136,7 +137,7 @@
   function appSkeleton(){
     return '<div class="app-chrome"><span class="traffic"><i></i><i></i><i></i></span><span>File</span><span>Edit</span><span>View</span><span>Help</span><span class="chrome-label">FRI</span></div><div class="app-body"><aside class="app-sidebar"><div class="app-brand">fri.<i class="search-glyph"></i></div><div class="app-today"><span>‹</span>Today<span>›</span></div><div class="app-new">＋ New</div><div class="app-nav current">▦ &nbsp; My day</div><div class="app-nav">▤ &nbsp; Calendar</div><div class="app-profile"><span class="app-avatar">A</span>Alex Morgan<span style="margin-left:auto">⚙</span></div></aside><div class="app-content"><div class="app-date"><div><h3>Sunday</h3><p>November 22, 2026</p></div><div class="app-date-ring"><svg viewBox="0 0 50 50"><circle class="ring-track" cx="25" cy="25" r="22"/><circle class="ring-fill" cx="25" cy="25" r="22"/></svg><span>✓</span></div></div><div class="app-mosaic"><div class="task-column">'+task('A slow start','8:00','AM','30m','At home','',true)+task('Make something meaningful','9:00','AM','2h','The studio','dark-tile tall')+'</div><div class="task-column coffee-column">'+task('A little room to read','4:00','PM','1h','Your favourite corner','tall')+'</div><div class="task-column"><div class="task-upnext"><span>UP NEXT</span><div class="upnext-line"></div><h4>9:00 <small>AM</small></h4><b>Make something<br>meaningful</b><p>The studio</p></div><div class="app-dot"><i></i><span>Day</span></div></div></div><div class="demo-overlay"><div class="demo-form"></div></div><div class="demo-cursor">'+cursor+'</div></div></div>';
   }
-  const apps=[$('#hero-app'),$('#live-app')];
+  const apps=[$('#live-app')];
   apps.forEach(a=>{a.innerHTML=appSkeleton();a.setAttribute('aria-hidden','true')});
   let elapsed=reduced.matches?9000:0,paused=reduced.matches,lastFrame=performance.now(),startTime=lastFrame,lastKey='',lastChapter=-1;
   function formHTML(mode,typed,chosen){
@@ -174,57 +175,23 @@
     });
   }
   function updatePause(){
-    $('#pause-demo').textContent=paused?'▶':'Ⅱ';
-    $('#pause-demo').setAttribute('aria-label',paused?'Play demo':'Pause demo');
-    $('#pause-demo').setAttribute('aria-pressed',String(paused));
+    $('#motion-access').textContent=paused?'Play animations':'Pause animations';
+    $('#motion-access').setAttribute('aria-pressed',String(paused));
   }
   function setChapter(n){elapsed=[0,4400,9000][n];lastKey='';renderDemo();$('#demo-status').textContent=['Add your plans.','Fill in the missing time.','Your appointment is on the calendar.'][n]}
   $$('[data-step]').forEach(b=>b.addEventListener('click',()=>setChapter(Number(b.dataset.step))));
-  $$('[data-demo-jump]').forEach(b=>b.addEventListener('click',()=>{setChapter(Number(b.dataset.demoJump));$('#demo').scrollIntoView({behavior:reduced.matches?'instant':'smooth'});$$('[data-step]')[Number(b.dataset.demoJump)].focus({preventScroll:true})}));
-  $('#pause-demo').addEventListener('click',()=>{paused=!paused;updatePause()});
-  $('#replay-demo').addEventListener('click',()=>{elapsed=0;paused=false;lastKey='';updatePause();renderDemo()});
+  $$('[data-demo-jump]').forEach(b=>b.addEventListener('click',()=>{setChapter(Number(b.dataset.demoJump));$('#demo').scrollIntoView({behavior:reduced.matches?'instant':'smooth'})}));
+  $('#motion-access').addEventListener('click',()=>{paused=!paused;updatePause();if(paused)$('#surf').pause();else $('#surf').play().catch(()=>{})});
   updatePause();renderDemo();
 
-  // A photographic surface displaced in WebGL, with a stationary photo fallback.
-  // The shore advances and recedes slowly; no video/network dependency is required.
-  let seaPaused=reduced.matches,seaVisible=true,seaTime=0,seaRender=null;
-  const sea=$('#sea'),ocean=$('.ocean');
-  function updateSeaPause(){const b=$('.sea-control');b.textContent=seaPaused?'▶':'Ⅱ';b.setAttribute('aria-label',seaPaused?'Play ocean motion':'Pause ocean motion');b.setAttribute('aria-pressed',String(seaPaused))}
-  $('.sea-control').addEventListener('click',()=>{seaPaused=!seaPaused;updateSeaPause()});
-  updateSeaPause();
-  new IntersectionObserver(es=>{seaVisible=es[0].isIntersecting},{threshold:0}).observe(ocean);
-  async function setupSea(){
-    try {
-      await $('#ocean-image').decode();
-      const gl=sea.getContext('webgl',{alpha:false,antialias:false,powerPreference:'low-power'});
-      if(!gl)throw Error('WebGL unavailable');
-      const vert='attribute vec2 p;varying vec2 uv;void main(){uv=p*.5+.5;gl_Position=vec4(p,0.,1.);}';
-      const frag='precision mediump float;varying vec2 uv;uniform sampler2D image;uniform float time;uniform vec2 viewport;uniform float aspect;void main(){vec2 q=vec2(uv.x,1.-uv.y);float va=viewport.x/viewport.y;if(va>aspect){q.y=(q.y-.5)*aspect/va+.5;}else{q.x=(q.x-.5)*va/aspect+.5;}vec2 base=q;float water=1.-smoothstep(.67,.98,q.y);float sweep=sin(time*.44)*.016+sin(time*.23+.7)*.009;float ripple=sin(q.x*12.+time*.18)*.004+sin(q.x*28.-time*.22)*.002;q.y+=sweep*water+ripple*sin(time*.3+q.y*4.)*water;q.x+=sin(q.y*38.+time*.25)*.0018*water;q=clamp(q,.002,.998);vec3 color=texture2D(image,q).rgb;float light=sin(base.x*19.+base.y*30.-time*.25)*.003*water;color+=light;gl_FragColor=vec4(color,1.);}';
-      const compile=(type,source)=>{const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s};
-      const program=gl.createProgram();gl.attachShader(program,compile(gl.VERTEX_SHADER,vert));gl.attachShader(program,compile(gl.FRAGMENT_SHADER,frag));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('Shader linking failed');gl.useProgram(program);
-      const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
-      const p=gl.getAttribLocation(program,'p');gl.enableVertexAttribArray(p);gl.vertexAttribPointer(p,2,gl.FLOAT,false,0,0);
-      const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,$('#ocean-image'));
-      const time=gl.getUniformLocation(program,'time'),viewport=gl.getUniformLocation(program,'viewport');
-      gl.uniform1i(gl.getUniformLocation(program,'image'),0);gl.uniform1f(gl.getUniformLocation(program,'aspect'),$('#ocean-image').naturalWidth/$('#ocean-image').naturalHeight);
-      function resize(){const d=Math.min(devicePixelRatio,1.5);sea.width=Math.round(ocean.clientWidth*d);sea.height=Math.round(ocean.clientHeight*d);gl.viewport(0,0,sea.width,sea.height);gl.uniform2f(viewport,sea.width,sea.height)}
-      resize();window.addEventListener('resize',resize);
-      seaRender=t=>{gl.uniform1f(time,t);gl.drawArrays(gl.TRIANGLES,0,6);evidence.seaFrames++};
-      seaRender(0);ocean.classList.add('ready');
-      sea.addEventListener('webglcontextlost',e=>{e.preventDefault();seaRender=null;ocean.classList.remove('ready')});
-      evidence.ocean='webgl';
-    }catch(e){evidence.ocean='static-photo';evidence.oceanFallback=e.message}
-  }
-  setupSea();
-  let lastSeaDraw=0;
+  let motionTime=0,reviewFrozen=false;
   function frame(now){
     const dt=Math.min(now-lastFrame,60);lastFrame=now;
-    if(entered&&!document.hidden){
-      if(!paused){elapsed+=dt;renderDemo()}
-      if(!seaPaused&&seaVisible&&seaRender&&now-lastSeaDraw>32){seaTime+=Math.min(now-lastSeaDraw,60)/1000;seaRender(seaTime);lastSeaDraw=now}
-    }else lastSeaDraw=now;
+    if(entered&&!document.hidden&&!paused&&!reviewFrozen){elapsed+=dt;motionTime+=dt/1000;renderDemo();window.FRI_MOTION?.render(motionTime)}
     requestAnimationFrame(frame);
   }
-  reduced.addEventListener('change',()=>{if(reduced.matches){paused=true;seaPaused=true;updatePause();updateSeaPause()}});
-  requestAnimationFrame(frame);startIntro();
+  reduced.addEventListener('change',()=>{if(reduced.matches){paused=true;$('#surf').pause();updatePause()}});
+  window.FRI_WEBSITE.review={async seek(seconds){reviewFrozen=true;elapsed=seconds*1000;lastKey='';renderDemo();const v=$('#surf');v.pause();if(v.readyState<2)await Promise.race([new Promise(r=>v.addEventListener('loadeddata',r,{once:true})),new Promise(r=>setTimeout(r,1500))]);if(v.readyState<2){window.FRI_MOTION?.render(seconds,true);return}const time=seconds%v.duration;if(Math.abs(v.currentTime-time)>.001)await new Promise(r=>{v.addEventListener('seeked',r,{once:true});v.currentTime=time});window.FRI_MOTION?.render(seconds,true)},resume(){reviewFrozen=false;if(!paused)$('#surf').play().catch(()=>{})},chapter:setChapter};
+  requestAnimationFrame(frame);
+  if(location.pathname.includes('/pricing')||location.hash==='#pricing')enterSite();else startIntro();
 })();

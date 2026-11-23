@@ -6,6 +6,7 @@ import SwiftUI
 struct FRIServicesView: View {
     let calendar: FRICalendarSession
     @State private var city = ""
+    @FocusState private var cityFocused: Bool
     @State private var spotify = ""
     @State private var mapQuery = ""
     @State private var steps = 0
@@ -15,6 +16,7 @@ struct FRIServicesView: View {
     @State private var weatherTask: Task<Void, Never>?
     @State private var mapTask: Task<Void, Never>?
     @State private var mapSearch: MKLocalSearch?
+    @State private var weatherChoices: [WeatherLocation] = []
     @State private var loadingWeather = false
     @State private var loadingMap = false
     @State private var weatherRequest = UUID()
@@ -32,15 +34,34 @@ struct FRIServicesView: View {
                     Text("Open-Meteo receives the city you enter and your IP address.")
                         .friFont(.caption).foregroundStyle(.secondary)
                     TextField("City", text: $city).accessibilityIdentifier("fri.services.weather.city")
-                    Button("Get forecast") { refreshWeather() }.disabled(loadingWeather || city.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .focused($cityFocused)
+                        .submitLabel(.search)
+                        .onSubmit { searchWeather() }
+                    Button("Find city") { searchWeather() }.disabled(loadingWeather || city.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     if loadingWeather {
-                        ProgressView("Getting forecast…")
+                        ProgressView("Loading weather…")
                         Button("Cancel forecast request") { cancelWeather() }
+                    }
+                    ForEach(weatherChoices) { location in
+                        Button { refreshWeather(location) } label: {
+                            Label(location.label, systemImage: "mappin.and.ellipse")
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .disabled(loadingWeather)
+                        .accessibilityIdentifier("fri.services.weather.location.\(location.id)")
                     }
                     if let weatherMessage { Text(weatherMessage).foregroundStyle(.secondary) }
                     Text("Weather data: Open-Meteo · CC BY 4.0").friFont(.caption).foregroundStyle(.secondary)
                     if let cached = savedWeather {
                         Text(cached.summary)
+                        if let location = cached.location, location.label != cached.city {
+                            Text(location.label).friFont(.caption).foregroundStyle(.secondary)
+                        }
+                        if let conditions = cached.conditions { Text(conditions) }
+                        if let range = cached.dailyRange { Text(range) }
+                        if let location = cached.location {
+                            Button("Refresh saved forecast") { refreshWeather(location) }.disabled(loadingWeather)
+                        }
                         if let fetchedAt = cached.fetchedAt {
                             Text("Saved forecast · \(fetchedAt.formatted(date: .abbreviated, time: .shortened))")
                                 .friFont(.caption).foregroundStyle(.secondary)
@@ -50,7 +71,7 @@ struct FRIServicesView: View {
                         }
                         Button("Disconnect weather", role: .destructive) {
                             cancelWeather()
-                            if calendar.change({ $0.disconnectWeather() }) { city = ""; weatherMessage = nil }
+                            if calendar.change({ $0.disconnectWeather() }) { city = ""; weatherChoices = []; weatherMessage = nil }
                             else { weatherMessage = calendar.message }
                         }
                     }
@@ -111,6 +132,7 @@ struct FRIServicesView: View {
                 if let message { Text(message).foregroundStyle(.secondary) }
             }
             .formStyle(.grouped)
+            .accessibilityIdentifier("fri.services.form")
         }
         .onAppear {
             spotify = calendar.state.settings["spotifyUrl"]?.string ?? ""
@@ -119,6 +141,11 @@ struct FRIServicesView: View {
             if case .object(let activity) = calendar.state.settings["activity"],
                activity["date"]?.string == CalendarClock.day(), case .number(let value) = activity["steps"],
                value.isFinite, (0...100_000).contains(value) { steps = Int(value) }
+        }
+        .onChange(of: city) { _, _ in
+            cancelWeather()
+            weatherChoices = []
+            weatherMessage = nil
         }
         .onDisappear { cancelWeather(); cancelMap() }
     }
@@ -137,29 +164,50 @@ struct FRIServicesView: View {
         loadingMap = false
     }
 
-    private func refreshWeather() {
+    private func searchWeather() {
+        cityFocused = false
         cancelWeather()
         let request = weatherRequest
-        let city = city.trimmingCharacters(in: .whitespacesAndNewlines)
+        let query = city
+        weatherChoices = []
+        weatherMessage = nil
+        loadingWeather = true
+        weatherTask = Task {
+            defer { if weatherRequest == request { loadingWeather = false } }
+            do {
+                let choices = try await WeatherClient().search(query)
+                try Task.checkCancellation()
+                guard weatherRequest == request else { return }
+                weatherChoices = choices
+                weatherMessage = choices.isEmpty ? "No matching city. Try a city and country name." : "Choose your city."
+            } catch where !Task.isCancelled {
+                if weatherRequest == request { weatherMessage = "City search unavailable. Try again later." }
+            } catch {}
+        }
+    }
+
+    private func refreshWeather(_ location: WeatherLocation) {
+        cityFocused = false
+        cancelWeather()
+        let request = weatherRequest
         loadingWeather = true
         weatherMessage = nil
         weatherTask = Task {
             defer { if weatherRequest == request { loadingWeather = false } }
             do {
-                try Task.checkCancellation()
-                let summary = try await FRIWeather.forecast(city: city)
+                let forecast = try await WeatherClient().forecast(for: location)
                 try Task.checkCancellation()
                 guard weatherRequest == request else { return }
-                if !calendar.change({ state in
-                    state.settings["appleWeatherCache"] = .object([
-                        "summary": .string(summary), "city": .string(city),
-                        "fetchedAt": .number(Date.now.timeIntervalSince1970)
-                    ])
-                    state.settings.removeValue(forKey: "weather")
-                }) { weatherMessage = calendar.message }
+                if calendar.change({ state in
+                    state.settings["weather"] = forecast.setting
+                    state.settings.removeValue(forKey: "appleWeatherCache")
+                }) {
+                    city = location.name
+                    weatherChoices = []
+                } else { weatherMessage = calendar.message }
             } catch where !Task.isCancelled {
                 guard weatherRequest == request else { return }
-                weatherMessage = savedWeather == nil ? "Forecast unavailable. Check the city or try again later." :
+                weatherMessage = savedWeather == nil ? "Forecast unavailable. Try again later." :
                     "Forecast unavailable. FRI kept the last saved forecast."
             } catch {}
         }
@@ -199,39 +247,4 @@ struct FRIServicesView: View {
     }
 
 
-}
-
-private enum FRIWeather {
-    private struct City: Decodable { let name: String; let latitude: Double; let longitude: Double }
-    private struct Search: Decodable { let results: [City]? }
-    private struct Forecast: Decodable {
-        struct Current: Decodable { let temperature_2m: Double }
-        let current: Current
-    }
-
-    static func forecast(city: String) async throws -> String {
-        let search: Search = try await request(host: "geocoding-api.open-meteo.com", path: "/v1/search", fields: [
-            "name": String(city.prefix(120)), "count": "1"
-        ])
-        guard let match = search.results?.first else { throw URLError(.resourceUnavailable) }
-        let forecast: Forecast = try await request(host: "api.open-meteo.com", path: "/v1/forecast", fields: [
-            "latitude": String(match.latitude), "longitude": String(match.longitude), "current": "temperature_2m"
-        ])
-        return "\(match.name) · \(forecast.current.temperature_2m.formatted(.number.precision(.fractionLength(0)))) °C"
-    }
-
-    private static func request<T: Decodable>(host: String, path: String, fields: [String: String]) async throws -> T {
-        var components = URLComponents()
-        components.scheme = "https"
-        components.host = host
-        components.path = path
-        components.queryItems = fields.sorted { $0.key < $1.key }.map { URLQueryItem(name: $0.key, value: $0.value) }
-        guard let url = components.url else { throw URLError(.badURL) }
-        let request = URLRequest(url: url, timeoutInterval: 12)
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard data.count < 128_000, let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-            throw URLError(.badServerResponse)
-        }
-        return try JSONDecoder().decode(T.self, from: data)
-    }
 }

@@ -12,6 +12,13 @@ struct FRIServiceCardsView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     Label(title(service), systemImage: symbol(service)).friFont(.caption, weight: .semibold)
                     Text(summary(service)).friFont(.title3, weight: .medium).fixedSize(horizontal: false, vertical: true)
+                    if service == "weather", let weather = CachedWeather(settings: calendar.state.settings) {
+                        if let location = weather.location, location.label != weather.city {
+                            Text(location.label).friFont(.caption)
+                        }
+                        if let conditions = weather.conditions { Text(conditions).friFont(.body) }
+                        if let range = weather.dailyRange { Text(range).friFont(.caption) }
+                    }
                     Text(detail(service)).friFont(.caption).foregroundStyle(FRIColors.muted)
                     Text("Manage").friFont(.caption, weight: .semibold).foregroundStyle(FRIColors.marsala)
                 }.padding(20).frame(maxWidth: .infinity, alignment: .leading)

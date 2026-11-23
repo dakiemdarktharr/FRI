@@ -3,6 +3,67 @@ import XCTest
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
     #if os(iOS)
+    func testWeatherCityChoiceRefreshAndPersistence() throws {
+        guard ProcessInfo.processInfo.environment["FRI_WEATHER_NETWORK_TEST"] == "1" else {
+            throw XCTSkip("Opt-in live Open-Meteo interaction; offline behavior is covered by core transport tests.")
+        }
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        app.buttons["fri.navigation.menu"].tap()
+        app.buttons["Services"].tap()
+        let city = app.textFields["fri.services.weather.city"]
+        XCTAssertTrue(city.waitForExistence(timeout: 5))
+        city.tap()
+        city.typeText("Paris")
+        app.buttons["Find city"].tap()
+        let texas = app.buttons["fri.services.weather.location.4717560"]
+        XCTAssertTrue(texas.waitForExistence(timeout: 20))
+        reveal(texas, in: app, form: "fri.services.form")
+        texas.tap()
+        let refresh = app.buttons["Refresh saved forecast"]
+        XCTAssertTrue(refresh.waitForExistence(timeout: 20))
+        XCTAssertTrue(app.staticTexts["Paris, Texas, United States"].exists)
+        let range = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "High ")).firstMatch
+        reveal(range, in: app, form: "fri.services.form")
+        XCTAssertTrue(range.exists)
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Weather-chosen-city-iOS"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+        app.buttons["Close"].firstMatch.tap()
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        app.buttons["fri.navigation.menu"].tap()
+        app.buttons["Services"].tap()
+        XCTAssertTrue(refresh.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Paris, Texas, United States"].exists)
+        reveal(refresh, in: app, form: "fri.services.form")
+        refresh.tap()
+        XCTAssertTrue(refresh.waitForExistence(timeout: 20))
+        // Wait for the button to re-enable after the asynchronous refresh.
+        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: refresh)
+        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 20), .completed)
+        XCTAssertFalse(app.staticTexts["Forecast unavailable. FRI kept the last saved forecast."].exists)
+        let disconnect = app.buttons["Disconnect weather"]
+        reveal(disconnect, in: app, form: "fri.services.form")
+        disconnect.tap()
+        XCTAssertFalse(refresh.exists)
+        app.buttons["Close"].firstMatch.tap()
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        app.buttons["fri.navigation.menu"].tap()
+        app.buttons["Services"].tap()
+        XCTAssertTrue(city.waitForExistence(timeout: 5))
+        XCTAssertFalse(disconnect.exists)
+        XCTAssertFalse(refresh.exists)
+    }
+
     func testLargerTextReachesEditorAndRestoresLook() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

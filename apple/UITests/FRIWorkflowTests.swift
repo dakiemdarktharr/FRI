@@ -1086,6 +1086,18 @@ final class FRIWorkflowTests: XCTestCase {
         let scroll = app.descendants(matching: .any)[form].firstMatch
         for _ in 0..<6 {
             var visible = scroll.frame.intersection(app.frame).insetBy(dx: 0, dy: form == "fri.calendar.content" ? 4 : 12)
+            if form == "fri.import.form" {
+                let feedback = app.descendants(matching: .any)["fri.import.feedback"].firstMatch
+                if feedback.exists {
+                    visible.size.height = max(0, min(visible.maxY, feedback.frame.minY - 8) - visible.minY)
+                }
+                let navigation = app.navigationBars.firstMatch
+                if navigation.exists && navigation.frame.intersects(visible) {
+                    let bottom = visible.maxY
+                    visible.origin.y = max(visible.minY, navigation.frame.maxY + 8)
+                    visible.size.height = max(0, bottom - visible.minY)
+                }
+            }
             if app.keyboards.firstMatch.exists {
                 visible.size.height = max(0, min(visible.maxY, app.keyboards.firstMatch.frame.minY - 100) - visible.minY)
             }
@@ -1103,7 +1115,7 @@ final class FRIWorkflowTests: XCTestCase {
                 let from = origin.withOffset(CGVector(dx: scroll.frame.width / 2, dy: (upward ? bottom : top) - scroll.frame.minY))
                 let to = origin.withOffset(CGVector(dx: scroll.frame.width / 2, dy: (upward ? top : bottom) - scroll.frame.minY))
                 from.press(forDuration: 0.05, thenDragTo: to)
-            } else if form == "fri.calendar.content" {
+            } else if form == "fri.calendar.content" || (form == "fri.import.form" && element.exists) {
                 // Calendar tiles can be partly visible at the edge. Short drags avoid
                 // flinging past an entire row; reverse when the target is above us.
                 let target = element.exists ? element.frame : .null
@@ -1278,6 +1290,19 @@ final class FRIWorkflowTests: XCTestCase {
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launch()
         XCTAssertTrue(app.descendants(matching: .any)["fri.calendar.content"].waitForExistence(timeout: 15))
+        #if os(iOS)
+        let largerText = ProcessInfo.processInfo.environment["FRI_IMPORT_LARGE_TEXT"] == "1"
+        defer { XCUIDevice.shared.orientation = .portrait }
+        if largerText {
+            app.buttons["fri.navigation.menu"].tap(); app.buttons["Settings"].tap()
+            let larger = app.switches["fri.settings.largeText"]
+            reveal(larger, in: app, form: "fri.settings.form")
+            if larger.value as? String != "1" {
+                larger.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+            }
+            app.buttons["Close"].firstMatch.tap()
+        }
+        #endif
         func openImport() {
             #if os(macOS)
             app.menuBars.menuBarItems["File"].click()
@@ -1296,12 +1321,42 @@ final class FRIWorkflowTests: XCTestCase {
             reveal(read, in: app, form: "fri.import.form"); read.tap()
         }
         openImport()
+        reveal(app.buttons["fri.import.readLink"], in: app, form: "fri.import.form")
         XCTAssertFalse(app.buttons["fri.import.readLink"].isEnabled)
         read("https://127.0.0.1/calendar.ics")
         let rejection = app.staticTexts["FRI cannot read links on private or local networks."]
-        reveal(rejection, in: app, form: "fri.import.form")
         XCTAssertTrue(rejection.waitForExistence(timeout: 15))
+        XCTAssertTrue(rejection.isHittable && app.frame.contains(rejection.frame), "Feedback must appear without scrolling")
         XCTAssertFalse(app.buttons["fri.import.accept"].exists)
+        #if os(iOS)
+        if largerText {
+            for orientation in [UIDeviceOrientation.landscapeLeft, .portrait] {
+                XCUIDevice.shared.orientation = orientation
+                let panel = app.descendants(matching: .any)["fri.import.feedback"].firstMatch
+                XCTAssertTrue(panel.waitForExistence(timeout: 5))
+                XCTAssertTrue(app.frame.contains(panel.frame))
+                XCTAssertGreaterThanOrEqual(panel.frame.minY, app.navigationBars.firstMatch.frame.maxY)
+                for id in ["fri.import.feedback.details", "fri.import.feedback.dismiss"] {
+                    let button = app.buttons[id]
+                    XCTAssertTrue(button.isHittable && app.frame.contains(button.frame))
+                    XCTAssertGreaterThanOrEqual(button.frame.height, 44)
+                }
+                let rotated = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+                rotated.name = "Import-feedback-large-text-\(orientation.rawValue)"
+                rotated.lifetime = .keepAlways; add(rotated)
+            }
+        }
+        #endif
+        app.buttons["fri.import.feedback.details"].tap()
+        XCTAssertTrue(app.navigationBars["Import feedback"].waitForExistence(timeout: 5))
+        XCTAssertTrue(rejection.exists)
+        app.buttons["Close"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["fri.import.feedback.dismiss"].waitForExistence(timeout: 5))
+        let feedback = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        feedback.name = "Public-link-error-without-scrolling"; feedback.lifetime = .keepAlways; add(feedback)
+        app.buttons["fri.import.feedback.dismiss"].tap()
+        XCTAssertFalse(app.staticTexts["fri.import.feedback.message"].exists)
+        XCTAssertEqual(app.textFields["fri.import.link"].value as? String, "https://127.0.0.1/calendar.ics")
         app.buttons["Close"].firstMatch.tap()
 
         // Pinned upstream ical.js fixture: one 60-minute event, 2012-06-30
@@ -1336,8 +1391,14 @@ final class FRIWorkflowTests: XCTestCase {
         XCTAssertTrue(title.waitForExistence(timeout: 40))
         reveal(accept, in: app, form: "fri.import.form"); accept.tap()
         let duplicate = app.staticTexts["This source is already in your calendar or saved drafts."]
-        reveal(duplicate, in: app, form: "fri.import.form")
         XCTAssertTrue(duplicate.waitForExistence(timeout: 8))
+        XCTAssertTrue(duplicate.isHittable && app.frame.contains(duplicate.frame))
+        app.buttons["fri.import.feedback.details"].tap()
+        XCTAssertTrue(app.navigationBars["Import feedback"].waitForExistence(timeout: 5))
+        XCTAssertTrue(duplicate.exists)
+        XCTAssertTrue(app.staticTexts["No new drafts were added."].exists)
+        app.buttons["Close"].firstMatch.tap()
+        app.buttons["fri.import.feedback.dismiss"].tap()
         app.buttons["Close"].firstMatch.tap()
         XCTAssertTrue(card.waitForExistence(timeout: 8))
         XCTAssertEqual(Set(cards.allElementsBoundByIndex.map(\.identifier)).count, 1)
@@ -1378,8 +1439,8 @@ final class FRIWorkflowTests: XCTestCase {
         XCTAssertTrue(app.buttons["Use today"].waitForExistence(timeout: 5))
         reveal(app.buttons["fri.import.accept"], in: app, form: "fri.import.form")
         app.buttons["fri.import.accept"].tap()
-        reveal(app.staticTexts["Enter a name and choose a date."], in: app, form: "fri.import.form")
         XCTAssertTrue(app.staticTexts["Enter a name and choose a date."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Enter a name and choose a date."].isHittable)
         reveal(app.buttons["Use today"], in: app, form: "fri.import.form", upward: false)
         app.buttons["Use today"].tap()
         reveal(app.buttons["fri.import.accept"], in: app, form: "fri.import.form")

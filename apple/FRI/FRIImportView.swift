@@ -18,6 +18,7 @@ struct FRIImportView: View {
     @State private var busy = false
     @State private var eventStore = EKEventStore()
     @State private var operation: Task<Void, Never>?
+    @State private var showFeedback = false
 
     var body: some View {
         FRISheetView(title: "Import plans") {
@@ -61,14 +62,65 @@ struct FRIImportView: View {
                         Button("Skip") { next() }
                     }
                 }
-                if busy { ProgressView() }
-                ForEach(Array(notices.enumerated()), id: \.offset) { _, note in
-                    Text(note).friFont(.caption).foregroundStyle(.secondary)
-                }
             }
             .formStyle(.grouped)
             .accessibilityIdentifier("fri.import.form")
             .disabled(busy)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if busy {
+                    HStack {
+                        ProgressView()
+                        Text("Reading source…")
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(FRIColors.sidebar)
+                } else if let first = notices.first {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(first)
+                            .lineLimit(3)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("fri.import.feedback.message")
+                        HStack {
+                            Button { showFeedback = true } label: {
+                                Text("Details").frame(minHeight: 44).contentShape(Rectangle())
+                            }
+                                .accessibilityIdentifier("fri.import.feedback.details")
+                            Spacer()
+                            Button { notices = [] } label: {
+                                Text("Dismiss").frame(minHeight: 44).contentShape(Rectangle())
+                            }
+                                .accessibilityIdentifier("fri.import.feedback.dismiss")
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(FRIColors.sidebar)
+                    .overlay(alignment: .top) { Divider() }
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("fri.import.feedback")
+                }
+            }
+            .sheet(isPresented: $showFeedback) {
+                FRISheetView(title: "Import feedback") {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 16) {
+                            ForEach(Array(notices.enumerated()), id: \.offset) { _, note in
+                                Text(note).fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                        .textSelection(.enabled)
+                    }
+                }
+            }
+            .onChange(of: notices) { _, messages in
+                if let first = messages.first {
+                    AccessibilityNotification.Announcement(first).post()
+                }
+            }
             .fileImporter(isPresented: $pickFile, allowedContentTypes: [.calendarEvent, .commaSeparatedText, .plainText, .pdf, .image], allowsMultipleSelection: true) { result in
                 do {
                     let sources = try result.get()
@@ -156,6 +208,7 @@ struct FRIImportView: View {
 
     private func run(_ action: @escaping @MainActor () async throws -> ImportResult) {
         operation?.cancel()
+        notices = []
         busy = true
         operation = Task {
             defer { if !Task.isCancelled { busy = false } }

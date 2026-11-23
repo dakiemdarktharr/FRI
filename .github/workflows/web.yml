@@ -37,3 +37,7 @@ jobs:
       - run: npm ci --prefix preview
       - run: npm run build --prefix preview
       - run: npm test --prefix preview
+      - run: node website/build.mjs
+      - run: node website/verify-v2.cjs
+        env:
+          FRI_SKIP_FRAMES: '1'

@@ -1,10 +1,10 @@
 const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path');
 const {chromium,webkit}=require('../tests/node_modules/playwright');
 const AxeBuilder=require('../tests/node_modules/@axe-core/playwright').default;
-const output=path.resolve('test-results/website-v2'),url=process.env.FRI_WEB_URL||'file:///D:/FRI/FRI-website.html';
+const output=path.resolve('test-results/website-v2'),url=process.env.FRI_WEB_URL||require('node:url').pathToFileURL(path.resolve(__dirname,'../FRI-website.html')).href;
 const results=[];
 async function check(name,fn){await fn();results.push(name);console.log('PASS '+name)}
-(async()=>{await fs.mkdir(output,{recursive:true});for(const [engine,type] of [['chromium',chromium],['webkit',webkit]]){
+(async()=>{await fs.mkdir(output,{recursive:true});for(const [engine,type] of [['chromium',chromium],['webkit',webkit]].filter(([name])=>!process.env.FRI_BROWSER||process.env.FRI_BROWSER===name)){
  const browser=await type.launch({headless:true});try{
  const context=await browser.newContext({viewport:{width:1440,height:1000}});const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(url);await page.locator('#quiet').waitFor({state:'visible',timeout:20000});

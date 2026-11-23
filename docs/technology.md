@@ -1,3 +1,7 @@
+# Current stack — 2026-11-23
+
+Electron 45.4.1 + electron-builder 26.18.0 + electron-updater 6.8.11; HTML/CSS/JavaScript with esbuild and ShaderGradient; safeStorage encrypted native persistence; Koffi 3.3.8 for the Windows desktop adapter; Windows.Media.Ocr for local OCR; node:test/Playwright/axe verification; Vercel static website and Docker browser image. No remote calendar backend, billing or telemetry. See [desktop ground truth](desktop.md) and [privacy boundaries](privacy.md). The earlier architecture proposals below are historical, not claims that Tauri, SQLite, cloud auth or every connector has shipped.
+
 # Fri · Kiến trúc và công nghệ
 
 ## Current desktop implementation — 2026-11-22

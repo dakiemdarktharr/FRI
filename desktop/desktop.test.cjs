@@ -20,7 +20,7 @@ test('native window, isolated IPC, real commands and persistent calendar',async(
   let app=await electron.launch(options);
   try{
     let p=await app.firstWindow();const errors=[];p.on('pageerror',e=>errors.push(e.message));
-    await p.locator('.task').first().waitFor();
+    await p.locator('#weekday').waitFor();
     assert.equal(await p.evaluate(()=>location.origin),'app://fri');
     assert.equal(await p.evaluate(()=>typeof require),'undefined');
     assert.equal(await p.evaluate(()=>typeof process),'undefined');
@@ -45,7 +45,7 @@ test('native window, isolated IPC, real commands and persistent calendar',async(
     await windowState(app,'isMinimized',false);
     await p.screenshot({path:path.join(results,'native-content.png')});
     assert.deepEqual(errors,[]);
-    await app.close();app=await electron.launch(options);p=await app.firstWindow();await p.locator('.task').first().waitFor();
+    await app.close();app=await electron.launch(options);p=await app.firstWindow();await p.locator('#weekday').waitFor();
     assert.equal(await p.evaluate(()=>FRI_PREVIEW.getState().tasks.some(t=>t.title==='Native deadline persistence')),true);
     await p.locator('[data-window=close]').click();await app.process().exitCode;
   }finally{await app.close().catch(()=>{});}
@@ -56,7 +56,7 @@ test('monochrome UI, new plan types, menus, keyboard and safe restore',async()=>
   try{
     const p=await browser.newPage({viewport:{width:1500,height:1000},reducedMotion:'reduce'});
     await p.goto(require('node:url').pathToFileURL(path.resolve(__dirname,'../FRI-liquid-glass.html')).href);
-    await p.locator('.task').first().waitFor();
+    await p.locator('#weekday').waitFor();
     for(const removed of ['.brand-caption','.local-label','#date-kicker','#progress-caption','#content-title','#collections','.task-note','.sidebar-note','.workspace-footer','.day-companion p'])assert.equal(await p.locator(removed).count(),0,removed);
     assert.equal(await p.locator('.brand-row [data-action=search]').count(),1);
     await p.locator('[data-menu=new]').click();await p.keyboard.press('ArrowDown');await p.keyboard.press('Enter');

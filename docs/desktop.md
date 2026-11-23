@@ -1,4 +1,25 @@
-# Desktop ground truth
+# Desktop ground truth — v0.3.0
+
+Updated 2026-11-23. This section supersedes the archived v0.2 notes below.
+
+## Implemented
+
+- Encrypted local calendar through Electron safeStorage async API, atomic replacement, safe failure on unlock errors and migration from v0.2 localStorage. Writes merge changed fields so a widget completion survives an unrelated main-window edit. Failed writes stay queued for retry.
+- Native rounded desktop widget with drag-to-create overlay, resize priorities, Done synchronization, persistence/reopen, options menu, tray and midnight rollover. Windows attaches to Explorer and repositions intersecting desktop icons. Auto arrange must be off. A coordinate recovery journal protects unchanged layouts; macOS uses a floating window.
+- Local text/ICS/image review; Windows OCR via installed Windows.Media.Ocr; public HTTPS ICS/JSON-LD links with pinned public DNS, no redirects/cookies, 1 MB and timeout limits. Unsupported/failed sources do not discard successful drafts. Repeated source IDs are skipped; recurrence expansion and automatic source-update reconciliation remain in the older research workspace only.
+- Simple free-slot planning and private local availability file comparison. Files contain free intervals only; live account calendar linking is not connected.
+- Opt-in real Open-Meteo weather (manual region, periodic refresh, timestamp and cached/stale label), official Spotify Embed in a separate ephemeral session, Google Maps browser search and manual activity entry. Spotify full account playback and Google Places API widgets await configuration. Free Open-Meteo hosted API is noncommercial; change provider plan before commercial use.
+- Private desktop notifications five minutes before an appointment while FRI runs. No cloud voice recognition; spoken playback selects a local system voice. Day remains a rule-based local helper, not a multimodal AI service.
+- Existing native Acrylic/vibrancy and monochrome calendar UI, backup/restore, platform menus and updater retained.
+
+## Verification checkpoints
+
+13 native/core tests and 9 UI/import tests passed before final packaging; a separate network-boundary test also passes. Chromium and WebKit UI suites run locally. Actual Windows desktop exercise moved 9 icons and restored all recorded positions after removal. Actual Open-Meteo search/forecast returned Da Nang at 09:15 local, 27.1°C on the test request. Actual Spotify Embed loaded the Chill Hits playlist and exposed neither Node nor the FRI bridge; full account playback was not exercised. A synthetic image containing Team meeting, 2026-11-25 10:30, Room A was read correctly by the installed en-US Windows OCR engine. No personal user calendar was used for fixtures.
+
+Installer upgrade, final CI artifacts and release publication are pending at this checkpoint. Final receipts will be recorded in release-verification.md. Security boundaries and limitations are in privacy.md; Apple follow-up is in apple-handoff.md.
+
+## Archived v0.2 implementation notes
+
 
 Updated 2026-11-22. The latest user request supersedes the beige/marsala preview: monochrome UI, no circled slogans, Search beside the logo, New with deadline/schedule choices, and a native desktop installer.
 

@@ -1,7 +1,7 @@
 {
   "name": "fri-desktop",
   "productName": "FRI",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A local calendar with a native glass workspace.",
   "author": "FRI contributors",
   "license": "UNLICENSED",
@@ -10,12 +10,13 @@
   "scripts": {
     "prepare:ui": "node prepare.cjs",
     "start": "npm run prepare:ui && electron .",
-    "test": "node --test desktop.test.cjs",
+    "test": "node --test desktop.test.cjs core.test.cjs planning.test.cjs widget.test.cjs",
     "pack": "npm run prepare:ui && electron-builder --dir",
     "dist": "npm run prepare:ui && electron-builder --publish never"
   },
   "dependencies": {
-    "electron-updater": "6.8.11"
+    "electron-updater": "6.8.11",
+    "koffi": "3.3.8"
   },
   "devDependencies": {
     "electron": "45.4.1",
@@ -29,10 +30,13 @@
       "buildResources": "resources"
     },
     "files": [
-      "main.cjs",
-      "preload.cjs",
+      "*.cjs",
+      "!*.test.cjs",
+      "widget*.html",
       "ui/**/*",
-      "package.json"
+      "resources/icon.png",
+      "package.json",
+      "ocr.ps1"
     ],
     "asar": true,
     "artifactName": "FRI-${version}-${os}-${arch}.${ext}",
@@ -86,7 +90,10 @@
       "category": "public.app-category.productivity",
       "icon": "resources/icon.png",
       "hardenedRuntime": true
-    }
+    },
+    "asarUnpack": [
+      "ocr.ps1"
+    ]
   },
   "overrides": {
     "minimatch": "11.0.1"

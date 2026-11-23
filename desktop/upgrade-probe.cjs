@@ -5,7 +5,7 @@ const [exe,profile,mode,version]=process.argv.slice(2);
   const env={...process.env,FRI_TEST_MODE:'1',FRI_TEST_USER_DATA:profile};delete env.ELECTRON_RUN_AS_NODE;
   const app=await _electron.launch({executablePath:exe,args:[],env});
   try{
-    const p=await app.firstWindow();await p.locator('.task').first().waitFor();
+    const p=await app.firstWindow();await p.waitForFunction(()=>window.FRI_PREVIEW);
     assert.equal(await p.evaluate(()=>window.friDesktop.version),version);
     if(mode==='seed'){
       await p.locator('[data-menu=new]').click();await p.locator('[data-command=deadline]').click();
@@ -13,6 +13,7 @@ const [exe,profile,mode,version]=process.argv.slice(2);
       await p.getByRole('button',{name:'Done',exact:true}).click();await p.locator('#modal').waitFor({state:'hidden'});
       await p.locator('[data-action=settings]').click();await p.locator('#text-setting').check();await p.getByRole('button',{name:'Done',exact:true}).click();
     }
+    await p.evaluate(()=>FRI_PREVIEW.settled?.());
     const s=await p.evaluate(()=>FRI_PREVIEW.getState());
     assert.equal(s.tasks.length,8);assert(s.tasks.some(t=>t.title==='Installer upgrade retained this deadline'));assert.equal(s.settings.large,true);
     console.log(JSON.stringify({version,mode,appointments:s.tasks.length,deadlinePreserved:true,settingsPreserved:true,origin:await p.evaluate(()=>location.origin)}));

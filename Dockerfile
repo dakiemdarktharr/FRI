@@ -3,6 +3,7 @@ WORKDIR /build
 COPY preview/package*.json preview/
 RUN npm ci --prefix preview
 COPY preview/ preview/
+COPY index.html index.html
 RUN npm run build --prefix preview
 
 FROM nginxinc/nginx-unprivileged:stable-alpine

@@ -37,6 +37,7 @@ jobs:
       - run: node desktop/node_modules/electron/install.js
       - run: npm run prepare:ui --prefix desktop
       - run: npm test --prefix desktop
+      - run: node --test desktop/network.test.cjs
       - run: npm audit --omit=dev --prefix desktop --audit-level=moderate
       - run: npm run dist --prefix desktop
         env:

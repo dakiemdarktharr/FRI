@@ -1,0 +1,29 @@
+'use strict';
+const {shell,BrowserWindow,Notification,session}=require('electron');
+async function json(url){const response=await fetch(url,{signal:AbortSignal.timeout(10000),redirect:'error',credentials:'omit'});if(!response.ok)throw Error('The service is unavailable. Try again later.');const text=await response.text();if(text.length>1024*1024)throw Error('Service response too large');return JSON.parse(text)}
+const short=(s,max=100)=>{if(typeof s!=='string'||!s.trim()||s.length>max)throw Error('Enter a valid value');return s.trim()};
+function createServices({store,changed}){
+ let music=null,refreshing=false,lastRefreshAttempt=0;const notified=new Set(),lastCall=new Map();
+ async function setting(key,value){const base=store.read().state,next=structuredClone(base);next.settings[key]=value;await store.commit(base,next);changed()}
+ const timer=setInterval(()=>{const state=store.read().state;if(!state?.settings?.reminders)return;const now=new Date(),date=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');for(const t of state.tasks){const at=new Date(t.date+'T'+t.time+':00').getTime(),key=t.id+':'+at;if(t.done||t.date!==date||notified.has(key)||at-Date.now()>5*60000||at-Date.now() < -60000)continue;notified.add(key);if(Notification.isSupported())new Notification({title:'FRI · Coming up',body:state.settings.reminderDetails?t.title+' · '+t.time:'You have an appointment soon. Open FRI to view it.'}).show()}},15000);timer.unref();
+ const weatherTimer=setInterval(async()=>{const w=store.read().state?.settings?.weather;if(!w||refreshing||Date.now()-w.fetchedAt<1800000||Date.now()-lastRefreshAttempt<300000)return;refreshing=true;lastRefreshAttempt=Date.now();try{await api.call('weather-forecast',{name:w.city,latitude:w.latitude,longitude:w.longitude})}catch{}finally{refreshing=false}},60000);weatherTimer.unref();
+ const api={stop(){clearInterval(timer);clearInterval(weatherTimer)},async call(action,input){
+  if(action.startsWith('weather-')&&action!=='weather-disconnect'){const now=Date.now();if(now-(lastCall.get(action)||0)<750)throw Error('Please wait a moment before trying again.');lastCall.set(action,now)}
+  if(action==='read-source')return require('./public-source.cjs').readPublicSource(input);
+  if(action==='ocr')return require('./ocr.cjs').recognize(input,require('electron').app.getPath('userData'));
+  if(action==='weather-search'){const name=short(input);const data=await json('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(name)+'&count=5&language=en&format=json');return (data.results||[]).map(p=>({id:p.id,name:p.name,country:p.country,latitude:p.latitude,longitude:p.longitude,timezone:p.timezone}))}
+  if(action==='weather-forecast'){if(!input||!Number.isFinite(input.latitude)||!Number.isFinite(input.longitude)||Math.abs(input.latitude)>90||Math.abs(input.longitude)>180)throw Error('Choose a city');const city=short(input.name),data=await json('https://api.open-meteo.com/v1/forecast?latitude='+input.latitude+'&longitude='+input.longitude+'&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1');if(!Number.isFinite(data.current?.temperature_2m))throw Error('No forecast returned');const value={city,latitude:input.latitude,longitude:input.longitude,temperature:data.current.temperature_2m,code:data.current.weather_code,time:data.current.time,timezone:data.timezone,high:data.daily.temperature_2m_max[0],low:data.daily.temperature_2m_min[0],fetchedAt:Date.now()};await setting('weather',value);return value}
+  if(action==='weather-disconnect'){await setting('weather',null);return true}
+  if(action==='maps'){const region=short(input);await shell.openExternal('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('popular restaurants attractions in '+region));return true}
+  if(action==='spotify'){
+   const url=new URL(short(input,250));if(url.protocol!=='https:'||url.hostname!=='open.spotify.com'||!/^\/(playlist|album|track|episode)\/[A-Za-z0-9]+$/.test(url.pathname))throw Error('Use a Spotify playlist, album, track or episode link');
+   if(music&&!music.isDestroyed()){music.close();music=null}const partition='fri-spotify-opt-in';const isolated=session.fromPartition(partition);isolated.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(details,cb)=>{const u=new URL(details.url),allowed=u.protocol==='https:'&&['spotify.com','scdn.co','spotifycdn.com','spotifycdn.net'].some(h=>u.hostname===h||u.hostname.endsWith('.'+h));cb({cancel:!allowed})});isolated.setPermissionRequestHandler((_w,_p,cb)=>cb(false));
+   music=new BrowserWindow({title:'Spotify · FRI',width:430,height:560,minWidth:360,minHeight:400,backgroundColor:'#121212',autoHideMenuBar:true,webPreferences:{partition,nodeIntegration:false,contextIsolation:true,sandbox:true,webSecurity:true}});
+   music.webContents.setWindowOpenHandler(({url})=>{try{const u=new URL(url);if(u.protocol==='https:'&&['open.spotify.com','accounts.spotify.com'].includes(u.hostname))shell.openExternal(u.href)}catch{}return {action:'deny'}});
+   music.webContents.on('will-navigate',(e,to)=>{try{if(new URL(to).hostname!=='open.spotify.com')e.preventDefault()}catch{e.preventDefault()}});
+   music.loadURL('https://open.spotify.com/embed'+url.pathname+'?utm_source=generator');await setting('spotifyUrl',url.origin+url.pathname);return true;
+  }
+  throw Error('Unknown service');
+ }};return api;
+}
+module.exports={createServices,json};

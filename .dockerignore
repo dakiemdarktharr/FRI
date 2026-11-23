@@ -6,3 +6,7 @@ tests
 preview/.build
 *.html
 docs
+
+!index.html
+website
+test-results

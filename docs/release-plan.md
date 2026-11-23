@@ -4,14 +4,14 @@ Updated 23 November 2026. Current user instruction authorizes GitHub commits, pu
 
 ## Website acceptance
 
-- [ ] XP-style single-action intro dialog; retain 1.3 second notification burst.
-- [ ] Halftone ocean: wave fronts and shoreline both advance/recede, faster cadence, deterministic frame review.
-- [ ] One complete app demo spans hero and next scroll area; no duplicate clipped demo.
-- [ ] Scramble loop: Fri → mission slogan → pole mark → Fri. Each transition 0.3 s, each hold 1.3 s.
-- [ ] Remove the marked arrows, eyebrows, replay/pause/chapter controls and footer micro-links.
-- [ ] Steve Jobs quotation with a primary source; continuously moving symbol/wordmark tiles behind legible footer text and under-page reveal.
-- [ ] Separate Pricing route with curtain transition and pointer-relative card tilt. Free/current core functions; Premium customization + mutual availability, Coming soon.
-- [ ] Frame sequence inspection, responsive/keyboard/reduced-motion tests; commit and deploy the exact verified version to Vercel.
+- [x] XP-style single-action intro dialog; retain 1.3 second notification burst.
+- [x] Halftone ocean: wave fronts and shoreline both advance/recede, faster cadence, deterministic frame review.
+- [x] One complete app demo spans hero and next scroll area; no duplicate clipped demo.
+- [x] Scramble loop: Fri → mission slogan → pole mark → Fri. Each transition 0.3 s, each hold 1.3 s.
+- [x] Remove the marked arrows, eyebrows, replay/pause/chapter controls and footer micro-links.
+- [x] Steve Jobs quotation with a primary source; continuously moving symbol/wordmark tiles behind legible footer text and under-page reveal.
+- [x] Separate Pricing route with curtain transition and pointer-relative card tilt. Free/current core functions; Premium customization + mutual availability, Coming soon.
+- [x] Frame sequence inspection, responsive/keyboard/reduced-motion tests; commit and deploy the exact verified version to Vercel.
 
 ## Desktop acceptance
 
@@ -34,6 +34,8 @@ Native Windows Acrylic/macOS vibrancy provides real OS background transparency/b
 
 ## Progress — 2026-11-23
 
-Website revision 2 implemented and verified: 16 interaction checks, axe zero findings, 276 surf frames captured and reviewed. Premium remains Coming soon. Vercel project fri created in the existing ACNE team; deployment pending this checkpoint.
+Website revision 2 implemented and verified: 16 interaction checks, axe zero findings, 276 surf frames captured and reviewed. Premium remains Coming soon. Vercel project fri created in the existing ACNE team; production deployment READY at https://fri-acne-a6cd.vercel.app, commit 286077a. Pricing direct-load and video rendering verified on the live site.
 
 Desktop work in progress: encrypted native store, selector and responsive widget, Windows icon adapter, opt-in weather and isolated Spotify player. These changes are not yet release-verified.
+
+Desktop checkpoint: encrypted restart and widget state passed; 9 real Windows desktop icons moved and restored; native weather and Spotify isolation checked; Windows local OCR reads the synthetic fixture. Public-source adapter, private free-time comparison and basic slot planner added. Installer/CI/release checks remain in progress.

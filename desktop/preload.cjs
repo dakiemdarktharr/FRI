@@ -12,6 +12,11 @@ contextBridge.exposeInMainWorld('friDesktop', {
   windowAction: action => ipcRenderer.invoke('fri:window', action),
   setGlass: enabled => ipcRenderer.invoke('fri:glass', enabled),
   openExternal: url => ipcRenderer.invoke('fri:external', url),
+  loadState:()=>ipcRenderer.invoke('fri:load-state'),
+  saveState:(base,next)=>ipcRenderer.invoke('fri:save-state',base,next),
+  createWidget:()=>ipcRenderer.invoke('fri:widget'),
+  service:(action,input)=>ipcRenderer.invoke('fri:service',action,input),
+  onState:callback=>subscribe('fri:state',callback),
   checkUpdates: () => ipcRenderer.invoke('fri:updates'),
   onCommand: callback => subscribe('fri:command', callback),
   onWindowState: callback => subscribe('fri:window-state', callback)

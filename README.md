@@ -1,107 +1,60 @@
 # FRI
 
-A local-first calendar and desktop workspace. The current website design uses halftone surf, an XP-style intro and a continuous app demo. Premium is coming soon; no subscriptions are being sold.
+A local-first calendar with a native glass workspace and desktop widgets. **Premium is coming soon; no payments or account signup are enabled.**
 
-- Website preview: `FRI-website.html`; source and build: `website/`.
-- Desktop UI: `FRI-liquid-glass.html`; source: `preview/`; native shell: `desktop/`.
-- Design handoff: [FRI design guidebook](docs/fri_design_guidebook.pdf).
-- Current verification: [website revision 2](docs/web-verification-2026-11-23.md).
-- Active scope and external dependencies: [release plan](docs/release-plan.md).
+- **Website:** https://fri-acne-a6cd.vercel.app — XP-style opening, halftone surf, continuous app demo and Pricing.
+- **Installers:** [GitHub Releases](https://github.com/dakiemdarktharr/FRI/releases).
+- **Review files:** [website HTML](FRI-website.html) and [app HTML](FRI-liquid-glass.html), both self-contained.
+- **Design handoff:** [fri_design_guidebook.pdf](docs/fri_design_guidebook.pdf) and [Apple platform handoff](docs/apple-handoff.md).
 
+## Use FRI
 
-Fri is a personal calendar that makes room for appointments, focused work, and the everyday things that matter.
+Start with **New → Schedule** or **One-time deadline**. Name your plan, add details, choose **Add another**, then **Done**. FRI asks for missing information one card at a time and checks overlaps before saving. Complete each task to fill the day ring. Dates open in separate tabs; Calendar shows month and year views. Search, edit, bulk delete, undo, backup and restore are available from the sidebar and menus.
 
-**Website design preview:** open [FRI-website.html](FRI-website.html) for the overload-to-calm intro, animated ocean, staged app demo and platform-aware installer links. It is a self-contained design review. [Website notes and verification](website/README.md) describe its scope; Pricing and Sign up are preview states.
+**File → Create FRI widget on desktop** opens a drawing overlay. Drag out an area, then release. Move the widget by its header, resize from its edges, and complete the current task directly. Its content adapts to the available space. Windows Explorer icons move out of its area when Auto arrange icons is off, and unchanged positions are restored when the last widget closes. On macOS this is currently a floating window; Finder icon reflow and WidgetKit are not implemented.
 
-**Desktop installers:** [GitHub Releases](https://github.com/dakiemdarktharr/FRI/releases). **Single-file interface:** [FRI-liquid-glass.html](FRI-liquid-glass.html). The current design is black and white, with a slow monochrome sidebar, multiple day tabs, a duration-sized appointment mosaic and Day beside Up Next.
+**File → Import plans** accepts text, ICS, images and public HTTPS calendar links. Windows OCR reads images locally with installed OCR languages. Review source evidence and dates before confirming. **Find time for a task** finds a contiguous free slot; **Find time together** compares explicitly shared free-time files without event details.
 
-The Electron desktop app uses native Windows Acrylic or macOS vibrancy to reveal blurred wallpaper and applications behind main space. HTML uses a sample background. Acrylic/vibrancy is real native transparency and blur; it is not Apple's native Liquid Glass refraction renderer. The earlier V1 remains in [index.html](index.html), with its separate sources, planner and data model.
+Weather fetches a real Open-Meteo forecast for a chosen city. Spotify opens an isolated official Embed player; account playback depends on Spotify. Maps opens Google Maps search for a chosen area. Health is a manual step entry. These optional actions disclose the provider receiving the request. [Privacy boundaries](docs/privacy.md).
 
-## Try the new interface
+The main space uses Windows Acrylic or macOS under-window vibrancy to reveal real blurred wallpaper and windows. This is native translucency, not Apple's Liquid Glass compositor. The app palette is monochrome; the marketing website uses white and marsala.
 
-Double-click `FRI-liquid-glass.html`, or launch the desktop app. Start on today, open another day with **+** beside the tabs, and close a day with its **×**. Search is the magnifying glass beside the logo. **New** offers **One-time deadline** (due date/time) or **Schedule** (one appointment with start/duration). Recurrence is not implemented. Use **…** for layout, editing and bulk deletion. **Settings** changes sidebar background, uploaded image, motion, transparency and text size. The palette is intentionally monochrome for the next design review.
+## Develop and verify
 
-**Add → name and details → Add another → Done** gathers a batch. Missing information is requested one card at a time; schedules are checked for overlap. Deadlines do not require duration. Complete individual tasks to unlock the day ring. Delete offers Undo. `N` opens New, `/` or `Ctrl/⌘ F` searches, `Ctrl/⌘ B` toggles the sidebar, and Escape closes a menu/dialog. File/Edit/View/Help provide backup/restore, editing, day/month/year views, shortcuts and updates. Window controls operate the real desktop window.
-
-Up Next uses the local calendar. Weather, Maps, Spotify and Health contain labeled sample content. Day is a local demo; spoken playback depends on platform support, and the native preview does not request microphone access. Accounts, connected services, native OS widgets and background reminders are not implemented. Calendar backups transfer tasks between browser and app; preferences and drafts remain local.
-
-Current implementation, packaging and limitations are in [desktop ground truth](docs/desktop.md). [Liquid Glass research](docs/liquid-glass-research.md) preserves the earlier beige/marsala design history.
-
-## Desktop and Docker
-
-Use Node.js 24+:
+Use Node.js 24. Run commands from the repository root:
 
 ```powershell
 npm ci --prefix preview
-npm run build --prefix preview
+npm ci --prefix tests
+npm exec --prefix tests -- playwright install chromium webkit
 npm ci --prefix desktop
 node desktop/node_modules/electron/install.js
+npm run build --prefix preview
 npm start --prefix desktop
+
+npm run prepare:ui --prefix desktop
+npm test --prefix desktop
+npm test --prefix preview
+npm test --prefix tests
+node website/build.mjs
+node website/verify-v2.cjs
 npm run dist --prefix desktop
 ```
 
-Windows produces `dist/FRI-0.2.0-win-x64.exe`. Its assisted per-user installer replaces the old application in the registered folder and keeps calendar data in a separate user-data directory. Help → Check for updates downloads newer GitHub releases and offers restart/install. Old files are removed during installation, after the download succeeds.
+The website builder writes a standalone HTML with embedded video, plus a smaller served page and video asset in website/public. Website tests generate screenshots and 276 frame captures under test-results. See [web verification](docs/web-verification-2026-11-23.md) and [desktop ground truth](docs/desktop.md).
 
-Initial packages are unsigned. macOS DMG/ZIP builds come from the macOS CI runner; automatic installation there awaits Apple signing/notarization. Replacing FRI in Applications preserves its user Library data. Windows glass needs Windows 11 22H2+; older systems use a solid fallback.
-
-`docker compose up --build -d` serves the browser interface at [localhost:8080](http://127.0.0.1:8080). The container runs non-root nginx and does not provide desktop transparency. Stop with `docker compose down`.
-
-To rebuild or test the preview:
+Docker serves the browser version, without OS glass or native widgets:
 
 ```powershell
-npm ci --prefix preview
-npm run build --prefix preview
-npm ci --prefix tests
-npm exec --prefix tests -- playwright install chromium webkit
-npm test --prefix preview
-$env:FRI_BROWSER = 'webkit'
-npm test --prefix preview
-Remove-Item Env:FRI_BROWSER
+docker compose up --build -d
+# http://127.0.0.1:8080
+docker compose down
 ```
 
-Verified on Windows: **8 scenario tests in Chromium and 8 in WebKit**, covering offline loading, mosaic geometry, batch review, overlap, editing/deletion/undo, completion, tabs, hover timing, settings, widgets and accessibility semantics. `npm test --prefix desktop` adds native isolation/IPC, window controls, deadline persistence after restart, monochrome menus, narrow layouts and invalid-backup rejection. Native foreground inspection confirmed blurred applications behind main space. `npm audit --prefix desktop` reports zero vulnerabilities with the current lockfile. Translucent contrast depends on the backdrop; this is not a claim of full accessibility conformance.
+## Release boundaries
 
-Authoring files and dependency lockfile live in `preview/`. The output includes [third-party notices](preview/THIRD-PARTY-NOTICES.txt). The reusable `moving_gradient_bg` skill is installed locally with canonical ID `moving-gradient-bg`.
+v0.3 is a Windows-first, keyless release. Calendar data is encrypted locally with OS-provided keys. No calendar-content server or telemetry exists. Windows installers replace old application files and retain user data; update installation happens after download succeeds. Builds are unsigned until signing certificates are supplied. Mac CI artifacts are development builds requiring signing, notarization and physical-device review before a supported Mac release.
 
-## Run the earlier V1
+Premium entitlement, account signup, OAuth/Spotify Web Playback SDK, Google Places/Routes APIs, automatic shared-calendar linking, cloud/multimodal Day AI and an iOS app are not shipped. Day provides local planning shortcuts and on-device spoken playback when a system voice is available. Recurrence expansion, overnight schedules and nested travel/context planning are not exposed in the new desktop interface. The earlier research workspace and its richer domain tests remain in index.html; the current desktop reuses its ICS/JSON-LD parser, not its entire separate data model.
 
-Open `index.html` directly in a modern browser. The app and sample assets are self-contained. For a stable storage origin and to try public calendar sources, run this command from the repository root:
-
-```powershell
-python -m http.server 8000 --bind 127.0.0.1
-```
-
-Open [Fri on localhost](http://127.0.0.1:8000/). The demo day is Monday, November 23, 2026 in `Asia/Ho_Chi_Minh`. Use **Settings → Manage data → Empty calendar** to start with your own calendar.
-
-## Calendar and widgets
-
-- **Day** opens first. Activities appear as posts with a time tile, title, and a check box for each trackable item. Hover for 300 ms to preview details or open the post by clicking, tapping, or pressing Enter.
-- **Month** and **Year** use rounded square tiles. The month tiles bobble when the pointer enters and show a cursor-following agenda preview after 500 ms. Pick a month or day to go one level deeper. Use the arrow keys to navigate days in Month.
-- The progress ring tracks appointments, flexible tasks, nested activities, and deadlines. The day-level check unlocks when every trackable activity is complete. Reopening an activity clears the day-level completion. Travel and on-site context appear in the feed and progress is unchanged by them.
-- The square **widget** shows progress and the next activity. Open it to expand the upcoming stack, then select an item to open its details. **Widgets** includes a lock screen preview and system tint. Native widgets and background notifications belong to later platform releases.
-- **Settings** includes alternate palettes, light and dark appearances, and reduced transparency. The app uses the Apple system font where available and platform fallbacks elsewhere. The calendar respects reduced motion.
-
-The motion treatments are implemented with CSS and the Web Animations API. [Motion references for bobble](https://motion.dev/examples/react-bobble-hover), [cursor-following previews](https://motion.dev/examples/vue-cursor-hover-follow), [stagger](https://motion.dev/examples/vue-staggered-grid), [post expansion](https://motion.dev/examples/js-app-store-layout), and the [widget stack](https://motion.dev/examples/vue-notifications-stack).
-
-## Add appointments and sources
-
-Choose **Add appointment** and enter a name. Use **New appointment** to add another, then choose **Done**. Fri asks for any missing or invalid date, start time, or end time one card at a time. The full batch goes on the calendar after the final answer. Closing or reloading keeps the draft.
-
-Use **Add sources** to stage images, text, and calendar links. The sample batch includes two images, an ICS calendar, and a login-required source. Public ICS and JSON-LD depend on the source’s browser access policy. Uploaded images have a local preview and go through manual review. **Plan tasks** previews schedule changes, explains issues, and applies a validated revision before exporting generated sessions as ICS.
-
-## Verify the earlier V1
-
-The earlier V1 HTML has no install step. Its test suite uses Node.js 24, Playwright, and a local HTTP server started by the tests.
-
-```powershell
-npm ci --prefix tests
-npm exec --prefix tests -- playwright install chromium webkit
-npm test --prefix tests
-$env:FRI_BROWSER = 'webkit'
-npm run test:browser --prefix tests
-Remove-Item Env:FRI_BROWSER
-```
-
-Run `npm run test:domain --prefix tests` for calendar and scheduling logic alone. [GitHub Actions](.github/workflows/web.yml) also runs both browser engines. [Architecture and technology](docs/technology.md) covers the implemented stack, data contracts, and platform roadmap.
-
-Verified on Windows with 14 domain cases and 19 browser cases each in Chromium and WebKit. Coverage includes the solid palette, preview delays, square tile layout, keyboard and 360 px touch navigation, completion persistence, widget navigation, and the appointment, sources, and planner workflows.
+[Current release scope](docs/release-plan.md) · [Technology](docs/technology.md) · [Ocean asset license](website/assets/NOTICE.md)

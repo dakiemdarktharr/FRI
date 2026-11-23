@@ -1,0 +1,107 @@
+{
+  "date": "2026-11-23",
+  "timezone": "Asia/Saigon",
+  "source": "f90cf250d6ac198b3dbeb6e863f42ffe1d8f49a2",
+  "merge": "b8d8aaa877a5b326c2997796b0d7046bbc40834d",
+  "pullRequest": "https://github.com/dakiemdarktharr/FRI/pull/1",
+  "release": "https://github.com/dakiemdarktharr/FRI/releases/tag/v0.5.0",
+  "desktopCi": 45157763342,
+  "webCi": 45157763021,
+  "androidSourceCi": 45157763827,
+  "deployment": {
+    "id": "dpl_HCrdBB4QwGWxckXcZtNgieyMyxFz",
+    "url": "https://fri-acne-a6cd.vercel.app",
+    "state": "READY",
+    "target": "production",
+    "commit": "b8d8aaa877a5b326c2997796b0d7046bbc40834d"
+  },
+  "liveChecks": [
+    "8 answer-led product sections",
+    "6 widths 320-1440 px",
+    "Pricing 50000 VND/month coming soon",
+    "muted autoplay observed",
+    "Axe no reported violations",
+    "Windows installer HEAD 200, 116943574 bytes"
+  ],
+  "assets": [
+    {
+      "name": "FRI-0.5.0-mac-arm64.dmg",
+      "bytes": 113366449,
+      "digest": "sha256:09e39f13e488f3de3fb2566920df18d3b472f9c0a0fa03370251920dd43017fa"
+    },
+    {
+      "name": "FRI-0.5.0-mac-arm64.dmg.blockmap",
+      "bytes": 119807,
+      "digest": "sha256:d7497bbe8abc095053a6057f7d90681f8fca962a330643e24fbcdca14873226c"
+    },
+    {
+      "name": "FRI-0.5.0-mac-arm64.zip",
+      "bytes": 119351420,
+      "digest": "sha256:1f75b156797b1a4f37878880e0c1508d4f1b3eba8aef087a71521af5a0743cd0"
+    },
+    {
+      "name": "FRI-0.5.0-mac-arm64.zip.blockmap",
+      "bytes": 125319,
+      "digest": "sha256:589f3fdb67f24fea1b0d744aaf980c3d04b45a9447e171f124daf41dad5953e6"
+    },
+    {
+      "name": "FRI-0.5.0-mac-x64.dmg",
+      "bytes": 116348882,
+      "digest": "sha256:a6bc4b78f42af86eb356c5821529ce3f2f8f81837ba50ca37003878c6beceae6"
+    },
+    {
+      "name": "FRI-0.5.0-mac-x64.dmg.blockmap",
+      "bytes": 122133,
+      "digest": "sha256:c14347ae16a54d666c8b7ea2ccfa81b6455ef1371f263d204c0e464524738a1d"
+    },
+    {
+      "name": "FRI-0.5.0-mac-x64.zip",
+      "bytes": 123397880,
+      "digest": "sha256:6728ac5065d5435d2616a221df4cc3f637b4b9e6836de194aec8a8948e2a6d7a"
+    },
+    {
+      "name": "FRI-0.5.0-mac-x64.zip.blockmap",
+      "bytes": 131126,
+      "digest": "sha256:9abafada741f6f187370622a831ab4348b32a5fc0cd87a9d098ce5358a0a882d"
+    },
+    {
+      "name": "FRI-0.5.0-win-x64.exe",
+      "bytes": 116943574,
+      "digest": "sha256:cb0dc30268d7c510c97d6d616678157b87f4313e1f4e9880686c981347ee0ab6"
+    },
+    {
+      "name": "FRI-0.5.0-win-x64.exe.blockmap",
+      "bytes": 122555,
+      "digest": "sha256:867536dd810a1e1e0bfaad92638ab4db974b19589d6b330e14041ec2baefd4f9"
+    },
+    {
+      "name": "FRI-liquid-glass.html",
+      "bytes": 4705707,
+      "digest": "sha256:547710ce7f9f3e5955fe46131a93001343ab0e0beff08899ab4eb1f6633852de"
+    },
+    {
+      "name": "FRI-website.html",
+      "bytes": 12424657,
+      "digest": "sha256:e97fdd66e8a0a16c7ced143146fba363601294d70e53bfa1dff1c2a5c93212a1"
+    },
+    {
+      "name": "latest-mac.yml",
+      "bytes": 799,
+      "digest": "sha256:8065486f3fb636c59e41669ec1792340a03e64ba762bf34a3b12f4c977c23cf6"
+    },
+    {
+      "name": "latest.yml",
+      "bytes": 339,
+      "digest": "sha256:7a5709695e26201cdb94fd45b2ffd68bf5633cfbcd099940951ede6ced1c7eb4"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "bytes": 622,
+      "digest": "sha256:201d80d76d7a86bbff5a6fb93c3a0dca6f0079527e7fbbd655f4275ced24bb39"
+    }
+  ],
+  "androidApksPublished": false,
+  "desktopVideoVersion": "0.4.0",
+  "macArtifactsSourceRun": 45149428442,
+  "macDesktopSourceIdenticalToFinal": true
+}

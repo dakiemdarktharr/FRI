@@ -29,4 +29,12 @@ See [Android verification](../mobile/docs/verification.md) for separate build/de
 
 Initial CI found two test-harness assumptions: the new brand test expected a pre-existing output directory, and the larger widget started against a screen edge on smaller runners. The tests now create their own directory and leave room for the explicit keyboard move/resize assertion. The app's edge clamping was working correctly.
 
-Physical Android launchers, physical iPhone Safari, macOS signing/notarization and native Apple widgets remain distinct checks; do not infer them from Windows tests. Desktop/container CI run 45149428442 passed on Windows, macOS and Linux container. Web CI run 45149428787 passed on Chromium and WebKit. These runs use e449aa0; subsequent Android and download-link changes receive their own final CI run. Publication receipts will be appended after deployment.
+Physical Android launchers, physical iPhone Safari, macOS signing/notarization and native Apple widgets remain distinct checks; do not infer them from Windows tests. Desktop/container CI run 45149428442 passed on Windows, macOS and Linux container. Web CI run 45149428787 passed on Chromium and WebKit. These runs use e449aa0; subsequent Android and download-link changes receive their own final CI run. Publication receipts are below.
+
+## Final CI and publication
+
+- Final source: f90cf250d6ac198b3dbeb6e863f42ffe1d8f49a2, merged through [PR #1](https://github.com/dakiemdarktharr/FRI/pull/1).
+- [Desktop/container CI](https://github.com/dakiemdarktharr/FRI/actions/runs/45157763342), [web CI](https://github.com/dakiemdarktharr/FRI/actions/runs/45157763021) and [Android source CI](https://github.com/dakiemdarktharr/FRI/actions/runs/45157763827) passed. Native Android device tests were local and are documented separately.
+- [Public desktop release v0.5.0](https://github.com/dakiemdarktharr/FRI/releases/tag/v0.5.0): all 15 uploaded assets matched local SHA-256 digests; both update manifests matched their files. The Windows EXE is the locally tested package. macOS artifacts are from passing run 45149428442; desktop/preview source is identical between e449aa0 and f90cf25.
+- Android APKs remain local; no APK/store publishing occurred.
+- Production: https://fri-acne-a6cd.vercel.app . Deployment receipt: dpl_HCrdBB4QwGWxckXcZtNgieyMyxFz; main b8d8aaa877a5b326c2997796b0d7046bbc40834d; READY, production. Live verification checked all eight sections, six widths, pricing, muted autoplay and Chromium accessibility.

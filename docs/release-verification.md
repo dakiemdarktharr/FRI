@@ -1,5 +1,7 @@
 # FRI 0.3.0 release verification
 
+Historical receipt. Current release: [0.5.0 verification](release-verification-0.5.0.md).
+
 Verified on 23 November 2026. This records observed checks and separates platform limits from shipped behavior.
 
 ## Local Windows checks

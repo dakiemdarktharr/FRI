@@ -30,13 +30,13 @@ Local output: `dist/android/` at repository root. Both are optimized release bui
 
 Device screenshots and raw diagnostic logs remain in local test-results/; no user desktop images or build-host identifiers are published as fixtures.
 
+- Rebooted the emulator: both placed widgets retained their filters/privacy, the all-day event remained available through a cold widget tap, and app dark/24-hour preferences persisted. No Metro process was needed.
+
 ## Defects found and fixed during device testing
 
 1. The initial discrete responsive sizes selected a layout too small for a 3×2 Pixel allocation, leaving excess blank space. SizeMode.Exact now uses the actual area.
 2. R8 removed the no-argument DoneCallback constructor used by Glance reflection. A targeted Keep annotation preserves the callback; release optimization remains enabled.
 3. A one-shot read before provideContent kept a newly configured widget at Set up during a live Glance session. Instance and event Room flows now drive the composition. A native observer regression test and actual launcher confirmation/completion were used to verify the change.
-
-- Rebooted the emulator: both placed widgets retained their filters/privacy, the all-day event remained available through a cold widget tap, and app dark/24-hour preferences persisted. No Metro process was needed.
 
 ## Remaining coverage and boundaries
 

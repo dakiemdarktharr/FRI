@@ -30,15 +30,10 @@ struct FRIServiceCardsView: View {
         let settings = calendar.state.settings
         switch kind {
         case "weather":
-            if case .object(let weather) = settings["appleWeatherCache"], let summary = weather["summary"]?.string { return summary }
-            if case .object(let weather) = settings["weather"], let city = weather["city"]?.string,
-               case .number(let temperature) = weather["temperature"], temperature.isFinite {
-                return "\(city) · \(temperature.formatted(.number.precision(.fractionLength(0)))) °C"
-            }
+            if let weather = CachedWeather(settings: settings) { return weather.summary }
             return "A little context before you step outside."
         case "maps":
-            if let place = settings["mapsLocation"]?.string { return place }
-            if case .object(let place) = settings["mapsLocation"], let name = place["name"]?.string { return name }
+            if let place = calendar.state.savedMapName { return place }
             return "Where are you heading?"
         case "spotify": return settings["spotifyUrl"]?.string != nil ? "Your focus soundtrack" : "A softer soundtrack."
         default:
@@ -50,9 +45,9 @@ struct FRIServiceCardsView: View {
     private func detail(_ kind: String) -> String {
         switch kind {
         case "weather":
-            if case .object(let weather) = calendar.state.settings["appleWeatherCache"],
-               case .number(let fetchedAt) = weather["fetchedAt"], fetchedAt.isFinite {
-                return "Saved forecast · " + Date(timeIntervalSince1970: fetchedAt).formatted(date: .abbreviated, time: .shortened)
+            if let weather = CachedWeather(settings: calendar.state.settings) {
+                guard let date = weather.fetchedAt else { return "Saved forecast · update time unknown. Refresh in Services." }
+                return (weather.isStale(at: .now) ? "Cached forecast · " : "Saved forecast · ") + date.formatted(date: .abbreviated, time: .shortened)
             }
             return "Choose a city to refresh with Open-Meteo."
         case "maps": return "Choose a place in Apple Maps."

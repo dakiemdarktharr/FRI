@@ -43,10 +43,9 @@ public struct WidgetSnapshot: Sendable {
            activity["date"]?.string == CalendarClock.day(day), case .number(let steps) = activity["steps"],
            steps.isFinite, (0...100_000).contains(steps) {
             service = "\(Int(steps)) steps"
-        } else if case .object(let weather) = state.settings["appleWeatherCache"],
-                  let summary = weather["summary"]?.string,
-                  case .number(let timestamp) = weather["fetchedAt"] {
-            service = summary + (now.timeIntervalSince1970 - timestamp >= 3600 ? " · cached" : "")
+        } else if CalendarClock.local.isDate(day, inSameDayAs: now),
+                  let weather = CachedWeather(settings: state.settings) {
+            service = weather.summary + (weather.isStale(at: now) ? " · cached" : "")
         }
     }
 
@@ -54,13 +53,18 @@ public struct WidgetSnapshot: Sendable {
     public static func refreshDates(state: CalendarState, day: Date, now: Date) -> [Date] {
         let calendar = CalendarClock.local
         guard calendar.isDate(day, inSameDayAs: now) else { return [now] }
-        let boundaries = state.tasks(on: CalendarClock.day(day)).filter { !$0.done }.flatMap { task in
+        var boundaries = state.tasks(on: CalendarClock.day(day)).filter { !$0.done }.flatMap { task in
             [CalendarClock.minutes(task.time), task.endMinute].compactMap { minute -> Date? in
                 guard let minute, minute < 1440,
                       let date = calendar.date(bySettingHour: minute / 60, minute: minute % 60, second: 0, of: day),
                       date > now else { return nil }
                 return date
             }
+        }
+        if let weather = CachedWeather(settings: state.settings), let fetched = weather.fetchedAt,
+           !weather.isStale(at: now) {
+            let expires = fetched.addingTimeInterval(3600)
+            if expires > now, calendar.isDate(expires, inSameDayAs: day) { boundaries.append(expires) }
         }
         return [now] + Set(boundaries).sorted().prefix(30)
     }

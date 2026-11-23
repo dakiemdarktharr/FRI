@@ -14,13 +14,16 @@ struct FRIServicesView: View {
     @State private var message: String?
     @State private var weatherTask: Task<Void, Never>?
     @State private var mapTask: Task<Void, Never>?
+    @State private var mapSearch: MKLocalSearch?
     @State private var loadingWeather = false
     @State private var loadingMap = false
+    @State private var weatherRequest = UUID()
+    @State private var mapRequest = UUID()
+    @State private var weatherMessage: String?
+    @State private var mapMessage: String?
 
-    private var savedMapName: String? {
-        if case .object(let place) = calendar.state.settings["mapsLocation"] { return place["name"]?.string }
-        return calendar.state.settings["mapsLocation"]?.string
-    }
+    private var savedMapName: String? { calendar.state.savedMapName }
+    private var savedWeather: CachedWeather? { CachedWeather(settings: calendar.state.settings) }
 
     var body: some View {
         FRISheetView(title: "Services") {
@@ -28,18 +31,27 @@ struct FRIServicesView: View {
                 Section("Weather") {
                     Text("Open-Meteo receives the city you enter and your IP address.")
                         .friFont(.caption).foregroundStyle(.secondary)
-                    TextField("City", text: $city)
+                    TextField("City", text: $city).accessibilityIdentifier("fri.services.weather.city")
                     Button("Get forecast") { refreshWeather() }.disabled(loadingWeather || city.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    if loadingWeather { ProgressView("Getting forecast…") }
+                    if loadingWeather {
+                        ProgressView("Getting forecast…")
+                        Button("Cancel forecast request") { cancelWeather() }
+                    }
+                    if let weatherMessage { Text(weatherMessage).foregroundStyle(.secondary) }
                     Text("Weather data: Open-Meteo · CC BY 4.0").friFont(.caption).foregroundStyle(.secondary)
-                    if case .object(let cached) = calendar.state.settings["appleWeatherCache"],
-                       let summary = cached["summary"]?.string, case .number(let fetchedAt) = cached["fetchedAt"] {
-                        Text(summary)
-                        Text(Date(timeIntervalSince1970: fetchedAt), style: .relative).friFont(.caption).foregroundStyle(.secondary)
+                    if let cached = savedWeather {
+                        Text(cached.summary)
+                        if let fetchedAt = cached.fetchedAt {
+                            Text("Saved forecast · \(fetchedAt.formatted(date: .abbreviated, time: .shortened))")
+                                .friFont(.caption).foregroundStyle(.secondary)
+                        } else {
+                            Text("Saved forecast · update time unknown. Refresh to get current weather.")
+                                .friFont(.caption).foregroundStyle(.secondary)
+                        }
                         Button("Disconnect weather", role: .destructive) {
-                            weatherTask?.cancel()
-                            calendar.updateSetting("appleWeatherCache", nil)
-                            city = ""
+                            cancelWeather()
+                            if calendar.change({ $0.disconnectWeather() }) { city = ""; weatherMessage = nil }
+                            else { weatherMessage = calendar.message }
                         }
                     }
                 }
@@ -48,19 +60,25 @@ struct FRIServicesView: View {
                         .friFont(.caption).foregroundStyle(.secondary)
                     TextField("City or place", text: $mapQuery)
                     Button("Show on map") { refreshMap() }.disabled(loadingMap || mapQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    if loadingMap { ProgressView("Finding place…") }
+                    if loadingMap {
+                        ProgressView("Finding place…")
+                        Button("Cancel map search") { cancelMap() }
+                    }
+                    if let mapMessage { Text(mapMessage).foregroundStyle(.secondary) }
                     if let mapItem {
                         Map(position: $mapPosition) { Marker(item: mapItem) }.frame(height: 210)
                     }
-                    if mapItem != nil || calendar.state.settings["mapsLocation"] != nil {
+                    if mapItem != nil || savedMapName != nil {
                         if mapItem == nil, let saved = savedMapName {
                             Text("Saved place: \(saved)").foregroundStyle(.secondary)
                         }
                         Button("Disconnect maps", role: .destructive) {
-                            mapTask?.cancel()
-                            self.mapItem = nil
-                            mapQuery = ""
-                            calendar.updateSetting("mapsLocation", nil)
+                            cancelMap()
+                            if calendar.change({ $0.disconnectMaps() }) {
+                                self.mapItem = nil
+                                mapQuery = ""
+                                mapMessage = nil
+                            } else { mapMessage = calendar.message }
                         }
                     }
                 }
@@ -97,52 +115,85 @@ struct FRIServicesView: View {
         .onAppear {
             spotify = calendar.state.settings["spotifyUrl"]?.string ?? ""
             mapQuery = savedMapName ?? ""
-            if case .object(let cached) = calendar.state.settings["appleWeatherCache"] { city = cached["city"]?.string ?? "" }
+            city = savedWeather?.city ?? ""
             if case .object(let activity) = calendar.state.settings["activity"],
                activity["date"]?.string == CalendarClock.day(), case .number(let value) = activity["steps"],
                value.isFinite, (0...100_000).contains(value) { steps = Int(value) }
         }
-        .onDisappear { weatherTask?.cancel(); mapTask?.cancel() }
+        .onDisappear { cancelWeather(); cancelMap() }
+    }
+
+    private func cancelWeather() {
+        weatherRequest = UUID()
+        weatherTask?.cancel()
+        loadingWeather = false
+    }
+
+    private func cancelMap() {
+        mapRequest = UUID()
+        mapTask?.cancel()
+        mapSearch?.cancel()
+        mapSearch = nil
+        loadingMap = false
     }
 
     private func refreshWeather() {
-        weatherTask?.cancel()
+        cancelWeather()
+        let request = weatherRequest
         let city = city.trimmingCharacters(in: .whitespacesAndNewlines)
         loadingWeather = true
+        weatherMessage = nil
         weatherTask = Task {
-            defer { loadingWeather = false }
+            defer { if weatherRequest == request { loadingWeather = false } }
             do {
+                try Task.checkCancellation()
                 let summary = try await FRIWeather.forecast(city: city)
                 try Task.checkCancellation()
-                calendar.updateSetting("appleWeatherCache", .object([
-                    "summary": .string(summary),
-                    "city": .string(city),
-                    "fetchedAt": .number(Date.now.timeIntervalSince1970)
-                ]))
-                message = nil
+                guard weatherRequest == request else { return }
+                if !calendar.change({ state in
+                    state.settings["appleWeatherCache"] = .object([
+                        "summary": .string(summary), "city": .string(city),
+                        "fetchedAt": .number(Date.now.timeIntervalSince1970)
+                    ])
+                    state.settings.removeValue(forKey: "weather")
+                }) { weatherMessage = calendar.message }
             } catch where !Task.isCancelled {
-                message = "Forecast unavailable. FRI kept the last saved forecast."
+                guard weatherRequest == request else { return }
+                weatherMessage = savedWeather == nil ? "Forecast unavailable. Check the city or try again later." :
+                    "Forecast unavailable. FRI kept the last saved forecast."
             } catch {}
         }
     }
 
     private func refreshMap() {
-        mapTask?.cancel()
+        cancelMap()
+        let requestID = mapRequest
         let name = mapQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         loadingMap = true
+        mapMessage = nil
         mapTask = Task {
-            defer { loadingMap = false }
+            defer { if mapRequest == requestID { loadingMap = false; mapSearch = nil } }
             do {
+                try Task.checkCancellation()
+                guard mapRequest == requestID else { return }
                 let request = MKLocalSearch.Request()
                 request.naturalLanguageQuery = name
-                let response = try await MKLocalSearch(request: request).start()
+                let search = MKLocalSearch(request: request)
+                mapSearch = search
+                let response = try await search.start()
                 try Task.checkCancellation()
+                guard mapRequest == requestID else { return }
                 guard let first = response.mapItems.first else { throw URLError(.resourceUnavailable) }
-                mapItem = first
-                mapPosition = .region(response.boundingRegion)
-                calendar.updateSetting("mapsLocation", .string(name))
-                message = nil
-            } catch where !Task.isCancelled { message = "Apple Maps could not find this place." }
+                if calendar.change({ state in
+                    state.settings["mapsLocation"] = .string(name)
+                    state.settings.removeValue(forKey: "mapsRegion")
+                }) {
+                    mapItem = first
+                    mapPosition = .region(response.boundingRegion)
+                } else { mapMessage = calendar.message }
+            } catch where !Task.isCancelled {
+                if mapRequest == requestID { mapMessage = "Apple Maps could not find this place. Try another name or try again later." }
+            }
             catch {}
         }
     }

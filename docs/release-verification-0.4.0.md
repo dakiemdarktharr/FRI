@@ -67,3 +67,13 @@ Tested source: `ad31d45cd89c48c4deef4047400ef1bbee59f243`. Subsequent release-re
 - Final local Windows EXE: 14 packaged tests passed after rebuild; the final installer upgrade receipt above was rerun against the same artifact.
 - `FRI-0.4.0-win-x64.exe`: 125,483,150 bytes; SHA-256 `22ec9f5cd2fa61402d3d360e0a986ba2a6f83fe0ef7d9072c11e4d9790bed43e`.
 - Download alone does not remove an installed application. Running the new installer replaces old application files while retaining user data.
+
+## Published artifacts and website
+
+[Release v0.4.0](https://github.com/dakiemdarktharr/FRI/releases/tag/v0.4.0) was published at 2026-11-23 07:12:18 UTC. All 14 payload SHA-256 digests matched GitHub's uploaded-asset digests; SHA256SUMS.txt is included. Windows and both Mac architecture download URLs returned HTTP 200. Mac files come from the successful CI build above; the Windows EXE is the locally verified final installer.
+
+[Production website](https://fri-acne-a6cd.vercel.app) is deployed from `d2c74e3d4ff0b73adb999ffe45e6752764904f84`, deployment `dpl_2v537DAQ7ocQTGf4AAfAb2XhZbSv`, state READY. Its widget video response is HTTP 200 with video/mp4 content type; the visible video has autoplay, muted, loop and playsinline, without playback controls. Chromium production checks passed the intro, demo, mobile layouts, pricing, FAQ, autoplay and automated accessibility checks.
+
+Windows WebKit also encountered a stalled media/load lifecycle on the HTTPS deployment, beyond its known codec limitation. Navigation checks now wait for DOMContentLoaded followed by the actual UI assertion, rather than all media. The passing [dedicated production workflow](https://github.com/dakiemdarktharr/FRI/actions/runs/45130536131) verifies the public URL in Linux Chromium/WebKit; this does not certify physical iPhone Safari. Publication metadata and artifact digests are in [publication.json](verification/0.4.0/publication.json).
+
+Final production verification passed in Chromium and Linux WebKit, including autoplay without invoking Play. An initial 320 px WebKit measurement ran before route/viewport layout settled; the assertion now waits for a fitting layout (maximum three seconds) and emits overflow diagnostics on failure. All six widths then passed without changing production CSS or app code. Physical iPhone Safari remains outside this Windows verification.

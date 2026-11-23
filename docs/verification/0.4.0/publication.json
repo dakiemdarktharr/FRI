@@ -1,0 +1,91 @@
+{
+  "release": "https://github.com/dakiemdarktharr/FRI/releases/tag/v0.4.0",
+  "publishedAt": "2026-11-23T07:12:18Z",
+  "releaseCommit": "d2c74e3d4ff0b73adb999ffe45e6752764904f84",
+  "testedAppCode": "ad31d45cd89c48c4deef4047400ef1bbee59f243",
+  "deployment": "dpl_2v537DAQ7ocQTGf4AAfAb2XhZbSv",
+  "deployedCommit": "d2c74e3d4ff0b73adb999ffe45e6752764904f84",
+  "website": "https://fri-acne-a6cd.vercel.app",
+  "deploymentState": "READY",
+  "desktopCI": "https://github.com/dakiemdarktharr/FRI/actions/runs/45128402869",
+  "webCI": "https://github.com/dakiemdarktharr/FRI/actions/runs/45128399242",
+  "productionCI": "https://github.com/dakiemdarktharr/FRI/actions/runs/45130536131",
+  "assets": [
+    {
+      "name": "FRI-0.4.0-mac-arm64.dmg",
+      "size": 125605007,
+      "digest": "sha256:fda44a4e35411fd8ffb39794f554dfd77a027230fee0b8ffc3427334e7f0c956"
+    },
+    {
+      "name": "FRI-0.4.0-mac-arm64.dmg.blockmap",
+      "size": 132498,
+      "digest": "sha256:a32fbe311f46286c421f0370ff62983a2b4c3aa4cc4e57ebcb6da950494a38b7"
+    },
+    {
+      "name": "FRI-0.4.0-mac-arm64.zip",
+      "size": 121926326,
+      "digest": "sha256:dc8d64790cd0f2664196b29731aa259efa826837611fc9be5785152c089e2893"
+    },
+    {
+      "name": "FRI-0.4.0-mac-arm64.zip.blockmap",
+      "size": 128826,
+      "digest": "sha256:61f41640bbdb4c77f9c9082098fd51f28e4550f8cbfcd480344f4267b87507c0"
+    },
+    {
+      "name": "FRI-0.4.0-mac-x64.dmg",
+      "size": 129612896,
+      "digest": "sha256:7b0e5e7121a4f1e85200dd65b8eb53f91eaea2b54011520ebe2d02e7edabef28"
+    },
+    {
+      "name": "FRI-0.4.0-mac-x64.dmg.blockmap",
+      "size": 136791,
+      "digest": "sha256:0dcfdd0e7abe3ca0c11951fcc053d171185ccc12f352857e0516924638570288"
+    },
+    {
+      "name": "FRI-0.4.0-mac-x64.zip",
+      "size": 125977019,
+      "digest": "sha256:ef336147698425ffb8e74b5bbf5952dceac9e0f2893cbcaa20c77a9f9fa84165"
+    },
+    {
+      "name": "FRI-0.4.0-mac-x64.zip.blockmap",
+      "size": 133601,
+      "digest": "sha256:0ef4dc286e27d59c2497b351df3375f262d7eef54b35e7a001ad2eba063091da"
+    },
+    {
+      "name": "FRI-0.4.0-win-x64.exe",
+      "size": 125483150,
+      "digest": "sha256:22ec9f5cd2fa61402d3d360e0a986ba2a6f83fe0ef7d9072c11e4d9790bed43e"
+    },
+    {
+      "name": "FRI-0.4.0-win-x64.exe.blockmap",
+      "size": 132509,
+      "digest": "sha256:4fb6fc74db97c3225044041293061be203631c25a954582e48105d33c0574dbd"
+    },
+    {
+      "name": "FRI-liquid-glass.html",
+      "size": 4699731,
+      "digest": "sha256:447d3184fcdfbd8413cc59602d1fe0df098cccaca5af784c888ec928e89a76c0"
+    },
+    {
+      "name": "FRI-website.html",
+      "size": 12414779,
+      "digest": "sha256:b2d814f5dfc5bb7dfb5dda781418a42208cfbaa3e7074710b5d905a899e80471"
+    },
+    {
+      "name": "latest-mac.yml",
+      "size": 799,
+      "digest": "sha256:cde022c006b3d9a04fe0b054ea6c079e87c1fb57b5a46b4b00e13d7350d53116"
+    },
+    {
+      "name": "latest.yml",
+      "size": 339,
+      "digest": "sha256:19b994259ea652f44e3e47950d44e74becb62d6c98cde86c5bdbe33846b29a59"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "size": 1276,
+      "digest": "sha256:bc0d869771c0c7c5874dd4f295320f04a83a612a809a1676fb742f5db4183db2"
+    }
+  ],
+  "productionCIResult": "success: Chromium and Linux WebKit, including autoplay without Play"
+}

@@ -3,6 +3,79 @@ import XCTest
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
     #if os(iOS)
+    func testMosaicCardDetailsAndCompletion() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        XCUIDevice.shared.orientation = .portrait
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        for (name, time, duration) in [("Morning walk", "09:00", "30"), ("Project review", "10:00", "60"), ("Afternoon workshop", "13:00", "120")] {
+            app.buttons["fri.new"].tap(); app.buttons["Schedule"].tap()
+            let title = app.textFields["fri.editor.title"]
+            XCTAssertTrue(title.waitForExistence(timeout: 8)); title.tap(); title.typeText(name + "\n")
+            let start = app.textFields["fri.editor.time"]
+            start.tap(); start.typeText(time + "\n")
+            let length = app.textFields["fri.editor.duration"]
+            length.tap(); length.typeText(duration + "\n")
+            let save = app.buttons["fri.editor.submit"]
+            reveal(save, in: app, form: "fri.editor.form"); save.tap()
+            XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 8))
+        }
+        let cards = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "fri.card."))
+        XCTAssertEqual(cards.count, 3)
+        let first = cards.matching(NSPredicate(format: "label CONTAINS %@", "Morning walk")).firstMatch
+        let id = first.identifier.replacingOccurrences(of: "fri.card.", with: "")
+        let done = app.buttons["fri.done." + id]
+        func revealCard() {
+            reveal(first, in: app, form: "fri.calendar.content")
+            reveal(done, in: app, form: "fri.calendar.content")
+            let viewport = app.scrollViews["fri.calendar.content"].frame.intersection(app.frame)
+            XCTAssertTrue(viewport.contains(first.frame.union(done.frame)), "The title, location and completion control must fit together")
+        }
+        revealCard()
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = "Duration-mosaic-portrait"; shot.lifetime = .keepAlways; add(shot)
+        // Open from the empty middle of the card, away from all text.
+        first.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.45)).tap()
+        XCTAssertTrue(app.buttons["Edit"].waitForExistence(timeout: 8))
+        app.buttons["Close"].firstMatch.tap()
+        reveal(done, in: app, form: "fri.calendar.content")
+        XCTAssertGreaterThanOrEqual(done.frame.width, 44)
+        XCTAssertGreaterThanOrEqual(done.frame.height, 44)
+        XCTAssertGreaterThan(done.frame.midX, first.frame.midX)
+        done.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.15)).tap()
+        XCTAssertEqual(done.label, "Mark as pending")
+        XCTAssertFalse(app.buttons["Edit"].exists, "Completion must not open appointment details")
+        let completed = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        completed.name = "Duration-mosaic-completed"; completed.lifetime = .keepAlways; add(completed)
+        app.terminate(); app.launch()
+        XCTAssertTrue(done.waitForExistence(timeout: 15))
+        XCTAssertEqual(done.label, "Mark as pending")
+        let mosaicWidth = first.frame.width
+        app.buttons["fri.navigation.menu"].tap(); app.buttons["Settings"].tap()
+        let layout = app.buttons["fri.settings.layout"]
+        reveal(layout, in: app, form: "fri.settings.form"); layout.tap()
+        app.buttons["List"].tap()
+        app.buttons["Close"].firstMatch.tap()
+        revealCard()
+        XCTAssertGreaterThan(first.frame.width, mosaicWidth * 1.5)
+        let list = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        list.name = "Appointment-list"; list.lifetime = .keepAlways; add(list)
+        app.buttons["fri.navigation.menu"].tap(); app.buttons["Settings"].tap()
+        reveal(layout, in: app, form: "fri.settings.form"); layout.tap()
+        app.buttons["Duration mosaic"].tap()
+        let larger = app.switches["fri.settings.largeText"]
+        reveal(larger, in: app, form: "fri.settings.form")
+        larger.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        app.buttons["Close"].firstMatch.tap()
+        revealCard()
+        XCTAssertGreaterThan(first.frame.width, mosaicWidth * 1.5)
+        let large = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        large.name = "Duration-mosaic-larger-text"; large.lifetime = .keepAlways; add(large)
+    }
+
     func testToolbarHitAreasAndNavigation() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

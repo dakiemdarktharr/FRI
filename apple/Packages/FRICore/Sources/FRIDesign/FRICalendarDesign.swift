@@ -27,20 +27,25 @@ public struct FRIMosaic: Layout {
 
     private func frames(width: CGFloat, subviews: Subviews) -> [CGRect] {
         guard !subviews.isEmpty else { return [] }
-        let columns = min(subviews.count, (largeText || list) ? 1 : (width > 680 ? 3 : (width >= 390 ? 2 : 1)))
+        let columns = min(subviews.count, (largeText || list) ? 1 : (width > 680 ? 3 : (width > 320 ? 2 : 1)))
         let ratios: [CGFloat] = columns == 3 ? [0.94, 1.12, 0.94] : Array(repeating: 1, count: columns)
         let unit = max(0, width - CGFloat(columns - 1) * gutter) / CGFloat(columns)
         var heights = Array(repeating: CGFloat.zero, count: columns)
+        var packing = heights
         return subviews.indices.map { index in
-            let column = heights.indices.min { heights[$0] < heights[$1] } ?? 0
+            let column = packing.indices.min { packing[$0] < packing[$1] } ?? 0
             let columnWidth = unit * ratios[column]
             let duration = durations.indices.contains(index) ? CGFloat(durations[index]) : 0
             let measured = subviews[index].sizeThatFits(ProposedViewSize(width: columnWidth, height: nil)).height
-            let baseline = list ? 120 : (145 + min(240, duration * 0.8)) / ratios[column]
+            // Match desktop's duration area scale and 14-point shortest-column
+            // packing. Its CSS minimum height is applied after bucketing.
+            let nominal = ((250 + duration * 1.1) / ratios[column]).rounded()
+            let baseline = largeText ? 260 : (list ? 280 : max(280, nominal))
             let height = max(measured, baseline)
             let x = ratios.prefix(column).reduce(0, +) * unit + CGFloat(column) * gutter
             let frame = CGRect(x: x, y: heights[column], width: columnWidth, height: height)
             heights[column] += height + gutter
+            packing[column] += ((largeText || list) ? height : nominal) + gutter
             return frame
         }
     }
@@ -53,12 +58,14 @@ public struct FRISurface: ViewModifier {
     public let radius: CGFloat
     public let fill: Color
     public let text: Color
+    public let border: Color?
 
-    public init(glass: Bool, radius: CGFloat = 22, fill: Color = FRIColors.cream, text: Color = FRIColors.ink) {
+    public init(glass: Bool, radius: CGFloat = 22, fill: Color = FRIColors.cream, text: Color = FRIColors.ink, border: Color? = nil) {
         self.glass = glass
         self.radius = radius
         self.fill = fill
         self.text = text
+        self.border = border
     }
 
     public func body(content: Content) -> some View {
@@ -66,7 +73,7 @@ public struct FRISurface: ViewModifier {
         content
             .foregroundStyle(text)
             .background(fill, in: shape)
-            .overlay(shape.strokeBorder(contrast == .increased ? FRIColors.muted : FRIColors.line))
+            .overlay(shape.strokeBorder(contrast == .increased ? FRIColors.muted : (border ?? FRIColors.line)))
             .shadow(color: .black.opacity(glass && !reduceTransparency ? 0.07 : 0), radius: 10, y: 3)
     }
 }

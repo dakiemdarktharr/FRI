@@ -490,7 +490,8 @@ struct FRIWorkspaceView: View {
             FRIMosaic(durations: visible.map(\.duration), largeText: effectiveType.isAccessibilitySize || calendar.state.settings["large"]?.bool == true,
                       list: calendar.state.settings["layout"]?.string == "list") {
                 ForEach(Array(visible.enumerated()), id: \.element.id) { index, item in
-                    FRICardView(item: item, glass: glass, accented: index % 3 == 1, show: { calendar.appointment = item },
+                    FRICardView(item: item, glass: glass, accented: index % 3 == 1,
+                                list: calendar.state.settings["layout"]?.string == "list", show: { calendar.appointment = item },
                                 complete: { calendar.setDoneWithoutOpening(item) })
                 }
             }
@@ -669,34 +670,71 @@ private struct FRICardView: View {
     let item: Appointment
     let glass: Bool
     let accented: Bool
+    let list: Bool
     let show: () -> Void
     let complete: () -> Void
 
     private var fill: Color { item.done ? FRIColors.completed : (accented ? FRIColors.marsala : FRIColors.cream) }
-    private var ink: Color { accented && !item.done ? FRIColors.cream : FRIColors.ink }
+    private var ink: Color { item.done ? Color(red: 107 / 255, green: 92 / 255, blue: 84 / 255) : (accented ? .white : FRIColors.ink) }
+    private var timeParts: (main: String, period: String) {
+        let minutes = CalendarClock.minutes(item.time) ?? 0
+        let hour = minutes / 60
+        return (String(format: "%d:%02d", hour % 12 == 0 ? 12 : hour % 12, minutes % 60), hour >= 12 ? "PM" : "AM")
+    }
+    private var duration: String {
+        if item.isDeadline { return "Deadline" }
+        if item.duration < 60 { return "\(item.duration)m" }
+        return "\(item.duration / 60)h" + (item.duration % 60 == 0 ? "" : " \(item.duration % 60)m")
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 0) {
             Button(action: show) {
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(item.isDeadline ? "Deadline" : item.category).friFont(.caption)
-                        Spacer(minLength: 4)
-                        if !item.isDeadline { Text("\(item.duration) min").friFont(.caption) }
-                    }.opacity(0.8)
-                    Text(item.time).font(.system(size: 31, weight: .medium).monospacedDigit())
-                    Text(item.title).friFont(.headline).fixedSize(horizontal: false, vertical: true)
+                    ViewThatFits(in: .horizontal) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(item.isDeadline ? "Deadline" : item.category).textCase(.uppercase)
+                            Spacer(minLength: 5)
+                            Text(duration)
+                        }
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(item.isDeadline ? "Deadline" : item.category).textCase(.uppercase)
+                            Text(duration)
+                        }
+                    }.friFont(.caption).opacity(0.8)
+                    HStack(alignment: .firstTextBaseline, spacing: 5) {
+                        Text(timeParts.main).font(.system(size: list ? 28 : 31, weight: .regular).monospacedDigit())
+                        Text(timeParts.period).friFont(.caption)
+                    }.opacity(item.done ? 0.7 : 1)
+                    if !list { Spacer(minLength: 18) }
+                    Text(item.title).friFont(.headline).strikethrough(item.done)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(item.location.isEmpty ? "A place of your choosing" : item.location)
                         .friFont(.caption).opacity(0.8).fixedSize(horizontal: false, vertical: true)
-                }.frame(maxWidth: .infinity, alignment: .leading).contentShape(.rect)
+                }
+                .padding(.horizontal, 18).padding(.top, 18).padding(.bottom, 10)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .contentShape(Rectangle())
             }.buttonStyle(.plain)
-            Spacer(minLength: 0)
-            Button(item.done ? "Mark as pending" : "Done", systemImage: item.done ? "checkmark.circle.fill" : "circle", action: complete)
-                .labelStyle(.iconOnly).buttonStyle(.plain).friFont(.title2)
-                .frame(minWidth: 44, minHeight: 44)
+                .accessibilityIdentifier("fri.card.\(item.id)")
+                .accessibilityLabel("\(item.title), \(item.time), \(item.isDeadline ? "Deadline" : "\(item.duration) min"), \(item.location)")
+            HStack {
+                Spacer(minLength: 0)
+                Button(action: complete) {
+                    ZStack {
+                        Circle().fill(item.done ? FRIColors.marsala : (accented ? FRIColors.cream : Color(red: 231 / 255, green: 220 / 255, blue: 213 / 255)))
+                        Circle().strokeBorder(item.done || accented ? .clear : Color(red: 188 / 255, green: 165 / 255, blue: 156 / 255))
+                        if item.done { Image(systemName: "checkmark").font(.system(size: 16, weight: .semibold)).foregroundStyle(FRIColors.cream) }
+                    }.frame(width: 36, height: 36)
+                        .frame(width: 44, height: 44).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(item.done ? "Mark as pending" : "Done")
                 .accessibilityIdentifier("fri.done.\(item.id)")
+            }.padding(.horizontal, 13).padding(.bottom, 9)
         }
-        .padding(18).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .modifier(FRISurface(glass: glass, radius: 24, fill: fill, text: ink))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .modifier(FRISurface(glass: glass, radius: 24, fill: fill, text: ink,
+                             border: accented && !item.done ? FRIColors.marsala : Color(red: 227 / 255, green: 217 / 255, blue: 209 / 255)))
     }
 }

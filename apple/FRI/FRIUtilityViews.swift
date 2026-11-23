@@ -346,7 +346,7 @@ struct FRIAppearanceView: View {
                     Picker("Layout", selection: setting("layout", initial: "mosaic")) {
                         Text("Duration mosaic").tag("mosaic")
                         Text("List").tag("list")
-                    }
+                    }.accessibilityIdentifier("fri.settings.layout")
                 }
                 Button("Restore look") {
                     _ = calendar.change {

@@ -2,6 +2,29 @@ import XCTest
 
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
+    private func reveal(_ element: XCUIElement, in app: XCUIApplication, form: String, upward: Bool = true) {
+        let scroll = app.descendants(matching: .any)[form].firstMatch
+        for _ in 0..<6 {
+            if element.exists && element.isHittable { return }
+            #if os(iOS)
+            if app.keyboards.firstMatch.exists {
+                // The form's AX frame can extend behind the keyboard. Start the
+                // gesture in its visible content, as a person scrolling would.
+                let top = scroll.frame.minY + 30
+                // Keyboard AX bounds exclude the prediction/accessory strip.
+                let bottom = min(scroll.frame.maxY - 30, app.keyboards.firstMatch.frame.minY - 100)
+                let origin = scroll.coordinate(withNormalizedOffset: .zero)
+                let from = origin.withOffset(CGVector(dx: scroll.frame.width / 2, dy: (upward ? bottom : top) - scroll.frame.minY))
+                let to = origin.withOffset(CGVector(dx: scroll.frame.width / 2, dy: (upward ? top : bottom) - scroll.frame.minY))
+                from.press(forDuration: 0.05, thenDragTo: to)
+            } else if upward { scroll.swipeUp() } else { scroll.swipeDown() }
+            #else
+            if upward { scroll.swipeUp() } else { scroll.swipeDown() }
+            #endif
+        }
+        XCTAssertTrue(element.exists && element.isHittable, "Control must be reachable by scrolling: \(element)")
+    }
+
     func testWidgetAutoFitAtEverySize() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -53,6 +76,17 @@ final class FRIWorkflowTests: XCTestCase {
         app.launch()
         let canvas = app.descendants(matching: .any)["fri.calendar.content"]
         XCTAssertTrue(canvas.waitForExistence(timeout: 15))
+        #if os(macOS)
+        app.typeKey("n", modifierFlags: .command)
+        #else
+        app.buttons["fri.new"].tap()
+        app.buttons["Schedule"].tap()
+        #endif
+        let unrelatedDraft = app.textFields["fri.editor.title"]
+        XCTAssertTrue(unrelatedDraft.waitForExistence(timeout: 8))
+        unrelatedDraft.tap()
+        unrelatedDraft.typeText("Unrelated saved draft")
+        app.buttons["Close"].firstMatch.tap()
         let name = "Deadline " + UUID().uuidString.prefix(8)
         #if os(macOS)
         app.typeKey("n", modifierFlags: [.command, .shift])
@@ -64,6 +98,7 @@ final class FRIWorkflowTests: XCTestCase {
         XCTAssertTrue(title.waitForExistence(timeout: 8))
         title.tap()
         title.typeText(String(name))
+        reveal(app.buttons["fri.editor.submit"], in: app, form: "fri.editor.form")
         app.buttons["fri.editor.submit"].tap()
         let time = app.textFields["fri.editor.missingTime"]
         XCTAssertTrue(time.waitForExistence(timeout: 8))
@@ -127,5 +162,40 @@ final class FRIWorkflowTests: XCTestCase {
         app.buttons["fri.collections"].tap()
         XCTAssertTrue(app.buttons["Work review"].firstMatch.waitForExistence(timeout: 5))
         #endif
+    }
+
+    func testTextImportRequiresExplicitDateAndReviewsOnlyAcceptedPlans() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        app.launch()
+        XCTAssertTrue(app.descendants(matching: .any)["fri.calendar.content"].waitForExistence(timeout: 15))
+        #if os(macOS)
+        app.menuBars.menuBarItems["File"].click()
+        app.menuItems["Import Plans…"].click()
+        #else
+        app.buttons["fri.actions"].tap()
+        app.buttons["Import plans"].tap()
+        #endif
+        let source = app.textFields["fri.import.text"]
+        XCTAssertTrue(source.waitForExistence(timeout: 8))
+        source.tap()
+        source.typeText("QA text import 15:30")
+        app.buttons["fri.import.reviewText"].tap()
+        XCTAssertTrue(app.buttons["Use today"].waitForExistence(timeout: 5))
+        reveal(app.buttons["fri.import.accept"], in: app, form: "fri.import.form")
+        app.buttons["fri.import.accept"].tap()
+        XCTAssertTrue(app.staticTexts["Enter a name and choose a date."].waitForExistence(timeout: 5))
+        reveal(app.buttons["Use today"], in: app, form: "fri.import.form", upward: false)
+        app.buttons["Use today"].tap()
+        reveal(app.buttons["fri.import.accept"], in: app, form: "fri.import.form")
+        app.buttons["fri.import.accept"].tap()
+        let duration = app.textFields["fri.editor.missingDuration"]
+        XCTAssertTrue(duration.waitForExistence(timeout: 8))
+        duration.tap()
+        duration.typeText("45")
+        app.buttons["fri.editor.continue"].tap()
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "QA text import")).firstMatch.waitForExistence(timeout: 8))
     }
 }

@@ -20,7 +20,7 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 |---|---|
 | Native macOS debug build | PASS after initial desktop 0.5 visual rebuild, `/tmp/fri-production-mac.log` |
 | Native iOS build after current edits | PASS, Simulator compile 2026-11-23 14:16 UTC; runtime regression in progress |
-| Core data regression | 19 passing Swift tests, 1 opt-in network test skipped; includes restore/undo, concurrent edits, Keychain denial and reminder timing |
+| Core data regression | 20 local tests passed, 1 opt-in network test skipped in current full run; live network passed separately. Includes imported-draft recovery and source deduplication |
 | Mac create/edit/delete/undo | PASS via CUA with isolated synthetic store: create 10:00/60 min, edit Unicode title, delete 11:00/30 min appointment, Cmd-Z restores it |
 | Mac overlapping appointments | PASS via CUA: 10:30 conflicts with 10:00–11:00; Change times opens review; 11:00 saves successfully |
 | Mac drafts/validation | PASS via CUA: close/reopen retains draft; edit/reopen retains Unicode title; 25:00 is rejected; 14:00 + 45 min completes review |
@@ -30,7 +30,7 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 | Widget timeline/midnight/lock/long text | Prior core and Simulator preview evidence only; current Mac runtime pending |
 | Mac all views, keyboard, accessibility | Pending full matrix; duplicate View menu and low-contrast toolbar found during current visual pass |
 | Full visual equivalence to 0.5 | In progress; first native cream/marsala render observed. Sidebar artwork, card variants, service rail, Day and some layout details remain |
-| Imports (ICS/CSV/text/image/PDF/public URL/EventKit) | Core fixtures exist; full Mac interaction matrix pending |
+| Imports | Mac ICS, CSV, text PDF, scanned PDF and PNG file-picker → review → save PASS; iOS pasted text / missing-date clarification PASS. Public calendar URL and EventKit runtime pending |
 | Export/restore file dialogs and Undo | PASS through native Mac file panels: restore exported three-appointment backup, collection removed; Cmd-Z restored collection and calendar |
 | Reminders | Five-minute lead and midnight/DST regression PASS; system permission/delivery/cancellation runtime pending |
 | Services | Live Weather/Maps success, reopen persistence and disconnect PASS; Spotify link save/canonicalize/disconnect and manual activity bounds/persistence/clear PASS. Offline errors, service rail and Spotify playback pending |
@@ -69,9 +69,9 @@ The native debug Mac run uses `FRI_SYNTHETIC_PREVIEW=1` and UUID-scoped `FRI_TES
 ## Follow-up verification — 2026-11-23
 
 - Closing the main window leaves the AppKit widget alive; Open calendar successfully recreates the main window. Menu Search/Import/Export/View now reveal the calendar first, reusing its existing window.
-- Export Backup opened the native save panel; the user completed Export. The exported JSON contained all three synthetic QA appointments and the `fri-backup` schema 1 envelope. Native restore dialog round-trip is still pending.
+- Export Backup opened the native save panel; the user completed Export. The exported JSON contained all three synthetic QA appointments and the `fri-backup` schema 1 envelope. Native restore/Undo round-trip subsequently passed; see additional runtime evidence.
 - Keychain preparation moved off the main actor and caches the key only in memory for the store lifetime. The app now displays a responsive opening state during system authorization. Tests cover denied authorization on empty and populated stores and preserve ciphertext on failure.
-- Found missing desktop 0.5 Collections flow: added creation, category filtering and clear-filter empty state; runtime validation pending. Fixed Solid sidebar still drawing a gradient.
+- Found missing desktop 0.5 Collections flow: added creation, category filtering and clear-filter empty state; Mac and iOS runtime validation subsequently passed. Fixed Solid sidebar still drawing a gradient.
 - The latest Mac Debug and iOS Simulator builds succeeded without compiler diagnostics. No physical iPhone was accessed.
 
 - Current iOS regression: `testDeadlineClarificationAndPersistence` and `testWidgetAutoFitAtEverySize` passed, 0 failures; six widget size/text combinations. Result bundle: `~/Library/Developer/MobileBuildMCP/workspaces/MOMO-c7c317bd7fec/result-bundles/test_sim_2026-11-23T14-16-33-380Z_pid22065_7eaedefa.xcresult`.
@@ -89,3 +89,14 @@ The native debug Mac run uses `FRI_SYNTHETIC_PREVIEW=1` and UUID-scoped `FRI_TES
 
 - Services dialogs now use the desktop cream/ink/marsala palette, visually checked on Mac after rebuild; iOS compile passed.
 - Spotify link saved with tracking query removed, survived closing/reopening Services, then disconnected. No Spotify login/playback was performed. Manual steps 4,321 saved; 100,001 rejected; reopening preserved 4,321; Clear activity reset to zero.
+
+## Import recovery and review isolation — 2026-11-23
+
+- Fixed a data-loss bug: source-key deduplication discarded clarification edits to an existing imported draft. `CalendarState.stageDrafts` now updates the same draft ID before deduplicating a newly imported source. Regression covers encrypted write/read, revised time/duration, duplicate-source rejection and already committed sources.
+- Import completion reviews only newly accepted plan IDs. New-plan Done reviews only the current composition batch; Review saved drafts remains the explicit way to review all saved drafts. Existing unrelated drafts are retained.
+- Mac CUA ICS: selected import-review.ics through the native picker; confirmed Nov 24 / Test room; Add to drafts immediately asked for time. Entered 15:30, closed before duration, reopened and observed 15:30 retained. Entered 45 minutes, saved one appointment; A little walk remained a draft.
+- Mac CUA CSV: parsed quoted comma title, schedule 09:15/35 minutes and deadline 12:00; accepted both and observed both on Nov 24.
+- Mac CUA PDF/image batch: selected image-only PDF, text PDF and PNG together; all produced correct titles, dates and times. After entering 20 minutes each, all three appeared on Nov 25. Controlled fixture evidence only, not a claim of general OCR accuracy. Fixtures and regeneration script are tracked under apple/UITests/Fixtures and apple/Tools.
+- iOS text import regression passed: missing source date requires explicit Use today, then duration clarification and save. Result: test_sim_2026-11-23T14-37-54-912Z_pid22065_aec274c7.xcresult (the other test in that run failed on a test scroll gesture).
+- iOS deadline/collection regression with a pre-existing unrelated draft passed after correcting the test scroll gesture to avoid the keyboard prediction strip. Result: test_sim_2026-11-23T14-43-59-594Z_pid22065_b370257e.xcresult. Prior failing attempts are not counted as passes.
+- Current core suite: 20 passed and 1 opt-in network skip, /tmp/fri-core-import-final.log.

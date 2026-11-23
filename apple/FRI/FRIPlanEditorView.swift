@@ -31,6 +31,7 @@ struct FRIPlanEditorView: View {
     @State private var draft = Appointment()
     @State private var reviewing = false
     @State private var queue: [Appointment] = []
+    @State private var batchIDs: Set<String> = []
     @State private var saved = false
     @State private var askOverlap = false
     @State private var error: String?
@@ -80,8 +81,19 @@ struct FRIPlanEditorView: View {
                 }
                 if let error { Text(error).foregroundStyle(.red) }
             }.formStyle(.grouped)
+                .accessibilityIdentifier("fri.editor.form")
         }
-        .onAppear { if let editing { draft = editing } else { resetDraft() } }
+        .onAppear {
+            if let editing { draft = editing }
+            else {
+                resetDraft()
+                if let ids = calendar.draftReviewIDs {
+                    calendar.draftReviewIDs = nil
+                    let imported = calendar.state.drafts.filter { ids.contains($0.id) }
+                    if !imported.isEmpty { startReview(imported) }
+                }
+            }
+        }
         .onDisappear {
             if editing == nil, !saved, !reviewing, !draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                (try? draft.validate(draft: true)) != nil {
@@ -110,7 +122,10 @@ struct FRIPlanEditorView: View {
 
     private func stashDraft() -> Bool {
         guard draftLooksValid() else { return false }
-        if calendar.addDrafts([draft]) { return true }
+        if calendar.addDrafts([draft]) {
+            batchIDs.insert(draft.id)
+            return true
+        }
         captureError()
         return false
     }
@@ -135,15 +150,17 @@ struct FRIPlanEditorView: View {
             startReview([draft])
         } else {
             if !draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !stashDraft() { return }
-            guard !calendar.state.drafts.isEmpty else {
+            let batch = calendar.state.drafts.filter { batchIDs.contains($0.id) }
+            guard !batch.isEmpty else {
                 error = "Give your appointment a name."
                 return
             }
-            startReview(calendar.state.drafts)
+            startReview(batch)
         }
     }
 
     private func startReview(_ items: [Appointment]) {
+        batchIDs.formUnion(items.map(\.id))
         queue = items
         reviewing = true
         resetQuestion()

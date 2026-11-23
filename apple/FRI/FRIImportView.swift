@@ -12,6 +12,7 @@ struct FRIImportView: View {
     @State private var link = ""
     @State private var notices: [String] = []
     @State private var items: [Appointment] = []
+    @State private var acceptedIDs: Set<String> = []
     @State private var pickFile = false
     @State private var busy = false
     @State private var eventStore = EKEventStore()
@@ -23,9 +24,11 @@ struct FRIImportView: View {
                 if items.isEmpty {
                     Section("Paste plans") {
                         TextField("One appointment per line", text: $text, axis: .vertical)
+                            .accessibilityIdentifier("fri.import.text")
                         Button("Review text") {
                             append(PlanImport.text(String(text.prefix(20_000))))
                         }.disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            .accessibilityIdentifier("fri.import.reviewText")
                     }
                     Section("Calendar files and images") {
                         Button("Choose ICS, CSV, text, PDF or image…") { pickFile = true }
@@ -51,6 +54,7 @@ struct FRIImportView: View {
                         } header: { Text("Source evidence") }
                         FRIPlanFields(draft: $items[binding])
                         Button("Add to drafts") { accept() }.buttonStyle(.borderedProminent)
+                            .accessibilityIdentifier("fri.import.accept")
                         Button("Skip") { next() }
                     }
                 }
@@ -60,6 +64,7 @@ struct FRIImportView: View {
                 }
             }
             .formStyle(.grouped)
+            .accessibilityIdentifier("fri.import.form")
             .disabled(busy)
             .fileImporter(isPresented: $pickFile, allowedContentTypes: [.calendarEvent, .commaSeparatedText, .plainText, .pdf, .image], allowsMultipleSelection: true) { result in
                 do {
@@ -89,19 +94,27 @@ struct FRIImportView: View {
     private func append(_ result: ImportResult) {
         notices = result.notices
         items = result.appointments
+        acceptedIDs = []
         if items.isEmpty { notices.append("No new plans found.") }
     }
 
     private func accept() {
         guard let item = items.first, !item.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               CalendarClock.date(item.date) != nil else { notices.append("Enter a name and choose a date."); return }
-        if calendar.addDrafts([item]) { next() }
+        if calendar.addDrafts([item]) {
+            if calendar.state.drafts.contains(where: { $0.id == item.id }) { acceptedIDs.insert(item.id) }
+            else { notices.append("This source is already in your calendar or saved drafts.") }
+            next()
+        }
         else if let message = calendar.message { notices.append(message) }
     }
 
     private func next() {
         items.removeFirst()
-        if items.isEmpty, !calendar.state.drafts.isEmpty { calendar.newDraft(deadline: false) }
+        if items.isEmpty {
+            if !acceptedIDs.isEmpty { calendar.reviewDrafts(acceptedIDs) }
+            else { notices.append("No new drafts were added.") }
+        }
     }
 
     private func connectCalendar() {

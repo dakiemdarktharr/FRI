@@ -1,0 +1,3 @@
+title,date,time,duration,kind,location,notes
+"QA CSV, planning",2026-11-24,09:15,35,schedule,Test room,Source fixture
+QA CSV deadline,2026-11-24,12:00,0,deadline,,Source fixture

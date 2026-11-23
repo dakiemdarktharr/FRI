@@ -180,6 +180,32 @@ private func withStore(_ action: (CalendarStore, URL) async throws -> Void) asyn
     #expect(text.appointments.first?.date == "2026-11-23")
 }
 
+@Test func importedDraftClarificationSurvivesReopeningWithoutDuplicatingSource() async throws {
+    try await withStore { store, directory in
+        var imported = task("Imported all-day event", time: "", duration: 0)
+        imported.sourceKey = "ics:fixture-event"
+        imported.kind = "schedule"
+        try store.update { $0.stageDrafts([imported]) }
+        imported.time = "15:30"
+        imported.duration = 45
+        try store.update { $0.stageDrafts([imported]) }
+        let reopened = try store.read()
+        #expect(reopened.state.drafts == [imported])
+        var duplicate = imported
+        duplicate.id = UUID().uuidString
+        duplicate.title = "Same event imported a second time"
+        try store.update { $0.stageDrafts([duplicate]) }
+        #expect(try store.read().state.drafts == [imported])
+        try store.update { state in
+            state.tasks = [imported]
+            state.drafts = []
+            state.stageDrafts([duplicate])
+        }
+        #expect(try store.read().state.drafts.isEmpty)
+        #expect(FileManager.default.fileExists(atPath: directory.appending(path: "calendar.v1.aesgcm").path))
+    }
+}
+
 @Test func publicSourcesRejectPrivateAddressesAndInvalidHTTP() throws {
     for address in ["10.0.0.1", "127.0.0.1", "169.254.169.254", "192.168.1.1", "198.18.0.1",
                     "::1", "::ffff:192.168.1.1", "fe80::1", "2001:db8::1", "fc00::1"] {

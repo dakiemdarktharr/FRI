@@ -81,6 +81,7 @@ final class FRICalendarSession {
     var cursor: Date = .now
     var appointment: Appointment?
     var draftDeadline = false
+    var draftReviewIDs: Set<String>?
     var onlyPending = false
     var collection: String?
     var restoreCandidate: CalendarState?
@@ -166,7 +167,14 @@ final class FRICalendarSession {
 
     func newDraft(deadline: Bool) {
         guard ready else { return }
+        draftReviewIDs = nil
         draftDeadline = deadline
+        show(.draft)
+    }
+
+    func reviewDrafts(_ ids: Set<String>) {
+        guard ready, !ids.isEmpty else { return }
+        draftReviewIDs = ids
         show(.draft)
     }
 
@@ -237,17 +245,7 @@ final class FRICalendarSession {
     }
 
     func addDrafts(_ drafts: [Appointment]) -> Bool {
-        change { state in
-            for draft in drafts {
-                if let key = draft.sourceKey, !key.isEmpty,
-                   (state.tasks + state.drafts).contains(where: { $0.sourceKey == key }) { continue }
-                if let index = state.drafts.firstIndex(where: { $0.id == draft.id }) {
-                    state.drafts[index] = draft
-                } else {
-                    state.drafts.append(draft)
-                }
-            }
-        }
+        change { $0.stageDrafts(drafts) }
     }
 
     func save(_ plans: [Appointment], editing base: Appointment? = nil, allowOverlap: Bool = false) -> Bool {

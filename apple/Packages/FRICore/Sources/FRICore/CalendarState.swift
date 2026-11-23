@@ -166,6 +166,21 @@ public struct CalendarState: Codable, Equatable, Sendable {
         guard try JSONEncoder().encode(self).count <= CalendarBackup.sizeLimit else { throw CalendarError.invalidBackup }
     }
 
+    /// Update an existing draft before checking source identity for a new import.
+    /// Source deduplication must not discard the user's clarification edits.
+    public mutating func stageDrafts(_ incoming: [Appointment]) {
+        for draft in incoming {
+            if let index = drafts.firstIndex(where: { $0.id == draft.id }) {
+                drafts[index] = draft
+            } else if let key = draft.sourceKey, !key.isEmpty,
+                      (tasks + drafts).contains(where: { $0.sourceKey == key }) {
+                continue
+            } else {
+                drafts.append(draft)
+            }
+        }
+    }
+
     public func tasks(on day: String) -> [Appointment] {
         tasks.filter { $0.date == day }.sorted { ($0.time, $0.id) < ($1.time, $1.id) }
     }

@@ -26,7 +26,7 @@ struct FRIWidgetContent<Completion: View>: View {
                         }
                         if snapshot.tasks.count > 1 {
                             Divider()
-                            Text("Also today").friFont(.caption, weight: .semibold).foregroundStyle(secondaryColor)
+                            Text("Other plans").friFont(.caption, weight: .semibold).foregroundStyle(secondaryColor)
                             ForEach(snapshot.tasks.dropFirst()) { task in
                                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                                     Text(task.time).monospacedDigit().foregroundStyle(secondaryColor)

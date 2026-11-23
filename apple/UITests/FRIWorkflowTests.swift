@@ -183,12 +183,17 @@ final class FRIWorkflowTests: XCTestCase {
         let query = app.textFields["fri.search.field"]
         XCTAssertTrue(query.waitForExistence(timeout: 8))
         query.tap()
+        let absent = "No matching appointment 9127"
+        query.typeText(absent)
+        XCTAssertTrue(app.staticTexts["No appointments found"].waitForExistence(timeout: 5))
+        query.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: absent.count))
         query.typeText(String(name))
         let result = app.buttons.matching(NSPredicate(
             format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "fri.search.result.", String(name)
         )).firstMatch
         XCTAssertTrue(result.waitForExistence(timeout: 8))
-        result.tap()
+        XCTAssertFalse(app.staticTexts["No appointments found"].exists)
+        query.typeText("\n")
         let done = app.buttons["fri.detail.done"]
         XCTAssertTrue(done.waitForExistence(timeout: 8))
         XCTAssertEqual(done.label, "Done")

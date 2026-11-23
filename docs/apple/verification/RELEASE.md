@@ -1,5 +1,7 @@
 # FRI Apple development verification
 
+This is the initial development receipt, retained as historical evidence. Its pending rows and architecture descriptions are superseded by [the current production-readiness ledger](PRODUCTION-READINESS.md). In particular, FRIMac now uses standalone AppKit widgets, FRIMacWidgetKit is the separate shared-store scheme, and Day has since been implemented. Do not use this initial receipt as the current release decision.
+
 Date 2026-11-23. Xcode 27.2 (27B52), macOS 26.6.2 on Apple silicon, iOS Simulator 27.2. Deployment targets are iOS 17 and macOS 14. The release workflow requires signing and real-device verification. This receipt records development checks.
 
 ## Build and run

@@ -39,22 +39,37 @@ struct FRISearchView: View {
     let select: (Appointment) -> Void
     @State private var query = ""
 
+    private var results: [Appointment] {
+        tasks.filter(matches).sorted { ($0.date, $0.time, $0.id) < ($1.date, $1.time, $1.id) }
+    }
+
     var body: some View {
         FRISheetView(title: "Search") {
             VStack {
                 TextField("Search appointments", text: $query)
                     .textFieldStyle(FRISheetTextFieldStyle()).padding()
                     .accessibilityIdentifier("fri.search.field")
-                List {
-                    ForEach(tasks.filter(matches).sorted { ($0.date, $0.time) < ($1.date, $1.time) }) { task in
-                        Button { select(task) } label: {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(task.title)
-                                Text("\(task.date) · \(task.time)").friFont(.caption).foregroundStyle(.secondary)
+                    .submitLabel(.search)
+                    .onSubmit { if let first = results.first { select(first) } }
+                if results.isEmpty {
+                    ContentUnavailableView {
+                        Label("No appointments found", systemImage: "magnifyingglass")
+                    } description: {
+                        Text(tasks.isEmpty ? "Add an appointment to find it here." : "Try another word.")
+                    }
+                    .accessibilityIdentifier("fri.search.empty")
+                } else {
+                    List {
+                        ForEach(results) { task in
+                            Button { select(task) } label: {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(task.title)
+                                    Text("\(task.date) · \(task.time)").friFont(.caption).foregroundStyle(.secondary)
+                                }
                             }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("fri.search.result.\(task.id)")
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("fri.search.result.\(task.id)")
                     }
                 }
             }
@@ -83,9 +98,13 @@ struct FRIManageView: View {
                         Text(task.title)
                         Text(task.time).friFont(.caption).foregroundStyle(.secondary)
                     }
+                    .accessibilityLabel(task.title)
+                    .accessibilityHint(task.time)
+                    .accessibilityIdentifier("fri.manage.select.\(task.id)")
                 }
                 Button("Delete selected (\(selections.count))", role: .destructive) { confirming = true }
                     .disabled(selections.isEmpty)
+                    .accessibilityIdentifier("fri.manage.delete")
             }
             .formStyle(.grouped)
             .confirmationDialog("Delete these appointments?", isPresented: $confirming) {

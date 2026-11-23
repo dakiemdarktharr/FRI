@@ -37,7 +37,25 @@ final class FRIWorkflowTests: XCTestCase {
         reveal(february, in: app, form: "fri.calendar.content")
         february.tap()
         XCTAssertEqual(heading.value as? String, "\(leapYear)-02")
-        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "fri.calendar.day.")).count, 42)
+        // LazyVGrid exposes only instantiated rows. Inspect both ends of the
+        // month before asserting all six weeks, independent of scroll position.
+        let dayButtons = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "fri.calendar.day."))
+        var observedDays = Set(dayButtons.allElementsBoundByIndex.map(\.identifier))
+        let gregorian = Calendar(identifier: .gregorian)
+        let firstOfFebruary = try XCTUnwrap(gregorian.date(from: DateComponents(year: leapYear, month: 2, day: 1, hour: 12)))
+        let firstGridDay = try XCTUnwrap(gregorian.date(byAdding: .day, value: 1 - gregorian.component(.weekday, from: firstOfFebruary), to: firstOfFebruary))
+        let lastGridDay = try XCTUnwrap(gregorian.date(byAdding: .day, value: 41, to: firstGridDay))
+        let dateKey = DateFormatter()
+        dateKey.calendar = gregorian
+        dateKey.locale = Locale(identifier: "en_US_POSIX")
+        dateKey.dateFormat = "yyyy-MM-dd"
+        let lastDay = app.buttons["fri.calendar.day.\(dateKey.string(from: lastGridDay))"]
+        reveal(lastDay, in: app, form: "fri.calendar.content")
+        observedDays.formUnion(dayButtons.allElementsBoundByIndex.map(\.identifier))
+        let firstDay = app.buttons["fri.calendar.day.\(dateKey.string(from: firstGridDay))"]
+        reveal(firstDay, in: app, form: "fri.calendar.content", upward: false)
+        observedDays.formUnion(dayButtons.allElementsBoundByIndex.map(\.identifier))
+        XCTAssertEqual(observedDays.count, 42)
         let leapDay = app.buttons["fri.calendar.day.\(leapYear)-02-29"]
         reveal(leapDay, in: app, form: "fri.calendar.content")
         XCTAssertGreaterThanOrEqual(leapDay.frame.height, 44)
@@ -82,6 +100,8 @@ final class FRIWorkflowTests: XCTestCase {
         reveal(january, in: app, form: "fri.calendar.content", upward: false)
         let landscapeShot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         landscapeShot.name = "Year-larger-text-landscape"; landscapeShot.lifetime = .keepAlways; add(landscapeShot)
+        let viewport = app.scrollViews["fri.calendar.content"].frame.intersection(app.frame)
+        XCTAssertTrue(viewport.contains(january.frame), "Complete month tile \(january.frame) must fit in the visible calendar \(viewport)")
         january.tap()
         XCTAssertEqual(heading.value as? String, "\(leapYear)-01")
     }
@@ -443,7 +463,7 @@ final class FRIWorkflowTests: XCTestCase {
     private func reveal(_ element: XCUIElement, in app: XCUIApplication, form: String, upward: Bool = true) {
         let scroll = app.descendants(matching: .any)[form].firstMatch
         for _ in 0..<6 {
-            var visible = scroll.frame.intersection(app.frame).insetBy(dx: 0, dy: 12)
+            var visible = scroll.frame.intersection(app.frame).insetBy(dx: 0, dy: form == "fri.calendar.content" ? 4 : 12)
             if app.keyboards.firstMatch.exists {
                 visible.size.height = max(0, min(visible.maxY, app.keyboards.firstMatch.frame.minY - 100) - visible.minY)
             }
@@ -468,10 +488,11 @@ final class FRIWorkflowTests: XCTestCase {
                 let towardsBottom = target.isNull ? upward : target.maxY > visible.maxY
                 let origin = scroll.coordinate(withNormalizedOffset: .zero)
                 let startY = towardsBottom ? visible.maxY - 24 : visible.minY + 24
-                let delta = visible.height * 0.3 * (towardsBottom ? -1 : 1)
+                let overflow = target.isNull ? visible.height : (towardsBottom ? target.maxY - visible.maxY : visible.minY - target.minY)
+                let delta = min(visible.height * 0.3, max(20, overflow + 4)) * (towardsBottom ? -1 : 1)
                 let from = origin.withOffset(CGVector(dx: scroll.frame.width / 2, dy: startY - scroll.frame.minY))
                 let to = origin.withOffset(CGVector(dx: scroll.frame.width / 2, dy: startY + delta - scroll.frame.minY))
-                from.press(forDuration: 0.1, thenDragTo: to)
+                from.press(forDuration: 0.1, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.2)
             } else if upward { scroll.swipeUp() } else { scroll.swipeDown() }
             #else
             if upward { scroll.swipeUp() } else { scroll.swipeDown() }

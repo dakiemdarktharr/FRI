@@ -400,12 +400,19 @@ struct FRIWorkspaceView: View {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 16) {
                     dayHeading.frame(minWidth: 180, maxWidth: .infinity)
-                    headingActions.frame(width: 110)
+                    headingActions(compact: false).frame(width: 110)
                     ring.frame(width: 100)
                 }.frame(minHeight: 174)
+                HStack(spacing: 12) {
+                    dayHeading.frame(minWidth: 200, idealWidth: 200, maxWidth: .infinity)
+                    VStack(spacing: 12) {
+                        ring
+                        headingActions(compact: true)
+                    }.frame(width: 100)
+                }
                 VStack(spacing: 14) {
                     dayHeading
-                    HStack { headingActions; Spacer(); ring }
+                    HStack { headingActions(compact: false); Spacer(); ring }
                 }
             }
             ViewThatFits(in: .horizontal) {
@@ -498,16 +505,22 @@ struct FRIWorkspaceView: View {
         }
     }
 
-    private var headingActions: some View {
-        VStack(spacing: 12) {
+    private func headingActions(compact: Bool) -> some View {
+        let layout = compact ? AnyLayout(HStackLayout(spacing: 8)) : AnyLayout(VStackLayout(spacing: 12))
+        return layout {
             Button { calendar.newDraft(deadline: false) } label: {
-                Label("Add", systemImage: "plus").friFont(.title2)
-                    .frame(maxWidth: .infinity, minHeight: 68)
-            }.background(FRIColors.marsala, in: RoundedRectangle(cornerRadius: 24))
+                Group {
+                    if compact { Label("Add", systemImage: "plus").labelStyle(.iconOnly) }
+                    else { Label("Add", systemImage: "plus") }
+                }.friFont(.title2)
+                    .frame(maxWidth: .infinity, minHeight: compact ? 48 : 68).contentShape(Rectangle())
+            }.background(FRIColors.marsala, in: RoundedRectangle(cornerRadius: compact ? 14 : 24))
+                .accessibilityIdentifier("fri.day.add").help("Add an appointment")
             Button { calendar.panel = .manage } label: {
                 Label("Manage appointments", systemImage: "ellipsis").labelStyle(.iconOnly)
-                    .friFont(.title2).frame(maxWidth: .infinity, minHeight: 68)
-            }.background(FRIColors.sidebar, in: RoundedRectangle(cornerRadius: 24))
+                    .friFont(.title2).frame(maxWidth: .infinity, minHeight: compact ? 48 : 68).contentShape(Rectangle())
+            }.background(FRIColors.sidebar, in: RoundedRectangle(cornerRadius: compact ? 14 : 24))
+                .accessibilityIdentifier("fri.day.manage").help("Manage appointments")
         }.buttonStyle(.plain)
     }
 
@@ -519,7 +532,7 @@ struct FRIWorkspaceView: View {
                     .accessibilityAddTraits(.isHeader)
                 HStack {
                     Text(selected, format: .dateTime.month(.wide).day().year())
-                        .friFont(.subheadline).foregroundStyle(FRIColors.muted)
+                        .friFont(.subheadline).foregroundStyle(FRIColors.muted).fixedSize(horizontal: false, vertical: true)
                     Spacer()
                     Image(systemName: "calendar")
                 }
@@ -642,6 +655,7 @@ struct FRIWorkspaceView: View {
         }
         .frame(width: 86, height: 86).padding(7)
         .background(FRIColors.sidebar, in: Circle())
+        .accessibilityIdentifier("fri.day.progress")
     }
 
     private func moveDay(_ offset: Int) {

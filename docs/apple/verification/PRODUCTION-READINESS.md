@@ -18,7 +18,7 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 
 | Gate | Status / evidence |
 |---|---|
-| Native macOS debug build | PASS with appointment card/mosaic changes, `/tmp/fri-card-mac-final.log`; Mac notification delivery remains unverified |
+| Native macOS debug build | PASS with compact day header changes, `/tmp/fri-header-mac.log`; fresh Mac UI and notification delivery remain unverified |
 | Native iOS build after current edits | PASS, iPad system-notification UI tests 2026-11-23 20:33–20:37 UTC, foreground and background. WidgetKit timeline, photo picker and earlier iPhone/iPad UI evidence are recorded below |
 | Core data regression | Current full run: 35 core tests and 8 AppKit design/placement tests passed; 1 opt-in network test skipped. Live network passed separately earlier. Includes imported-draft recovery, invalid-restore preservation, cross-platform caches and photo backup compatibility; `/tmp/fri-sidebar-photo-core-full.log` |
 | Mac create/edit/delete/undo | PASS via CUA with isolated synthetic store: create 10:00/60 min, edit Unicode title, delete 11:00/30 min appointment, Cmd-Z restores it |
@@ -43,6 +43,14 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 ## Current runtime isolation
 
 The native debug Mac run uses `FRI_SYNTHETIC_PREVIEW=1` and UUID-scoped `FRI_TEST_STORE_ID`. It does not touch the installed Electron application's calendar. Preview mode is excluded from Release. The fixed synthetic key must never be used for customer calendar data.
+
+## Compact day header — 2026-11-23 21:27 UTC
+
+- Added an intermediate `ViewThatFits` layout matching the shipping desktop mobile composition: date card on the left, progress ring above the actions on the right. Previously iPhone fell directly from the wide row to a tall stacked header. The wide row and narrow vertical fallback remain available. The date can wrap without truncation.
+- Compact actions use 46 × 48 point targets with an icon-only Add label (accessible name retained); this deliberately differs from the web's smaller controls. Added rectangular hit areas inside both button labels and stable UI identifiers. This is a responsive adaptation, not a claim of pixel-identical output at every width.
+- New `testCompactDayHeadingAndActions` checks that the date, Add and Manage controls are visible, at least 44 points in both dimensions, arranged side by side and bounded to a 250-point header. It taps near the corners of Add/Manage, opens the month calendar, enables the app's Larger text setting and rotates to landscape. iPhone PASS: 1 test, 0 failures/skips, 29.231-second test body, `test_sim_2026-11-23T21-25-37-536Z_pid22065_93035b7f.xcresult`. iPad mini PASS: 1 test, 0 failures/skips, 31.007-second test body, `test_sim_2026-11-23T21-27-09-338Z_pid22065_9cc1fd0a.xcresult`.
+- Reviewed iPhone portrait, larger-text and landscape captures under `/tmp/fri-header-iphone-final/`; full date and controls are visible, with the wider row restored in landscape. Reviewed iPad portrait `/tmp/fri-header-ipad-final/30368FFE-8F43-4515-8233-CD6226D18E24.png`. Tests use isolated synthetic stores. They do not cover every system Dynamic Type category, localization or minimum supported OS.
+- Mac Xcode Debug build PASS with no warning/error diagnostics, `/tmp/fri-header-mac.log`. No new Mac interaction, signed WidgetKit or release pass is claimed. Reference: [Apple ViewThatFits selection](https://developer.apple.com/documentation/swiftui/viewthatfits).
 
 ## Appointment cards and desktop mosaic — 2026-11-23 21:06 UTC
 

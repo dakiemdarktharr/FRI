@@ -3,6 +3,53 @@ import XCTest
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
     #if os(iOS)
+    func testCompactDayHeadingAndActions() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        XCUIDevice.shared.orientation = .portrait
+        defer { XCUIDevice.shared.orientation = .portrait }
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        let day = app.buttons["Open month calendar"]
+        let add = app.buttons["fri.day.add"]
+        let manage = app.buttons["fri.day.manage"]
+        func inspect(_ name: String) {
+            XCTAssertTrue(day.waitForExistence(timeout: 8))
+            XCTAssertGreaterThanOrEqual(add.frame.minX, day.frame.maxX)
+            XCTAssertGreaterThanOrEqual(manage.frame.minX, day.frame.maxX)
+            for control in [day, add, manage] {
+                XCTAssertTrue(control.isHittable)
+                XCTAssertTrue(app.frame.contains(control.frame))
+                XCTAssertGreaterThanOrEqual(control.frame.width, 44)
+                XCTAssertGreaterThanOrEqual(control.frame.height, 44)
+            }
+            let header = day.frame.union(add.frame).union(manage.frame)
+            XCTAssertLessThanOrEqual(header.height, 250, "The compact header must leave space for appointments")
+            let image = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            image.name = name; image.lifetime = .keepAlways; self.add(image)
+        }
+        inspect("Day-heading-portrait")
+        add.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.15)).tap()
+        XCTAssertTrue(app.textFields["fri.editor.title"].waitForExistence(timeout: 8))
+        app.buttons["Close"].firstMatch.tap()
+        manage.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.15)).tap()
+        XCTAssertTrue(app.staticTexts["Manage appointments"].waitForExistence(timeout: 8))
+        app.buttons["Close"].firstMatch.tap()
+        day.tap()
+        XCTAssertTrue(app.staticTexts["fri.calendar.heading"].waitForExistence(timeout: 8))
+        app.buttons["fri.navigation.menu"].tap(); app.buttons["fri.navigation.day"].tap()
+        app.buttons["fri.navigation.menu"].tap(); app.buttons["Settings"].tap()
+        let larger = app.switches["fri.settings.largeText"]
+        reveal(larger, in: app, form: "fri.settings.form")
+        larger.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        app.buttons["Close"].firstMatch.tap()
+        inspect("Day-heading-larger-text")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        inspect("Day-heading-landscape")
+    }
+
     func testMosaicCardDetailsAndCompletion() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

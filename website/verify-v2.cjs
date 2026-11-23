@@ -12,7 +12,24 @@ async function check(name,fn){await fn();results.push(name);console.log('PASS '+
  await check(engine+' intro sequence and XP choice',async()=>{const e=await page.evaluate(()=>FRI_WEBSITE.evidence.events);assert.deepEqual(e.map(x=>x.name),['loading','black','notification','popup','calendar','spam-start','spam-end','question']);const duration=e.find(x=>x.name==='spam-end').time-e.find(x=>x.name==='spam-start').time;assert.ok(duration>=1280&&duration<1700);assert.equal(await page.locator('#quiet button').count(),1);assert.equal(await page.locator('.xp-title').count(),1);await page.screenshot({path:path.join(output,engine+'-xp.png')})});
  await page.locator('#enter').click();await page.locator('#intro').waitFor({state:'hidden'});
  await page.evaluate(()=>FRI_WEBSITE.review.seek(0));
- await check(engine+' one full demo crosses fold',async()=>{assert.equal(await page.locator('.app-window').count(),1);const r=await page.locator('#live-app').boundingBox();assert.ok(r.y<1000&&r.y+r.height>1000);assert.equal(await page.locator('.sea-control,#pause-demo,#replay-demo,.scroll-down,.chapter-controls,.footer-bottom').count(),0);const target=await page.locator('.download').first().getAttribute('href');const windows=await page.evaluate(()=>(navigator.userAgentData?.platform||navigator.platform||navigator.userAgent).toLowerCase().includes('win'));assert.match(target,windows?/releases\/download\/v[0-9.]+\/FRI-[0-9.]+-win-x64\.exe$/:/releases\/tag\/v[0-9.]+$/);await page.screenshot({path:path.join(output,engine+'-hero.png')})});
+ await check(engine+' one full demo crosses fold',async()=>{assert.equal(await page.locator('.app-window').count(),1);const r=await page.locator('#live-app').boundingBox();assert.ok(r.y<1000&&r.y+r.height>1000);assert.equal(await page.locator('.sea-control,#pause-demo,#replay-demo,.scroll-down,.chapter-controls,.footer-bottom').count(),0);await page.screenshot({path:path.join(output,engine+'-hero.png')})});
+ await check(engine+' three platform pills and both macOS builds',async()=>{
+  const panel=page.locator('#downloads');
+  const links=panel.getByRole('link');
+  assert.equal(await links.count(),3);
+  for(const [name,asset] of [['Windows',/-win-x64[.]exe$/],['Linux',/FRI-liquid-glass[.]html$/]]){
+   const link=panel.getByRole('link',{name,exact:true});
+   assert.equal(await link.isVisible(),true);
+   assert.match(await link.getAttribute('href'),asset);
+  }
+  await panel.getByRole('link',{name:'macOS',exact:true}).click();
+  const chooser=page.getByRole('dialog',{name:'macOS',exact:true});
+  assert.equal(await chooser.isVisible(),true);
+  assert.match(await chooser.getByRole('link',{name:'Apple silicon',exact:true}).getAttribute('href'),/-mac-arm64[.]dmg$/);
+  assert.match(await chooser.getByRole('link',{name:'Intel',exact:true}).getAttribute('href'),/-mac-x64[.]dmg$/);
+  await page.keyboard.press('Escape');
+  assert.equal(await chooser.isVisible(),false);
+ });
  await check(engine+' scramble timing 1300ms hold + 300ms transition',async()=>{for(const [t,text,changing] of [[0,'Fri.',false],[1.29,'Fri.',false],[1.31,'transition',true],[1.59,'transition',true],[1.61,'Make time\nfor your life.',false],[3.21,'[mark]',false],[4.81,'Fri.',false]]){await page.evaluate(t=>FRI_WEBSITE.review.seek(t),t);const s=await page.evaluate(()=>FRI_WEBSITE.evidence.scramble);assert.equal(s.text,text);assert.equal(s.changing,changing)}});
  await check(engine+' demo adds clarifies and completes',async()=>{await page.evaluate(()=>FRI_WEBSITE.review.seek(2));assert.match(await page.locator('.demo-form').textContent(),/What’s the plan/);await page.evaluate(()=>FRI_WEBSITE.review.seek(6));assert.match(await page.locator('.demo-form').textContent(),/When’s coffee/);await page.evaluate(()=>FRI_WEBSITE.review.seek(13));assert.equal(await page.locator('.new-task').count(),1);assert.equal(await page.locator('.dark-tile.completed').count(),1);await page.locator('#demo').screenshot({path:path.join(output,engine+'-demo.png')})});
  await check(engine+' pricing route, tilt, back navigation',async()=>{await page.locator('[data-route="pricing"]').click();await page.waitForFunction(()=>FRI_WEBSITE.evidence.route==='pricing');await page.waitForTimeout(600);assert.equal(await page.locator('.plan-card').count(),2);assert.match(await page.locator('.premium-plan').textContent(),/Coming soon/);assert.equal(await page.locator('.premium-plan button').isDisabled(),true);const r=await page.locator('.free-plan').boundingBox();await page.mouse.move(r.x+25,r.y+25);assert.match(await page.locator('.free-plan').getAttribute('style'),/rotateX/);await page.screenshot({path:path.join(output,engine+'-pricing.png')});await page.goBack();await page.waitForFunction(()=>FRI_WEBSITE.evidence.route==='home')});

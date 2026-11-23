@@ -1,4 +1,4 @@
-# Smart calendar import · 0.6.0
+# Smart calendar import · 0.6.1
 
 Open **File → Import plans**. Add timetable images, text, ICS files or HTTPS links, then choose **Read & arrange**. Missing details appear one card at a time. Review the proposed calendar, adjust uncertain records, and choose **Add appointments**. No event is committed by the model itself.
 
@@ -46,4 +46,4 @@ npm test --prefix desktop
 npm run dist --prefix desktop
 ```
 
-Live image/UEH evidence is kept in ignored local test-results, never uploaded with the account's content or session. Public tests use synthetic records and mocked API responses. Desktop 0.6 implements this flow; Android and native Apple clients need corresponding adapters and UI before claiming parity. Day is outside this change.
+Live image/UEH evidence is kept in ignored local test-results, never uploaded with the account's content or session. Public tests use synthetic records and mocked API responses. Desktop 0.6.1 implements this flow; Android and native Apple clients need corresponding adapters and UI before claiming parity. Day is outside this change.

@@ -22,7 +22,7 @@ const supportsAcrylic = process.platform === 'win32' && Number(os.release().spli
 const material = nativeGlass ? 'liquid-glass' : isMac ? 'vibrancy' : supportsAcrylic ? 'acrylic' : 'solid';
 let store, widgets, services, quitting=false;
 let glassController;
-let win, checking = false, updateDialog = false;
+let win, updates;
 
 function trusted(event) {
   if (!win || event.sender !== win.webContents || event.senderFrame !== win.webContents.mainFrame || event.senderFrame.url !== startURL) throw new Error('Untrusted IPC sender');
@@ -59,36 +59,10 @@ function nativeMenu(){
     {label:'File',submenu:[item('Import plans from files or text','intake'),item('Find time for a task','focus'),item('Find time together','together'),{type:'separator'},item('Create FRI widget on desktop','desktop-widget'),{type:'separator'},item('New deadline','deadline'),item('New schedule','schedule','CommandOrControl+N'),{type:'separator'},item('Export calendar backup…','export'),item('Restore calendar backup…','import'),{type:'separator'},{role:'close'}]},
     {label:'Edit',submenu:[{role:'undo'},{role:'redo'},{type:'separator'},{role:'cut'},{role:'copy'},{role:'paste'},{role:'selectAll'},{type:'separator'},item('Search appointments','search','CommandOrControl+F'),item('Edit appointments','manage')]},
     {label:'View',submenu:[item('Toggle sidebar','sidebar','CommandOrControl+B'),item('My day','day'),item('Month','month'),item('Year','year'),{type:'separator'},{role:'togglefullscreen'}]},
-    {label:'Help',submenu:[item('Keyboard shortcuts','shortcuts'),{label:'Check for updates…',click:()=>checkUpdates()},item('About FRI','about')]}
+    {label:'Help',submenu:[item('Keyboard shortcuts','shortcuts'),{label:'Check for updates…',click:()=>send('updates')},item('About FRI','about')]}
   ];
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
-async function checkUpdates(){
-  if(checking||updateDialog)return;
-  if(!app.isPackaged||process.env.FRI_TEST_MODE==='1'){
-    await dialog.showMessageBox(win,{type:'info',message:'Updates are available in installed release builds.',detail:'Development and test copies do not install updates.'});return;
-  }
-  // macOS requires an Apple-signed app for Squirrel updates. Do not bypass that check.
-  if(isMac){await dialog.showMessageBox(win,{type:'info',message:'Download the latest FRI release.',detail:'This preview does not have an Apple distribution certificate. Replace FRI in Applications with the new version; calendar data stays in your user Library.',buttons:['Open releases','Cancel']}).then(r=>r.response===0&&openExternal('https://github.com/dakiemdarktharr/FRI/releases/latest'));return;}
-  checking=true;
-  try{await autoUpdater.checkForUpdates();}catch{await dialog.showMessageBox(win,{type:'info',message:'Unable to check for updates.',detail:'Check your internet connection, or try again after the next release is published.'});}finally{checking=false;}
-}
-autoUpdater.autoDownload = false;
-autoUpdater.autoInstallOnAppQuit = false;
-autoUpdater.allowDowngrade = false;
-autoUpdater.on('error',()=>{}); // Errors are shown by the checked operation, without private paths.
-autoUpdater.on('update-not-available',()=>dialog.showMessageBox(win,{type:'info',message:'FRI is up to date.',detail:`Version ${app.getVersion()}`}));
-autoUpdater.on('update-available',async info=>{
-  if(updateDialog)return;updateDialog=true;
-  try{
-    const choice=await dialog.showMessageBox(win,{type:'info',message:`FRI ${info.version} is available.`,detail:'Download and install to replace the current application. Your calendar and settings stay on this device.',buttons:['Download update','Later'],defaultId:0,cancelId:1});
-    if(choice.response!==0)return;
-    await autoUpdater.downloadUpdate();
-    const install=await dialog.showMessageBox(win,{type:'info',message:'The update is ready.',detail:'FRI will close, replace its application files, and reopen. Your calendar is kept.',buttons:['Restart and install','Later'],defaultId:0,cancelId:1});
-    if(install.response===0)autoUpdater.quitAndInstall(false,true);
-  }catch{await dialog.showMessageBox(win,{type:'error',message:'The update could not be installed.',detail:'The current version remains available. Try again later.'});}finally{updateDialog=false;}
-});
-
 function createWindow(){
   const workArea=screen.getPrimaryDisplay().workAreaSize;
   win=new BrowserWindow({
@@ -131,16 +105,22 @@ if(!app.requestSingleInstanceLock()){app.quit();}else{
     ipcMain.handle('fri:window',(e,action)=>{trusted(e);windowAction(action)});
     ipcMain.handle('fri:glass',(e,enabled)=>{trusted(e);setGlass(enabled)});
     ipcMain.handle('fri:external',(e,url)=>{trusted(e);return openExternal(url)});
-    ipcMain.handle('fri:updates',e=>{trusted(e);return checkUpdates()});
+    updates=require('./updates.cjs').createUpdates({updater:autoUpdater,version:app.getVersion(),platform:process.platform,packaged:app.isPackaged,testMode:process.env.FRI_TEST_MODE==='1',
+      publish:state=>{if(win&&!win.isDestroyed())win.webContents.send('fri:update-state',state)},
+      openReleases:()=>openExternal('https://github.com/dakiemdarktharr/FRI/releases/latest'),
+      confirmInstall:async()=>{const choice=await dialog.showMessageBox(win,{type:'question',message:'Restart Fri to install the update?',detail:'Your calendar and settings stay on this device.',buttons:['Restart and install','Later'],defaultId:1,cancelId:1});return choice.response===0},
+      prepareInstall:async()=>{if(!win||win.isDestroyed())throw Error('Calendar window is unavailable');await win.webContents.executeJavaScript('if (typeof window.FRI_PREVIEW?.flush !== "function") throw Error("Calendar is not ready"); window.FRI_PREVIEW.flush();');await store.settled()}
+    });
+    ipcMain.handle('fri:updates',(e,action='check')=>{trusted(e);return updates.call(action)});
     services=createServices({store,changed});
     ipcMain.handle('fri:load-state',e=>{trusted(e);return store.read()});
     ipcMain.handle('fri:save-state',async(e,base,next)=>{trusted(e);const result=await store.commit(base,next);changed();return result});
     ipcMain.handle('fri:widget',e=>{trusted(e);return widgets.select()});
     ipcMain.handle('fri:service',async(e,action,input)=>{trusted(e);return services.call(action,input)});
     widgets=createWidgets({store,getMain:()=>win,onChange:changed,onService:action=>{const settings=store.read().state.settings;return services.call(action,action==='spotify'?settings.spotifyUrl:settings.mapsRegion)}});
-    nativeMenu();createWindow();widgets.restore();
+    nativeMenu();createWindow();widgets.restore();updates.start();
     app.on('activate',()=>{if(!win)createWindow()});
   });
   app.on('window-all-closed',()=>{if(!isMac)app.quit()});
-  app.on('before-quit',e=>{if(quitting)return;e.preventDefault();quitting=true;widgets?.cleanup();services?.stop();glassController?.destroy();nativeGlass?.shutdown();Promise.resolve(store?.settled()).finally(()=>app.quit())});
+  app.on('before-quit',e=>{if(quitting)return;e.preventDefault();quitting=true;widgets?.cleanup();services?.stop();updates?.stop();glassController?.destroy();nativeGlass?.shutdown();Promise.resolve(store?.settled()).finally(()=>app.quit())});
 }

@@ -1,0 +1,9 @@
+.app-titlebar .fri-update{display:inline-flex;align-items:center;justify-content:center;gap:6px;order:8;margin-left:auto;padding:0 11px;min-height:26px;height:26px;border:1px solid #9f716c;border-radius:7px;background:#543633;color:#fff6ed;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;-webkit-app-region:no-drag;app-region:no-drag}
+.app-titlebar .fri-update:hover{background:#704944}.app-titlebar .fri-update:disabled{cursor:default;opacity:.85}.app-titlebar .fri-update:focus-visible{outline:2px solid #f3d7b5;outline-offset:2px}.app-titlebar .fri-update[hidden]{display:none}
+.fri-update:not([hidden])~.window-controls{margin-left:0}.app-titlebar:has(.fri-update:not([hidden])) .window-controls{margin-left:4px}.app-titlebar:has(.fri-update:not([hidden])) .titlebar-name{display:none}
+.fri-update-symbol{font-size:14px;line-height:1}.fri-update[data-phase=checking] .fri-update-symbol,.fri-update[data-phase=downloading] .fri-update-symbol,.fri-update[data-phase=installing] .fri-update-symbol{animation:fri-update-turn 1.4s linear infinite}
+.fri-update-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+[data-platform=darwin] .app-titlebar .fri-update{order:8;margin-right:12px}
+@keyframes fri-update-turn{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.fri-update .fri-update-symbol{animation:none!important}}
+@media(max-width:640px){.app-titlebar .fri-update{padding:0 7px;font-size:10px;max-width:170px}.fri-update-label{overflow:hidden;text-overflow:ellipsis}}

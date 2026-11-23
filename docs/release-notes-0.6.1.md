@@ -1,4 +1,4 @@
-# FRI 0.6.0 · Bring your plans
+# FRI 0.6.1 · Bring your plans
 
 - Import timetable images and authenticated calendar pages with optional OpenAI extraction. Confirm missing details through cards before adding appointments.
 - Keep fixed classes in place; schedule assignment work in free time before the real deadline. Review overlaps and insufficient capacity explicitly.

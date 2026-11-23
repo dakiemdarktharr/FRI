@@ -8,6 +8,6 @@ The intro loads, opens a black screen and builds from one notification into a 1,
 
 Real beach footage is processed to halftone every frame. The 9.2-second loop runs at 1.18 times the source speed; a soft closing dissolve avoids a hard cut. Footer tiles move continuously and fade/blur behind copy. The footer reveals beneath the main page. Pricing has its own URL, curtain transition and pointer-relative tilt. Premium is Coming soon; there is no payment or signup backend.
 
-Reduced-motion users see a still ocean and still demo. A keyboard-focus-only motion control remains available for accessibility; the previously marked visual pause/replay/down controls are removed. Download detection chooses Windows, or asks Mac users for Apple silicon/Intel. No Linux/iOS installer is claimed.
+Reduced-motion users see a still ocean and still demo. A keyboard-focus-only motion control remains available for accessibility; the previously marked visual pause/replay/down controls are removed. The home page shows three download buttons. Windows downloads the x64 installer, macOS opens a choice between Apple silicon and Intel, and Linux downloads the standalone HTML app.
 
 Run `node website/verify-v2.cjs` after installing tests dependencies and Chromium/WebKit. Set FRI_SKIP_FRAMES=1 for an interaction-only run. See ../docs/web-verification-2026-11-23.md for observed results and platform limits. Asset provenance and license are in assets/NOTICE.md.

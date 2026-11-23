@@ -14,3 +14,6 @@ ai-config.json
 source-sessions.json
 .env
 .env.local
+# Local Day provider credentials; the example contains no key.
+.env.day
+day.env

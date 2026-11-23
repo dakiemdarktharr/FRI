@@ -6,6 +6,8 @@ function createServices({store,changed}){
  const maps=require('./maps.cjs').createMap();
  const electron=require('electron'), ai=require('./ai-import.cjs').createAI({directory:electron.app.getPath('userData'),crypto:electron.safeStorage});
  const sources=require('./source-browser.cjs').createSourceBrowser({directory:electron.app.getPath('userData')});
+ const app=require('electron').app,path=require('node:path');
+ const day=require('./day-service.cjs').createDayService({store,changed,configFile:app.isPackaged?path.join(app.getPath('userData'),'day.env'):path.join(__dirname,'.env.day')});
  let music=null,musicUrl=null,weatherGeneration=0,refreshing=false,lastRefreshAttempt=0;const notified=new Set(),lastCall=new Map();
  async function setting(key,value){const base=store.read().state,next=structuredClone(base);next.settings[key]=value;await store.commit(base,next);changed()}
  const timer=setInterval(()=>{const state=store.read().state;if(!state?.settings?.reminders)return;const now=new Date(),date=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');for(const t of state.tasks){const at=new Date(t.date+'T'+t.time+':00').getTime(),key=t.id+':'+at;if(t.done||t.date!==date||notified.has(key)||at-Date.now()>5*60000||at-Date.now() < -60000)continue;notified.add(key);if(Notification.isSupported())new Notification({title:'FRI · Coming up',body:state.settings.reminderDetails?t.title+' · '+t.time:'You have an appointment soon. Open FRI to view it.'}).show()}},15000);timer.unref();
@@ -19,6 +21,7 @@ function createServices({store,changed}){
   if(action==='source-open')return sources.open(input);
   if(action==='source-sessions')return sources.list();
   if(action==='source-forget')return sources.forget(input);
+  if(['day-status','day-analyze','day-apply'].includes(action))return day.call(action,input);
   if(action.startsWith('weather-')&&action!=='weather-disconnect'){const now=Date.now();if(now-(lastCall.get(action)||0)<750)throw Error('Please wait a moment before trying again.');lastCall.set(action,now)}
   if(action==='read-source')return require('./public-source.cjs').readPublicSource(input);
   if(action==='ocr')return require('./ocr.cjs').recognize(input,require('electron').app.getPath('userData'));

@@ -1,5 +1,11 @@
 # Desktop ground truth — v0.6.0
 
+0.6.1 adds reviewed image/link imports, encrypted source sessions and deadline-aware work planning. See [smart import](smart-import.md) and [0.6.1 verification](release-verification-0.6.1.md).
+
+Day now offers proactive calendar suggestions with optional OpenAI Luna Max ranking, and the title bar has a stateful update button. Windows fractional-DPI widget drift is fixed. See [0.6 verification](release-verification-0.6.0.md), [Day setup](day-ai.md), and [updater behavior](updater.md). Older records below retain their original version scope.
+
+## Historical v0.5 record
+
 Updated 2026-11-23. Current behavior supersedes the historical records below.
 
 - Native Windows Direct3D refraction remains confined to the main workspace, with material/solid fallbacks. Appointment cards, controls, dialogs and widget surfaces are opaque ivory, charcoal and marsala.

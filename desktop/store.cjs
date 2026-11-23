@@ -8,6 +8,7 @@ function validate(s){
  const ids=new Set();for(const t of s.tasks){
   if(!t||typeof t.id!=='string'||!/^[a-zA-Z0-9_-]{1,100}$/.test(t.id)||ids.has(t.id)||typeof t.title!=='string'||!t.title.trim()||t.title.length>160||!/^\d{4}-\d{2}-\d{2}$/.test(t.date)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(t.time)||!Number.isInteger(t.duration)||t.duration<0||t.duration>1440)throw Error('Invalid appointment');
   const d=new Date(t.date+'T12:00:00Z');if(t.kind==='deadline'&&t.duration!==0)throw Error('Invalid deadline');const [hour,minute]=t.time.split(':').map(Number);if(hour*60+minute+t.duration>1440)throw Error('Appointment crosses midnight');
+  if(t.flexibleUntil!==undefined&&(typeof t.flexibleUntil!=='string'||!/^([01]\d|2[0-3]):[0-5]\d$/.test(t.flexibleUntil)))throw Error('Invalid flexible time limit');
   if(!Number.isFinite(+d)||d.toISOString().slice(0,10)!==t.date)throw Error('Invalid date');
   for(const [key,max] of [['category',35],['location',200],['notes',2000]])if(typeof t[key]!=='string'||t[key].length>max)throw Error('Invalid appointment details');
   ids.add(t.id);
@@ -34,6 +35,9 @@ function createStore(directory,crypto){
   async init(){await fs.mkdir(directory,{recursive:true});if(!await crypto.isAsyncEncryptionAvailable())throw Error('Secure storage is unavailable. Unlock your system keychain and reopen FRI.');try{const bytes=await fs.readFile(file);const decrypted=await crypto.decryptStringAsync(bytes);const data=JSON.parse(decrypted.result);if(decrypted.shouldReEncrypt){const rotated=await crypto.encryptStringAsync(decrypted.result);await fs.writeFile(file+'.pending',rotated,{mode:0o600});await fs.rename(file+'.pending',file);}state=validate(data.state);revision=data.revision||0;}catch(e){if(e.code!=='ENOENT')throw Error('Your calendar could not be unlocked. It has not been overwritten.');}return this.read()},
   read(){return {state:state&&clone(state),revision}},
   commit(base,next){const operation=queue.then(async()=>{validate(next);const updated=merge(state,base,next),data=await crypto.encryptStringAsync(JSON.stringify({state:updated,revision:revision+1}));const temp=file+'.pending';await fs.writeFile(temp,data,{mode:0o600});await fs.rename(temp,file);state=updated;revision++;return this.read()});queue=operation.catch(()=>{});return operation},
+  // Recompute an action against the latest state inside the same write queue.
+  // A calendar edit queued before Day cannot be overwritten by a stale suggestion.
+  transaction(update){const operation=queue.then(async()=>{const updated=validate(update(state&&clone(state))),data=await crypto.encryptStringAsync(JSON.stringify({state:updated,revision:revision+1}));const temp=file+'.pending';await fs.writeFile(temp,data,{mode:0o600});await fs.rename(temp,file);state=updated;revision++;return this.read()});queue=operation.catch(()=>{});return operation},
   settled(){return queue}
  };
 }

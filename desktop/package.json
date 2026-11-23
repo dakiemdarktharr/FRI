@@ -1,7 +1,7 @@
 {
   "name": "fri-desktop",
   "productName": "FRI",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "A local calendar with a native glass workspace.",
   "author": "FRI contributors",
   "license": "UNLICENSED",
@@ -10,7 +10,7 @@
   "scripts": {
     "prepare:ui": "node prepare.cjs",
     "start": "npm run prepare:ui && electron .",
-    "test": "node --test --test-concurrency=1 desktop.test.cjs core.test.cjs planning.test.cjs widget.test.cjs brand.test.cjs ai-import.test.cjs network.test.cjs source-browser.test.cjs",
+    "test": "node --test --test-concurrency=1 desktop.test.cjs core.test.cjs planning.test.cjs widget.test.cjs brand.test.cjs ai-import.test.cjs network.test.cjs source-browser.test.cjs day.test.cjs day.integration.test.cjs updates.test.cjs",
     "pack": "npm run prepare:ui && electron-builder --dir",
     "dist": "npm run prepare:ui && electron-builder --publish never"
   },
@@ -34,6 +34,8 @@
     "files": [
       "*.cjs",
       "!*.test.cjs",
+      "!.env*",
+      "!day.env",
       "widget*.html",
       "ui/**/*",
       "resources/icon.png",

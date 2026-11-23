@@ -19,6 +19,12 @@ Weather fetches a real Open-Meteo forecast for a chosen city. Spotify opens an i
 
 The Windows x64 workspace uses a guarded Direct3D desktop-refraction layer from @hicccc77/electron-liquid-glass, with OS-material/solid fallbacks. This samples the actual desktop locally on the GPU; it is not Apple's compositor. macOS currently uses under-window vibrancy; the native Apple implementation is specified in the handoff. Fri uses ivory, charcoal and marsala (#955251). Only the main workspace is translucent; appointment cards, buttons and dialogs are opaque. Desktop widgets keep fixed type sizes and reveal additional content as they grow, with + in empty integration slots.
 
+## Day AI
+
+Day automatically checks Fri's existing calendar for conflicts and approaching deadlines. It proposes moving only flexible work; the user clicks to apply. There is no chat prompt requirement. Optional OpenAI **GPT-6 Luna, max reasoning** ranks the validated suggestions through the desktop main process.
+
+Enter `OPENAI_API_KEY` in the ignored `desktop/.env.day`, run `node start-day.cjs`, then enable OpenAI inside Day → **Cách Day hoạt động**. The HTML preview supports local suggestions. See [Day setup, architecture and limitations](docs/day-ai.md). No hosted inference service is deployed by this branch.
+
 ## Android
 
 The [Android local alpha](mobile/README.md) starts with an Expo/React Native app, Kotlin/Room storage, native Compose configuration, and two Glance home-screen widgets. Read its [verification status](mobile/docs/verification.md) before relying on a feature. Android does not yet include all desktop integrations; APKs are local test builds, not a store release.
@@ -62,4 +68,4 @@ v0.5 is a Windows-first, keyless release. Calendar data is encrypted locally wit
 
 Premium entitlement, account signup, OAuth/Spotify Web Playback SDK, Google Places/Routes APIs, automatic shared-calendar linking, cloud/multimodal Day AI and an iOS app are not shipped. Day provides local planning shortcuts and on-device spoken playback when a system voice is available. Recurrence expansion, overnight schedules and nested travel/context planning are not exposed in the new desktop interface. The earlier research workspace and its richer domain tests remain in index.html; the current desktop reuses its ICS/JSON-LD parser, not its entire separate data model.
 
-[Apple build and parity guide](docs/apple/00-START-HERE.md) · [0.6 verification](docs/release-verification-0.6.0.md) · [Current release scope](docs/release-plan.md) · [Technology](docs/technology.md) · [Ocean asset license](website/assets/NOTICE.md)
+[Apple build and parity guide](docs/apple/00-START-HERE.md) · [0.6.1 import verification](docs/release-verification-0.6.1.md) · [0.6 verification](docs/release-verification-0.6.0.md) · [Current release scope](docs/release-plan.md) · [Technology](docs/technology.md) · [Ocean asset license](website/assets/NOTICE.md)

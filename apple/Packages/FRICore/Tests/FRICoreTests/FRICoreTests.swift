@@ -399,3 +399,35 @@ func directPublicHTTPSConnectsUsingTheVerifiedHostname() async throws {
     #expect(ServiceLinks.spotify("https://user@open.spotify.com/track/abc") == nil)
     #expect(ServiceLinks.spotify("http://open.spotify.com/track/abc") == nil)
 }
+
+@Test func spotifyEmbedAndProviderBoundaries() throws {
+    #expect(ServiceLinks.spotifyEmbed("https://open.spotify.com/episode/abc123?si=private#fragment")?.absoluteString == "https://open.spotify.com/embed/episode/abc123")
+    #expect(ServiceLinks.spotifyEmbed("https://open.spotify.com/embed/track/abc") == nil)
+    #expect(ServiceLinks.spotifyEmbed("https://open.spotify.com:443/track/abc") == nil)
+    #expect(ServiceLinks.spotifyBrowserLink(URL(string: "https://accounts.spotify.com/login")!))
+    for raw in ["https://accounts.spotify.com.evil.test/login", "https://user@accounts.spotify.com/login", "file:///tmp/a", "http://open.spotify.com/track/abc"] {
+        #expect(!ServiceLinks.spotifyBrowserLink(URL(string: raw)!))
+    }
+    let rules = try #require(JSONSerialization.jsonObject(with: Data(ServiceLinks.spotifyContentRules.utf8)) as? [[String: Any]])
+    let expressions = try rules.dropFirst().map { rule in
+        let allow = try #require((rule["trigger"] as? [String: String])?["url-filter"])
+        return try NSRegularExpression(pattern: allow)
+    }
+    for raw in ["https://open.spotify.com/embed/track/abc", "https://i.scdn.co/image/abc", "https://audio.spotifycdn.com/a", "https://a.b.spotifycdn.net/a"] {
+        #expect(expressions.contains { $0.firstMatch(in: raw, range: NSRange(raw.startIndex..., in: raw)) != nil })
+    }
+    for raw in ["http://open.spotify.com/a", "https://evilspotify.com/a", "https://spotify.com.evil.test/a", "https://spotify.com@evil.test/a", "https://evil.test/?https://spotify.com/a"] {
+        #expect(!expressions.contains { $0.firstMatch(in: raw, range: NSRange(raw.startIndex..., in: raw)) != nil })
+    }
+}
+
+#if canImport(WebKit)
+import WebKit
+
+@Test @MainActor func spotifyContentRulesCompileInWebKit() async throws {
+    let list = try await WKContentRuleListStore.default().compileContentRuleList(
+        forIdentifier: "FRI.Test.Spotify", encodedContentRuleList: ServiceLinks.spotifyContentRules)
+    #expect(list != nil)
+    try await WKContentRuleListStore.default().removeContentRuleList(forIdentifier: "FRI.Test.Spotify")
+}
+#endif

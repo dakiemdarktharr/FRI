@@ -70,6 +70,7 @@ final class FRICalendarSession {
     private var pendingOpenURL: URL?
     private(set) var synthetic = false
     private var store: CalendarStore?
+    @ObservationIgnored let spotifyPlayer = FRISpotifyPlayer()
     @ObservationIgnored private let automaticWeather = WeatherAutoRefresh()
     @ObservationIgnored private var weatherTimer: Task<Void, Never>?
     @ObservationIgnored private var weatherUpdatesEnabled = false
@@ -153,6 +154,11 @@ final class FRICalendarSession {
         if loaded.state != state || !ready {
             state = loaded.state
             reconcileReminders()
+        }
+        spotifyPlayer.largeText = state.settings["large"]?.bool == true
+        if let playing = spotifyPlayer.resourceURL,
+           state.settings["spotifyUrl"]?.string.flatMap(ServiceLinks.spotify) != playing {
+            spotifyPlayer.close()
         }
         ready = true
         refreshWeatherAutomatically()

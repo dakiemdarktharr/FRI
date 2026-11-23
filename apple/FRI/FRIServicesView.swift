@@ -5,9 +5,13 @@ import SwiftUI
 
 struct FRIServicesView: View {
     let calendar: FRICalendarSession
+    @Environment(\.dynamicTypeSize) private var readingSize
     @State private var city = ""
     @FocusState private var cityFocused: Bool
     @State private var spotify = ""
+    @State private var spotifyPresented = false
+    @State private var spotifyMessage: String?
+    @FocusState private var spotifyFocused: Bool
     @State private var mapQuery = ""
     @State private var steps = 0
     @State private var mapItem: MKMapItem?
@@ -106,18 +110,17 @@ struct FRIServicesView: View {
                     }
                 }
                 Section("Spotify") {
-                    Text("Opening a public Spotify link shares the connection with Spotify.")
+                    Text("Spotify receives your IP address and playback activity when you open the player. FRI sends no calendar details. Full playback depends on your Spotify account.")
                         .friFont(.caption).foregroundStyle(.secondary)
                     TextField("Spotify link", text: $spotify)
-                    if let url = ServiceLinks.spotify(spotify) {
-                        Button("Save link") { calendar.updateSetting("spotifyUrl", .string(url.absoluteString)) }
-                        Link("Open Spotify", destination: url)
-                    }
+                        .focused($spotifyFocused)
+                        .accessibilityIdentifier("fri.services.spotify.url")
+                        .onSubmit { openSpotify() }
+                    Button("Open player") { openSpotify() }
+                        .accessibilityIdentifier("fri.services.spotify.open")
+                    if let spotifyMessage { Text(spotifyMessage).foregroundStyle(.secondary) }
                     if calendar.state.settings["spotifyUrl"] != nil {
-                        Button("Disconnect Spotify", role: .destructive) {
-                            calendar.updateSetting("spotifyUrl", nil)
-                            spotify = ""
-                        }
+                        Button("Disconnect Spotify", role: .destructive) { disconnectSpotify() }
                     }
                 }
                 Section("Manual activity") {
@@ -136,6 +139,13 @@ struct FRIServicesView: View {
             .formStyle(.grouped)
             .accessibilityIdentifier("fri.services.form")
         }
+        #if os(iOS)
+        .sheet(isPresented: $spotifyPresented, onDismiss: { calendar.spotifyPlayer.close() }) {
+            FRISpotifyPlayerView(player: calendar.spotifyPlayer,
+                onClose: { spotifyPresented = false }, onDisconnect: { disconnectSpotify() })
+                .environment(\.dynamicTypeSize, readingSize)
+        }
+        #endif
         .onAppear {
             calendar.cancelAutomaticWeather()
             spotify = calendar.state.settings["spotifyUrl"]?.string ?? ""
@@ -145,12 +155,50 @@ struct FRIServicesView: View {
                activity["date"]?.string == CalendarClock.day(), case .number(let value) = activity["steps"],
                value.isFinite, (0...100_000).contains(value) { steps = Int(value) }
         }
+        .onChange(of: calendar.state.settings["spotifyUrl"]?.string) { _, saved in
+            spotify = saved ?? ""
+            if saved == nil { spotifyPresented = false }
+        }
         .onChange(of: city) { _, _ in
             cancelWeather()
             weatherChoices = []
             weatherMessage = nil
         }
         .onDisappear { cancelWeather(); cancelMap() }
+    }
+
+    private func openSpotify() {
+        spotifyFocused = false
+        guard let url = ServiceLinks.spotify(spotify) else {
+            spotifyMessage = "Use a Spotify playlist, album, track or episode link."
+            return
+        }
+        guard calendar.change({ $0.settings["spotifyUrl"] = .string(url.absoluteString) }) else {
+            spotifyMessage = calendar.message
+            return
+        }
+        spotify = url.absoluteString
+        spotifyMessage = nil
+        calendar.spotifyPlayer.open(url)
+        #if os(macOS)
+        calendar.spotifyPlayer.present { [weak calendar] in
+            guard let calendar, calendar.change({ $0.settings.removeValue(forKey: "spotifyUrl") }) else { return }
+            calendar.spotifyPlayer.close()
+        }
+        #else
+        spotifyPresented = true
+        #endif
+    }
+
+    private func disconnectSpotify() {
+        guard calendar.change({ $0.settings.removeValue(forKey: "spotifyUrl") }) else {
+            spotifyMessage = calendar.message
+            return
+        }
+        calendar.spotifyPlayer.close()
+        spotifyPresented = false
+        spotify = ""
+        spotifyMessage = nil
     }
 
     private func cancelWeather() {

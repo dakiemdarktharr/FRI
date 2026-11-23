@@ -3,6 +3,64 @@ import XCTest
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
     #if os(iOS)
+    func testSpotifyEmbeddedPlayerAndDisconnect() throws {
+        guard ProcessInfo.processInfo.environment["FRI_SPOTIFY_NETWORK_TEST"] == "1" else {
+            throw XCTSkip("Opt-in live Spotify embed; no account sign-in or paid subscription is used.")
+        }
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        app.buttons["fri.navigation.menu"].tap()
+        app.buttons["Services"].tap()
+        let field = app.textFields["fri.services.spotify.url"]
+        reveal(field, in: app, form: "fri.services.form")
+        field.tap()
+        field.typeText("https://example.com/track/abc")
+        let open = app.buttons["fri.services.spotify.open"]
+        reveal(open, in: app, form: "fri.services.form")
+        open.tap()
+        XCTAssertTrue(app.staticTexts["Use a Spotify playlist, album, track or episode link."].waitForExistence(timeout: 5))
+        field.tap()
+        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: "https://example.com/track/abc".count))
+        field.typeText("https://open.spotify.com/episode/7makk4oTQel546B0PZlDM5?si=qa")
+        reveal(open, in: app, form: "fri.services.form")
+        open.tap()
+        let close = app.buttons["fri.spotify.close"]
+        XCTAssertTrue(close.waitForExistence(timeout: 10))
+        let episode = app.webViews.links.matching(NSPredicate(format: "label == %@", "My Path to Spotify: Women in Engineering")).firstMatch
+        XCTAssertTrue(episode.waitForExistence(timeout: 30), app.debugDescription)
+        XCTAssertFalse(app.staticTexts["fri.spotify.error"].exists)
+        XCTAssertGreaterThanOrEqual(app.webViews.firstMatch.frame.width, 280)
+        app.buttons["fri.spotify.reload"].tap()
+        XCTAssertTrue(episode.waitForExistence(timeout: 30))
+        let shot = XCTAttachment(screenshot: app.screenshot())
+        shot.name = "Spotify-embedded-episode-iOS"; shot.lifetime = .keepAlways; add(shot)
+        close.tap()
+        XCTAssertTrue(open.waitForExistence(timeout: 10))
+        app.buttons["Close"].firstMatch.tap()
+        app.terminate(); app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        app.buttons["fri.navigation.menu"].tap(); app.buttons["Services"].tap()
+        reveal(field, in: app, form: "fri.services.form")
+        XCTAssertEqual(field.value as? String, "https://open.spotify.com/episode/7makk4oTQel546B0PZlDM5")
+        reveal(open, in: app, form: "fri.services.form"); open.tap()
+        XCTAssertTrue(close.waitForExistence(timeout: 10))
+        app.buttons["fri.spotify.disconnect"].tap()
+        XCTAssertTrue(open.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["Disconnect Spotify"].exists)
+        XCTAssertEqual(field.value as? String, "Spotify link")
+        app.buttons["Close"].firstMatch.tap()
+        app.terminate(); app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        app.buttons["fri.navigation.menu"].tap(); app.buttons["Services"].tap()
+        reveal(field, in: app, form: "fri.services.form")
+        XCTAssertEqual(field.value as? String, "Spotify link")
+        XCTAssertFalse(app.buttons["Disconnect Spotify"].exists)
+    }
+
     func testWeatherCityChoiceRefreshAndPersistence() throws {
         guard ProcessInfo.processInfo.environment["FRI_WEATHER_NETWORK_TEST"] == "1" else {
             throw XCTSkip("Opt-in live Open-Meteo interaction; offline behavior is covered by core transport tests.")

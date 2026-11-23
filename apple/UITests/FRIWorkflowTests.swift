@@ -203,6 +203,24 @@ final class FRIWorkflowTests: XCTestCase {
         Thread.sleep(forTimeInterval: 3)
         XCTAssertNotEqual(moving, try edgePixels(), "The native GPU gradient must actually animate")
         setMotion(false)
+        Thread.sleep(forTimeInterval: 20)
+        setMotion(true)
+        let restarted = try edgePixels()
+        func decodedPixels(_ data: Data) throws -> Data {
+            let image = try XCTUnwrap(UIImage(data: data)?.cgImage)
+            return try XCTUnwrap(image.dataProvider?.data) as Data
+        }
+        let firstPixels = try decodedPixels(moving), secondPixels = try decodedPixels(restarted)
+        XCTAssertEqual(firstPixels.count, secondPixels.count)
+        let meanDifference = zip(firstPixels, secondPixels).reduce(0.0) {
+            $0 + abs(Double($1.0) - Double($1.1))
+        } / Double(firstPixels.count)
+        let metric = XCTAttachment(string: "Mean byte difference after motion restart: \(meanDifference)")
+        metric.name = "Sidebar-motion-restart"; metric.lifetime = .keepAlways; add(metric)
+        // Both captures follow the same Settings interaction. Allow minor frame-phase variation;
+        // a new desktop ShaderGradient starts its animation clock again when motion is enabled.
+        XCTAssertLessThan(meanDifference, 2, "Re-enabling motion must restart the same visual sequence")
+        setMotion(false)
     }
 
     func testCompactDayHeadingAndActions() throws {

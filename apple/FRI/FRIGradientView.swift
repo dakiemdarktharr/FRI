@@ -63,8 +63,13 @@ struct FRIGradientView: FRIPlatformViewRepresentable {
     @MainActor
     final class Renderer: NSObject, MTKViewDelegate {
         static let resources = Resources()
-        private let started = ContinuousClock.now
-        var motion = true
+        private var started = ContinuousClock.now
+        var motion = true {
+            didSet {
+                // The desktop remounts ShaderGradient when motion is enabled, restarting its clock.
+                if motion && !oldValue { started = .now }
+            }
+        }
 
         func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
 

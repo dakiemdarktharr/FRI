@@ -7,7 +7,8 @@ async function check(name,fn){await fn();results.push(name);console.log('PASS '+
 (async()=>{await fs.mkdir(output,{recursive:true});for(const [engine,type] of [['chromium',chromium],['webkit',webkit]].filter(([name])=>!process.env.FRI_BROWSER||process.env.FRI_BROWSER===name)){
  const browser=await type.launch({headless:true});try{
  const context=await browser.newContext({viewport:{width:1440,height:1000}});const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto(url);await page.locator('#quiet').waitFor({state:'visible',timeout:20000});
+ // Media streams must not delay navigation readiness; the next assertion waits for actual UI.
+ await page.goto(url,{waitUntil:'domcontentloaded',timeout:60000});await page.locator('#quiet').waitFor({state:'visible',timeout:20000});
  await check(engine+' intro sequence and XP choice',async()=>{const e=await page.evaluate(()=>FRI_WEBSITE.evidence.events);assert.deepEqual(e.map(x=>x.name),['loading','black','notification','popup','calendar','spam-start','spam-end','question']);const duration=e.find(x=>x.name==='spam-end').time-e.find(x=>x.name==='spam-start').time;assert.ok(duration>=1280&&duration<1700);assert.equal(await page.locator('#quiet button').count(),1);assert.equal(await page.locator('.xp-title').count(),1);await page.screenshot({path:path.join(output,engine+'-xp.png')})});
  await page.locator('#enter').click();await page.locator('#intro').waitFor({state:'hidden'});
  await page.evaluate(()=>FRI_WEBSITE.review.seek(0));

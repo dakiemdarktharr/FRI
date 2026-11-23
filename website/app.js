@@ -94,13 +94,22 @@
 
   const downloadPage=location.protocol==='file:'?'#downloads':'/#downloads';
   $$('.download-jump').forEach(link=>link.href=downloadPage);
-  const dialog=$('#info-dialog');
-  $('[data-dialog="signup"]').addEventListener('click',()=>{
-    $('#dialog-title').textContent='Your space. Soon.';
-    $('#dialog-content').innerHTML='<p>Accounts aren’t open yet. The desktop app works without one.</p><a class="pill dark" id="choose-download" href="'+downloadPage+'">Download Fri <span aria-hidden="true">↓</span></a>';
-    $('#choose-download').addEventListener('click',()=>dialog.close());
+  const dialog=$('#info-dialog'), dialogContent=$('#dialog-content');
+  function showDialog(title){
+    $('#dialog-title').textContent=title;
     if(!dialog.open)dialog.showModal();
     $('.dialog-close').focus();
+  }
+  $('#mac-download').addEventListener('click',e=>{
+    if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;
+    e.preventDefault();
+    dialogContent.replaceChildren($('#mac-download-options').content.cloneNode(true));
+    showDialog('macOS');
+  });
+  $('[data-dialog="signup"]').addEventListener('click',()=>{
+    dialogContent.innerHTML='<p>Accounts aren’t open yet. The desktop app works without one.</p><a class="pill dark" id="choose-download" href="'+downloadPage+'">Download Fri <span aria-hidden="true">↓</span></a>';
+    $('#choose-download').addEventListener('click',()=>dialog.close());
+    showDialog('Your space. Soon.');
   });
   $('.dialog-close').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('click',e=>{const r=dialog.getBoundingClientRect();if(e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))dialog.close()});

@@ -33,54 +33,21 @@ body:not(.pricing-view) .topbar{background:#28171999;backdrop-filter:blur(14px)}
 .task-tile:not(.dark-tile) .task-place{color:#626262}
 .task-tile:not(.dark-tile) .task-place{opacity:1}
 
+
 .download-panel {
-  display:grid;
-  grid-template-columns:1fr 1.45fr 1fr;
-  width:min(92%, 680px);
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:12px;
+  width:min(94%, 720px);
   margin-inline:auto;
-  padding:15px 0;
-  border-radius:20px;
-  background:#fff;
-  color:#272121;
-  box-shadow:0 12px 32px #2f181b40;
-  text-align:center;
   scroll-margin-top:90px;
 }
-.download-platform {min-width:0;padding:0 12px}
-.download-platform + .download-platform {border-inline-start:1px solid #e9dddb}
-.download-platform strong {display:block;font-size:16px;line-height:1.2}
-.download-note {
-  display:block;
-  margin-top:4px;
-  color:#665452;
-  font-size:12px;
-  line-height:1.25;
-}
-.platform-links {display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:10px}
-.platform-links a {
-  display:inline-flex;
-  justify-content:center;
-  align-items:center;
-  max-width:100%;
-  min-height:36px;
-  padding:5px 11px;
-  border:1px solid #ddcecb;
-  border-radius:8px;
-  background:#f8f2f0;
-  color:#442b2b;
-  font-size:13px;
-  font-weight:600;
-  line-height:1.15;
-  text-decoration:none;
-}
-.platform-links a:hover {background:#eadbd8;border-color:#bea5a0}
-.platform-links a:focus-visible {outline:2px solid #693d3c;outline-offset:2px}
+.download-panel:focus {outline:none}
+.download-panel .platform-download {font-weight:650;white-space:nowrap}
+.download-panel .platform-download > span {margin:0}
 @media (max-width:600px) {
-  .download-panel {grid-template-columns:repeat(3,minmax(0,1fr));padding:10px 0;border-radius:15px}
-  .download-platform {padding:0 6px}
-  .download-platform strong {font-size:14px}
-  .download-note {font-size:11px}
-  .platform-links {gap:4px;margin-top:6px}
-  .platform-links a {min-height:32px;padding:4px 6px;font-size:12px}
+  .download-panel {gap:7px}
+  .download-panel .platform-download {gap:6px;min-height:46px;padding:11px 12px}
+  .download-panel .platform-download > span {font-size:16px}
 }
-.platform-links a::after {content:"↓";margin-inline-start:5px;font-size:.9em}

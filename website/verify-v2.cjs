@@ -13,14 +13,22 @@ async function check(name,fn){await fn();results.push(name);console.log('PASS '+
  await page.locator('#enter').click();await page.locator('#intro').waitFor({state:'hidden'});
  await page.evaluate(()=>FRI_WEBSITE.review.seek(0));
  await check(engine+' one full demo crosses fold',async()=>{assert.equal(await page.locator('.app-window').count(),1);const r=await page.locator('#live-app').boundingBox();assert.ok(r.y<1000&&r.y+r.height>1000);assert.equal(await page.locator('.sea-control,#pause-demo,#replay-demo,.scroll-down,.chapter-controls,.footer-bottom').count(),0);await page.screenshot({path:path.join(output,engine+'-hero.png')})});
- await check(engine+' all platform downloads are on the home page',async()=>{
+ await check(engine+' three platform pills and both macOS builds',async()=>{
   const panel=page.locator('#downloads');
   const links=panel.getByRole('link');
-  assert.equal(await links.count(),4);
-  for(const [index,asset] of [[0,/-win-x64[.]exe$/],[1,/-mac-arm64[.]dmg$/],[2,/-mac-x64[.]dmg$/],[3,/FRI-liquid-glass[.]html$/]]){
-   assert.equal(await links.nth(index).isVisible(),true);
-   assert.match(await links.nth(index).getAttribute('href'),asset);
+  assert.equal(await links.count(),3);
+  for(const [name,asset] of [['Windows',/-win-x64[.]exe$/],['Linux',/FRI-liquid-glass[.]html$/]]){
+   const link=panel.getByRole('link',{name,exact:true});
+   assert.equal(await link.isVisible(),true);
+   assert.match(await link.getAttribute('href'),asset);
   }
+  await panel.getByRole('link',{name:'macOS',exact:true}).click();
+  const chooser=page.getByRole('dialog',{name:'macOS',exact:true});
+  assert.equal(await chooser.isVisible(),true);
+  assert.match(await chooser.getByRole('link',{name:'Apple silicon',exact:true}).getAttribute('href'),/-mac-arm64[.]dmg$/);
+  assert.match(await chooser.getByRole('link',{name:'Intel',exact:true}).getAttribute('href'),/-mac-x64[.]dmg$/);
+  await page.keyboard.press('Escape');
+  assert.equal(await chooser.isVisible(),false);
  });
  await check(engine+' scramble timing 1300ms hold + 300ms transition',async()=>{for(const [t,text,changing] of [[0,'Fri.',false],[1.29,'Fri.',false],[1.31,'transition',true],[1.59,'transition',true],[1.61,'Make time\nfor your life.',false],[3.21,'[mark]',false],[4.81,'Fri.',false]]){await page.evaluate(t=>FRI_WEBSITE.review.seek(t),t);const s=await page.evaluate(()=>FRI_WEBSITE.evidence.scramble);assert.equal(s.text,text);assert.equal(s.changing,changing)}});
  await check(engine+' demo adds clarifies and completes',async()=>{await page.evaluate(()=>FRI_WEBSITE.review.seek(2));assert.match(await page.locator('.demo-form').textContent(),/What’s the plan/);await page.evaluate(()=>FRI_WEBSITE.review.seek(6));assert.match(await page.locator('.demo-form').textContent(),/When’s coffee/);await page.evaluate(()=>FRI_WEBSITE.review.seek(13));assert.equal(await page.locator('.new-task').count(),1);assert.equal(await page.locator('.dark-tile.completed').count(),1);await page.locator('#demo').screenshot({path:path.join(output,engine+'-demo.png')})});

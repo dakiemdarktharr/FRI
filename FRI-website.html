@@ -64,57 +64,24 @@ body:not(.pricing-view) .topbar{background:#28171999;backdrop-filter:blur(14px)}
 .task-tile:not(.dark-tile) .task-place{color:#626262}
 .task-tile:not(.dark-tile) .task-place{opacity:1}
 
+
 .download-panel {
-  display:grid;
-  grid-template-columns:1fr 1.45fr 1fr;
-  width:min(92%, 680px);
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:12px;
+  width:min(94%, 720px);
   margin-inline:auto;
-  padding:15px 0;
-  border-radius:20px;
-  background:#fff;
-  color:#272121;
-  box-shadow:0 12px 32px #2f181b40;
-  text-align:center;
   scroll-margin-top:90px;
 }
-.download-platform {min-width:0;padding:0 12px}
-.download-platform + .download-platform {border-inline-start:1px solid #e9dddb}
-.download-platform strong {display:block;font-size:16px;line-height:1.2}
-.download-note {
-  display:block;
-  margin-top:4px;
-  color:#665452;
-  font-size:12px;
-  line-height:1.25;
-}
-.platform-links {display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:10px}
-.platform-links a {
-  display:inline-flex;
-  justify-content:center;
-  align-items:center;
-  max-width:100%;
-  min-height:36px;
-  padding:5px 11px;
-  border:1px solid #ddcecb;
-  border-radius:8px;
-  background:#f8f2f0;
-  color:#442b2b;
-  font-size:13px;
-  font-weight:600;
-  line-height:1.15;
-  text-decoration:none;
-}
-.platform-links a:hover {background:#eadbd8;border-color:#bea5a0}
-.platform-links a:focus-visible {outline:2px solid #693d3c;outline-offset:2px}
+.download-panel:focus {outline:none}
+.download-panel .platform-download {font-weight:650;white-space:nowrap}
+.download-panel .platform-download > span {margin:0}
 @media (max-width:600px) {
-  .download-panel {grid-template-columns:repeat(3,minmax(0,1fr));padding:10px 0;border-radius:15px}
-  .download-platform {padding:0 6px}
-  .download-platform strong {font-size:14px}
-  .download-note {font-size:11px}
-  .platform-links {gap:4px;margin-top:6px}
-  .platform-links a {min-height:32px;padding:4px 6px;font-size:12px}
+  .download-panel {gap:7px}
+  .download-panel .platform-download {gap:6px;min-height:46px;padding:11px 12px}
+  .download-panel .platform-download > span {font-size:16px}
 }
-.platform-links a::after {content:"↓";margin-inline-start:5px;font-size:.9em}
 
 .product-story{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:8%;padding:72px 8%;max-width:1440px;margin:auto;border-top:1px solid #eee8e4;min-height:370px}.product-story h2{font-size:clamp(38px,4.6vw,68px);line-height:1.06;letter-spacing:-.055em;font-weight:550;max-width:620px}.product-story:nth-child(even) .story-copy{order:2}.product-story:nth-child(even) .scene{order:1}.scene{position:relative;height:260px;display:grid;place-items:center;border-radius:28px;background:#f5f0eb;overflow:hidden;color:#302929;isolation:isolate}.scene *{animation-play-state:paused!important}.scene.is-visible *{animation-play-state:running!important}.scene .scene-paper{background:#fff;border:1px solid #e2d6ce;border-radius:20px;padding:20px;box-shadow:0 8px 25px #4327240c}.scene-label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#785a52}.scene strong{font-size:18px;font-weight:550;letter-spacing:-.5px}.scene .accent{background:#955251;color:#fff}.scene .scene-dot{width:9px;height:9px;border-radius:50%;background:#955251}
 .unified-day{width:76%;display:grid;grid-template-columns:48px 1fr;gap:9px;padding:20px!important}.unified-day>strong{grid-column:1/-1;margin-bottom:6px}.unified-day .time-label{font-size:12px;color:#785a52;padding-top:10px}.unified-day .plan-line{padding:10px;border-radius:10px;background:#eee5df;font-size:13px;animation:plan-in 4.8s infinite both}.unified-day .plan-line:nth-of-type(2){animation-delay:.3s}.unified-day .plan-line:last-child{animation-delay:.6s}
@@ -170,28 +137,9 @@ body.motion-paused .scene *,body.motion-paused .scene{animation-play-state:pause
       <h1 id="hero-title" tabindex="-1" aria-label="Fri. Make time for your life."><span id="hero-word" aria-hidden="true">Fri.</span><span id="hero-mark" class="pole" aria-hidden="true" hidden><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 128" fill="currentColor"><path d="M30 21h13v99H30zM15 25h65v11H15zM26 60h43v10H26z"/><path d="M20 17h7v11h-7zM67 17h7v11h-7zM58 53h7v10h-7z"/></svg>
 </span></h1>
       <div class="download-panel" id="downloads" role="group" aria-label="Download Fri" tabindex="-1">
-        <div class="download-platform">
-          <strong>Windows</strong>
-          <span class="download-note">Unsigned installer</span>
-          <div class="platform-links">
-            <a href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.5.0/FRI-0.5.0-win-x64.exe" aria-label="Download for Windows x64">x64 .exe</a>
-          </div>
-        </div>
-        <div class="download-platform">
-          <strong>macOS</strong>
-          <span class="download-note">Development builds</span>
-          <div class="platform-links">
-            <a href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.5.0/FRI-0.5.0-mac-arm64.dmg" aria-label="Download for macOS Apple silicon">Apple silicon</a>
-            <a href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.5.0/FRI-0.5.0-mac-x64.dmg" aria-label="Download for macOS Intel">Intel</a>
-          </div>
-        </div>
-        <div class="download-platform">
-          <strong>Linux</strong>
-          <span class="download-note">Open in a browser</span>
-          <div class="platform-links">
-            <a href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.5.0/FRI-liquid-glass.html" aria-label="Download for Linux, browser app in HTML format">Web app .html</a>
-          </div>
-        </div>
+        <a class="pill light platform-download" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.5.0/FRI-0.5.0-win-x64.exe"><span aria-hidden="true">↓</span>Windows</a>
+        <a class="pill light platform-download" id="mac-download" href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.5.0" aria-haspopup="dialog" aria-controls="info-dialog"><span aria-hidden="true">↓</span>macOS</a>
+        <a class="pill light platform-download" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.5.0/FRI-liquid-glass.html"><span aria-hidden="true">↓</span>Linux</a>
       </div>
     </div>
   </section>
@@ -233,6 +181,10 @@ body.motion-paused .scene *,body.motion-paused .scene{animation-play-state:pause
 <button id="motion-access" class="skip-link">Pause animations</button>
 <dialog id="info-dialog" aria-labelledby="dialog-title"><button class="dialog-close icon-button" aria-label="Close dialog">×</button><span class="pole"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 128" fill="currentColor"><path d="M30 21h13v99H30zM15 25h65v11H15zM26 60h43v10H26z"/><path d="M20 17h7v11h-7zM67 17h7v11h-7zM58 53h7v10h-7z"/></svg>
 </span><h2 id="dialog-title"></h2><div id="dialog-content"></div></dialog>
+<template id="mac-download-options">
+  <a class="pill dark" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.5.0/FRI-0.5.0-mac-arm64.dmg">Apple silicon</a>
+  <a class="pill dark" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.5.0/FRI-0.5.0-mac-x64.dmg">Intel</a>
+</template>
 <noscript><style>#intro{display:none}#site{display:block}.intro-active{overflow:auto}</style><div class="noscript-message">Enable JavaScript to watch the intro and demo. <a href="https://github.com/dakiemdarktharr/FRI/releases/tag/v0.5.0">Download Fri</a></div></noscript>
 <script>(() => {
   'use strict';
@@ -330,13 +282,22 @@ body.motion-paused .scene *,body.motion-paused .scene{animation-play-state:pause
 
   const downloadPage=location.protocol==='file:'?'#downloads':'/#downloads';
   $$('.download-jump').forEach(link=>link.href=downloadPage);
-  const dialog=$('#info-dialog');
-  $('[data-dialog="signup"]').addEventListener('click',()=>{
-    $('#dialog-title').textContent='Your space. Soon.';
-    $('#dialog-content').innerHTML='<p>Accounts aren’t open yet. The desktop app works without one.</p><a class="pill dark" id="choose-download" href="'+downloadPage+'">Download Fri <span aria-hidden="true">↓</span></a>';
-    $('#choose-download').addEventListener('click',()=>dialog.close());
+  const dialog=$('#info-dialog'), dialogContent=$('#dialog-content');
+  function showDialog(title){
+    $('#dialog-title').textContent=title;
     if(!dialog.open)dialog.showModal();
     $('.dialog-close').focus();
+  }
+  $('#mac-download').addEventListener('click',e=>{
+    if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;
+    e.preventDefault();
+    dialogContent.replaceChildren($('#mac-download-options').content.cloneNode(true));
+    showDialog('macOS');
+  });
+  $('[data-dialog="signup"]').addEventListener('click',()=>{
+    dialogContent.innerHTML='<p>Accounts aren’t open yet. The desktop app works without one.</p><a class="pill dark" id="choose-download" href="'+downloadPage+'">Download Fri <span aria-hidden="true">↓</span></a>';
+    $('#choose-download').addEventListener('click',()=>dialog.close());
+    showDialog('Your space. Soon.');
   });
   $('.dialog-close').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('click',e=>{const r=dialog.getBoundingClientRect();if(e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))dialog.close()});

@@ -7,3 +7,7 @@ desktop/ui/
 desktop/test-results/
 
 website/public/
+
+# Local Day provider credentials; the example contains no key.
+.env.day
+day.env

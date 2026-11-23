@@ -9,11 +9,12 @@ const index=await readFile(path.join(here,'../index.html'),'utf8');
 const domain=[...index.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].find(m=>/const FriDomain\s*=/.test(m[1]))[1]+'\nwindow.FriDomain=FriDomain;';
 const planning=await readFile(path.join(here,'planning.cjs'),'utf8'),intake=await readFile(path.join(here,'intake.js'),'utf8');
 const native=await readFile(path.join(here,'native.js'),'utf8');
+const dayCore=await readFile(path.join(here,'../desktop/day-core.cjs'),'utf8'),day=await readFile(path.join(here,'day.js'),'utf8');
 const chrome=await readFile(path.join(here,'chrome.js'),'utf8');
 let html = await readFile(path.join(here,'shell.html'),'utf8');
-const css=(await readFile(path.join(here,'style.css'),'utf8'))+'\n'+(await readFile(path.join(here,'brand.css'),'utf8')),app=await readFile(path.join(here,'app.js'),'utf8');
+const css=(await readFile(path.join(here,'style.css'),'utf8'))+'\n'+(await readFile(path.join(here,'brand.css'),'utf8'))+'\n'+(await readFile(path.join(here,'day.css'),'utf8')),app=await readFile(path.join(here,'app.js'),'utf8');
 html=html.replace('/*__CSS__*/',()=>css)
-  .replace('/*__APP__*/',()=>domain+'\n'+planning+'\n'+intake+'\n'+native+'\n'+app)
+  .replace('/*__APP__*/',()=>domain+'\n'+planning+'\n'+intake+'\n'+native+'\n'+dayCore+'\n'+day+'\n'+app)
   .replace('/*__CHROME__*/',()=>chrome)
   .replace('/*__GRADIENT__*/',()=>bundle.outputFiles[0].text.replace(/<\/script/gi,'<\\/script'))
   .replaceAll('__DAY_IMAGE__','data:image/png;base64,'+(await readFile(path.join(here,'assets/day.png'))).toString('base64'));

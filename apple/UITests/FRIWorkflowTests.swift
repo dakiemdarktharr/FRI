@@ -1,8 +1,61 @@
 import XCTest
+#if os(iOS)
+import UIKit
+#endif
 
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
     #if os(iOS)
+    func testSidebarGradientMotionAndPause() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        guard app.frame.width >= 1000 else { throw XCTSkip("Requires a wide iPad sidebar") }
+        let settings = app.buttons["fri.sidebar.settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 8))
+        func setMotion(_ enabled: Bool) {
+            settings.tap()
+            let motion = app.switches["Gentle motion"]
+            reveal(motion, in: app, form: "fri.settings.form")
+            if (motion.value as? String == "1") != enabled {
+                motion.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+            }
+            app.buttons["Close"].firstMatch.tap()
+        }
+        func edgePixels() throws -> Data {
+            let screenshot = XCUIScreen.main.screenshot().image
+            let oriented = UIGraphicsImageRenderer(size: screenshot.size).image { _ in
+                screenshot.draw(in: CGRect(origin: .zero, size: screenshot.size))
+            }
+            let cg = try XCTUnwrap(oriented.cgImage)
+            let scale = CGFloat(cg.width) / app.frame.width
+            // The sidebar's inner left edge has no text, clock or controls.
+            let rect = CGRect(x: 4, y: 100, width: 8, height: app.frame.height - 200)
+                .applying(CGAffineTransform(scaleX: scale, y: scale)).integral
+            let crop = UIImage(cgImage: try XCTUnwrap(cg.cropping(to: rect)))
+            let attachment = XCTAttachment(image: crop)
+            attachment.name = "Sidebar-edge"; attachment.lifetime = .keepAlways; add(attachment)
+            return try XCTUnwrap(crop.pngData())
+        }
+        setMotion(false)
+        Thread.sleep(forTimeInterval: 1)
+        let still = try edgePixels()
+        Thread.sleep(forTimeInterval: 2)
+        XCTAssertEqual(still, try edgePixels(), "Gentle motion off must keep the Metal image stationary")
+        let paused = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        paused.name = "Sidebar-native-gradient-paused"; paused.lifetime = .keepAlways; add(paused)
+        setMotion(true)
+        let moving = try edgePixels()
+        Thread.sleep(forTimeInterval: 3)
+        XCTAssertNotEqual(moving, try edgePixels(), "The native GPU gradient must actually animate")
+        setMotion(false)
+    }
+
     func testCompactDayHeadingAndActions() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

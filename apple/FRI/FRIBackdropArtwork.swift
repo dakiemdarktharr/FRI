@@ -12,19 +12,12 @@ struct FRIBackdropArtwork: View {
     var body: some View {
         GeometryReader { proxy in
             ZStack {
-                if mode == "solid" {
-                    FRIColors.sidebar
-                } else {
-                    LinearGradient(colors: [FRIColors.sidebar, FRIColors.marsala.opacity(0.65), FRIColors.muted], startPoint: .topLeading, endPoint: .bottomTrailing)
-                }
+                FRIColors.sidebar
                 if mode == "image", let bitmap {
                     artwork(Image(decorative: bitmap, scale: 1), size: proxy.size)
                 } else if mode != "solid" {
-                    TimelineView(.animation(minimumInterval: 1.0 / 15, paused: reduced || !motion || scenePhase != .active)) { context in
-                        let y = reduced || !motion ? 0.72 : 0.65 + 0.17 * sin(context.date.timeIntervalSinceReferenceDate / 12)
-                        RadialGradient(colors: [FRIColors.marsala.opacity(0.4), FRIColors.cream.opacity(0.08), .clear],
-                                       center: UnitPoint(x: 0.19, y: y), startRadius: 5, endRadius: 320)
-                    }
+                    FRIGradientView(motion: motion && !reduced, active: scenePhase == .active)
+                        .allowsHitTesting(false)
                 }
             }.clipped()
         }.accessibilityHidden(true)

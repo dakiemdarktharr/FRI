@@ -120,7 +120,7 @@ if(!app.requestSingleInstanceLock()){app.quit();}else{
     const csp=JSON.parse(fs.readFileSync(path.join(uiPath,'csp.json'),'utf8'));
     protocol.handle('app',request=>{
       const widgetFiles={'app://fri/widget.html':'widget.html','app://fri/widget-select.html':'widget-select.html'};
-      if(widgetFiles[request.url]){const html=fs.readFileSync(path.join(__dirname,widgetFiles[request.url]),'utf8').replace(/\r\n?/g,'\n');const hash=require('node:crypto').createHash('sha256').update(html.match(/<script>([\s\S]*?)<\/script>/)[1]).digest('base64');return new Response(html,{headers:{'content-type':'text/html; charset=utf-8','Content-Security-Policy':"default-src 'none'; script-src 'sha256-"+hash+"'; style-src 'unsafe-inline'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"}})}
+      if(widgetFiles[request.url]){const html=fs.readFileSync(path.join(__dirname,widgetFiles[request.url]),'utf8').replace(/\r\n?/g,'\n').replace('<link rel="stylesheet" href="widget.css">',()=>'<style>'+fs.readFileSync(path.join(__dirname,'widget.css'),'utf8')+'</style>');const hash=require('node:crypto').createHash('sha256').update(html.match(/<script>([\s\S]*?)<\/script>/)[1]).digest('base64');return new Response(html,{headers:{'content-type':'text/html; charset=utf-8','Content-Security-Policy':"default-src 'none'; script-src 'sha256-"+hash+"'; style-src 'unsafe-inline'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"}})}
       if(request.url!==startURL)return new Response('Not found',{status:404});
       return new Response(fs.readFileSync(path.join(uiPath,'index.html')),{headers:{'content-type':'text/html; charset=utf-8','Content-Security-Policy':csp,'X-Content-Type-Options':'nosniff'}});
     });

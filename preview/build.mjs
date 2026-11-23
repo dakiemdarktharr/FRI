@@ -11,7 +11,7 @@ const planning=await readFile(path.join(here,'planning.cjs'),'utf8'),intake=awai
 const native=await readFile(path.join(here,'native.js'),'utf8');
 const chrome=await readFile(path.join(here,'chrome.js'),'utf8');
 let html = await readFile(path.join(here,'shell.html'),'utf8');
-const css=await readFile(path.join(here,'style.css'),'utf8'),app=await readFile(path.join(here,'app.js'),'utf8');
+const css=(await readFile(path.join(here,'style.css'),'utf8'))+'\n'+(await readFile(path.join(here,'brand.css'),'utf8')),app=await readFile(path.join(here,'app.js'),'utf8');
 html=html.replace('/*__CSS__*/',()=>css)
   .replace('/*__APP__*/',()=>domain+'\n'+planning+'\n'+intake+'\n'+native+'\n'+app)
   .replace('/*__CHROME__*/',()=>chrome)

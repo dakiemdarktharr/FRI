@@ -19,17 +19,16 @@ final class FRIDesktopWidgetManager: NSObject, NSWindowDelegate {
     private var panels: [UUID: NSPanel] = [:]
     private let defaultsKey: String
     private var terminating = false
-    private var terminationObserver: NSObjectProtocol?
 
     init(calendar: FRICalendarSession) {
         self.calendar = calendar
         let scope = calendar.synthetic ? (ProcessInfo.processInfo.environment["FRI_TEST_STORE_ID"] ?? "preview") : "calendar"
         defaultsKey = "FRI.DesktopWidgets.\(scope)"
         super.init()
-        terminationObserver = NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification,
-                                                                     object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.terminating = true }
-        }
+        NotificationCenter.default.addObserver(self, selector: #selector(applicationWillTerminate),
+                                               name: NSApplication.willTerminateNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(screenConfigurationChanged),
+                                               name: NSApplication.didChangeScreenParametersNotification, object: nil)
         if let data = UserDefaults.standard.data(forKey: defaultsKey),
            let saved = try? JSONDecoder().decode([Configuration].self, from: data) {
             configurations = Array(saved.prefix(12))
@@ -51,7 +50,19 @@ final class FRIDesktopWidgetManager: NSObject, NSWindowDelegate {
 
     func showAll() {
         if panels.isEmpty { add() }
-        else { panels.values.forEach { $0.orderFrontRegardless() }; panels.values.first?.makeKeyAndOrderFront(nil) }
+        else {
+            for panel in panels.values {
+                constrainToScreen(panel)
+                panel.orderFrontRegardless()
+            }
+            panels.values.first?.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    @objc private func applicationWillTerminate(_ notification: Notification) { terminating = true }
+
+    @objc private func screenConfigurationChanged(_ notification: Notification) {
+        for panel in panels.values { constrainToScreen(panel) }
     }
 
     private func open(_ configuration: Configuration) {
@@ -123,14 +134,9 @@ final class FRIDesktopWidgetManager: NSObject, NSWindowDelegate {
     }
 
     private func constrainToScreen(_ panel: NSPanel) {
-        guard let screen = panel.screen ?? NSScreen.main else { return }
-        let visible = screen.visibleFrame
-        var frame = panel.frame
-        frame.size.width = min(max(frame.width, 220), visible.width)
-        frame.size.height = min(max(frame.height, 140), visible.height)
-        frame.origin.x = min(max(frame.minX, visible.minX), visible.maxX - frame.width)
-        frame.origin.y = min(max(frame.minY, visible.minY), visible.maxY - frame.height)
-        panel.setFrame(frame, display: true)
+        // Read current visible frames each time; Dock/menu bar and display settings can change.
+        let frame = DesktopWidgetPlacement.fitting(panel.frame, visibleFrames: NSScreen.screens.map(\.visibleFrame))
+        if frame != panel.frame { panel.setFrame(frame, display: true) }
     }
 
     func windowWillClose(_ notification: Notification) {

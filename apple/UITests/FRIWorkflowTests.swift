@@ -1269,6 +1269,81 @@ final class FRIWorkflowTests: XCTestCase {
         #endif
     }
 
+    func testPublicCalendarLinkReviewPersistenceAndDuplicate() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["FRI_IMPORT_NETWORK_TESTS"] == "1",
+                          "Opt in to a real public HTTPS calendar request")
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        app.launch()
+        XCTAssertTrue(app.descendants(matching: .any)["fri.calendar.content"].waitForExistence(timeout: 15))
+        func openImport() {
+            #if os(macOS)
+            app.menuBars.menuBarItems["File"].click()
+            app.menuItems["Import Plans…"].click()
+            #else
+            app.buttons["fri.actions"].tap()
+            app.buttons["Import plans"].tap()
+            #endif
+            XCTAssertTrue(app.textFields["fri.import.link"].waitForExistence(timeout: 8))
+        }
+        func read(_ url: String) {
+            let field = app.textFields["fri.import.link"]
+            reveal(field, in: app, form: "fri.import.form")
+            field.tap(); field.typeText(url + "\n")
+            let read = app.buttons["fri.import.readLink"]
+            reveal(read, in: app, form: "fri.import.form"); read.tap()
+        }
+        openImport()
+        XCTAssertFalse(app.buttons["fri.import.readLink"].isEnabled)
+        read("https://127.0.0.1/calendar.ics")
+        let rejection = app.staticTexts["FRI cannot read links on private or local networks."]
+        reveal(rejection, in: app, form: "fri.import.form")
+        XCTAssertTrue(rejection.waitForExistence(timeout: 15))
+        XCTAssertFalse(app.buttons["fri.import.accept"].exists)
+        app.buttons["Close"].firstMatch.tap()
+
+        // Pinned upstream ical.js fixture: one 60-minute event, 2012-06-30
+        // 06:00 America/Los_Angeles. No fixture or network stub enters the app.
+        let url = "https://raw.githubusercontent.com/kewisch/ical.js/4b28e296c6f2e9742fcde82fd2cde39b9ad382da/samples/minimal.ics"
+        let name = "Really long event name thing"
+        openImport(); read(url)
+        let title = app.textFields["fri.editor.title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 40), app.debugDescription)
+        XCTAssertEqual(title.value as? String, name)
+        let start = try XCTUnwrap(ISO8601DateFormatter().date(from: "2012-06-30T13:00:00Z"))
+        let localTime = DateFormatter()
+        localTime.locale = Locale(identifier: "en_US_POSIX")
+        localTime.timeZone = .current
+        localTime.dateFormat = "HH:mm"
+        reveal(app.textFields["fri.editor.time"], in: app, form: "fri.import.form")
+        XCTAssertEqual(app.textFields["fri.editor.time"].value as? String, localTime.string(from: start))
+        XCTAssertTrue(app.staticTexts["Time (HH:mm)"].exists)
+        reveal(app.textFields["fri.editor.duration"], in: app, form: "fri.import.form")
+        XCTAssertEqual(app.textFields["fri.editor.duration"].value as? String, "60")
+        XCTAssertTrue(app.staticTexts["Duration in minutes"].exists)
+        let reviewed = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        reviewed.name = "Public-HTTPS-calendar-review"; reviewed.lifetime = .keepAlways; add(reviewed)
+        let accept = app.buttons["fri.import.accept"]
+        reveal(accept, in: app, form: "fri.import.form"); accept.tap()
+        let cards = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'fri.card.' AND label CONTAINS %@", name))
+        let card = cards.firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 10), app.debugDescription)
+        app.terminate(); app.launch()
+        XCTAssertTrue(card.waitForExistence(timeout: 15), "Imported event must survive a relaunch")
+        openImport(); read(url)
+        XCTAssertTrue(title.waitForExistence(timeout: 40))
+        reveal(accept, in: app, form: "fri.import.form"); accept.tap()
+        let duplicate = app.staticTexts["This source is already in your calendar or saved drafts."]
+        reveal(duplicate, in: app, form: "fri.import.form")
+        XCTAssertTrue(duplicate.waitForExistence(timeout: 8))
+        app.buttons["Close"].firstMatch.tap()
+        XCTAssertTrue(card.waitForExistence(timeout: 8))
+        XCTAssertEqual(Set(cards.allElementsBoundByIndex.map(\.identifier)).count, 1)
+        XCTAssertEqual(app.staticTexts["fri.day.progress"].label, "0 of 1 appointments done")
+    }
+
     func testTextImportRequiresExplicitDateAndReviewsOnlyAcceptedPlans() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -1287,10 +1362,23 @@ final class FRIWorkflowTests: XCTestCase {
         XCTAssertTrue(source.waitForExistence(timeout: 8))
         source.tap()
         source.typeText("QA text import 15:30")
+        XCTAssertEqual(source.value as? String, "QA text import 15:30")
+        #if os(iOS)
+        let hideKeyboard = app.keyboards.buttons["Hide keyboard"]
+        if hideKeyboard.waitForExistence(timeout: 2) {
+            hideKeyboard.tap()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        }
+        #endif
+        reveal(app.buttons["fri.import.reviewText"], in: app, form: "fri.import.form")
+        XCTAssertTrue(app.buttons["fri.import.reviewText"].isEnabled)
         app.buttons["fri.import.reviewText"].tap()
+        XCTAssertTrue(app.textFields["fri.editor.title"].waitForExistence(timeout: 5), app.debugDescription)
+        reveal(app.buttons["Use today"], in: app, form: "fri.import.form")
         XCTAssertTrue(app.buttons["Use today"].waitForExistence(timeout: 5))
         reveal(app.buttons["fri.import.accept"], in: app, form: "fri.import.form")
         app.buttons["fri.import.accept"].tap()
+        reveal(app.staticTexts["Enter a name and choose a date."], in: app, form: "fri.import.form")
         XCTAssertTrue(app.staticTexts["Enter a name and choose a date."].waitForExistence(timeout: 5))
         reveal(app.buttons["Use today"], in: app, form: "fri.import.form", upward: false)
         app.buttons["Use today"].tap()

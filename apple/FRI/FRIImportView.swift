@@ -38,7 +38,9 @@ struct FRIImportView: View {
                     }
                     Section("Calendar link") {
                         TextField("Public HTTPS calendar link", text: $link)
+                            .accessibilityIdentifier("fri.import.link")
                         Button("Read link") { fetchLink() }.disabled(link.isEmpty)
+                            .accessibilityIdentifier("fri.import.readLink")
                         Text("The calendar website receives your IP address. FRI reads direct public ICS or structured event links and blocks private networks and redirects.")
                             .friFont(.caption).foregroundStyle(.secondary)
                     }

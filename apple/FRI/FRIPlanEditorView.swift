@@ -279,7 +279,9 @@ struct FRIPlanFields: View {
 
     var body: some View {
         Section("Appointment") {
-            TextField("Name", text: $draft.title).accessibilityIdentifier("fri.editor.title")
+            labeledField("Name") {
+                TextField("Name", text: $draft.title).accessibilityIdentifier("fri.editor.title")
+            }
             Picker("Type", selection: Binding(get: { draft.isDeadline }, set: { deadline in
                 draft.kind = deadline ? "deadline" : "schedule"
                 if deadline { draft.duration = 0 }
@@ -294,14 +296,25 @@ struct FRIPlanFields: View {
                 Text("No date was found in the source. Choose a date above or use today.").friFont(.caption).foregroundStyle(.secondary)
                 Button("Use today") { draft.date = CalendarClock.day() }
             }
-            TextField("Time (HH:mm)", text: $draft.time).accessibilityIdentifier("fri.editor.time")
-            if !draft.isDeadline {
-                TextField("Duration in minutes", value: $draft.duration, format: .number)
-                    .accessibilityIdentifier("fri.editor.duration")
+            labeledField("Time (HH:mm)") {
+                TextField("Time (HH:mm)", text: $draft.time).accessibilityIdentifier("fri.editor.time")
             }
-            TextField("Category", text: $draft.category)
-            TextField("Location", text: $draft.location)
-            TextField("Notes", text: $draft.notes, axis: .vertical)
+            if !draft.isDeadline {
+                labeledField("Duration in minutes") {
+                    TextField("Duration in minutes", value: $draft.duration, format: .number)
+                        .accessibilityIdentifier("fri.editor.duration")
+                }
+            }
+            labeledField("Category") { TextField("Category", text: $draft.category) }
+            labeledField("Location") { TextField("Location", text: $draft.location) }
+            labeledField("Notes") { TextField("Notes", text: $draft.notes, axis: .vertical) }
+        }
+    }
+
+    private func labeledField<Content: View>(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title).friFont(.caption).foregroundStyle(.secondary)
+            content()
         }
     }
 }

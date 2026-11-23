@@ -34,7 +34,7 @@
   function showRoute(route,push=false){
     activeRoute=route;const pricing=route==='pricing';$('#home-page').hidden=pricing;$('#pricing-page').hidden=!pricing;
     document.body.classList.toggle('pricing-view',pricing);$('.topbar .nav-link[data-route]').setAttribute('aria-current',pricing?'page':'false');
-    $('.topbar .brand').setAttribute('href',location.protocol==='file:'?'#home':'/');document.title=pricing?'Pricing â€” Fri.':'Fri. â€” Less noise. More life.';
+    $('.topbar .brand').setAttribute('href',location.protocol==='file:'?'#home':'/');document.title=pricing?'Pricing — Fri.':'Fri. — Less noise. More life.';
     if(push){const dest=location.protocol==='file:'?(pricing?'#pricing':'#home'):(pricing?'/pricing/':'/');history.pushState({route},'',dest)}
     scrollTo(0,0);if(!pricing)resizeSea();measureFooter();footerReveal();
     const downloads=!pricing&&location.hash==='#downloads'?$('#downloads'):null;

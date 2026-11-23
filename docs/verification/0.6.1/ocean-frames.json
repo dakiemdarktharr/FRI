@@ -1,0 +1,7 @@
+{
+  "frames": 276,
+  "identicalAdjacent": 0,
+  "minMeanPixelDifference": 0.012670366043613707,
+  "sample": "(frame + 0.5) / 30 seconds",
+  "seekTimeouts": 0
+}

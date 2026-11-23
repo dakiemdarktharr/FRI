@@ -1,6 +1,6 @@
 # FRI on Apple — Codex handoff
 
-Research date: 2026-11-23. This is an implementation and acceptance specification, not a claim that native Apple targets already exist. Windows 0.4.0 is the reference; inspect its final release verification before starting. Day development is deferred. Preserve shipped calendar behavior and the approved monochrome app. Marketing uses white/marsala; Premium is **50,000 VND/month, coming soon**, without a payment backend.
+Research date: 2026-11-23. This is an implementation and acceptance specification, not a claim that native Apple targets already exist. Windows 0.6.1 is the current reference; inspect its release verification and import addendum before starting. Preserve the shipped calendar behavior and ivory/charcoal/marsala design with an actual glass workspace and opaque controls. This handoff does not authorize new Day development. Marketing uses white/marsala; Premium is **50,000 VND/month, coming soon**, without a payment backend.
 
 Read in order:
 
@@ -26,6 +26,6 @@ Also read ../fri_design_guidebook.pdf, ../privacy.md, ../../desktop/store.cjs, .
 
 No Xcode project, provisioned App IDs, distribution certificates or physical-device validation exist in this Windows handoff. Create and verify them on the Mac. Commands in these guides are instructions, not execution receipts.
 
-## 0.6 import parity update
+## 0.6.1 import parity update
 
 Read [smart import](../smart-import.md) before building the next Apple client. Port the normalized records, missing-field cards, fixed-time conflict rules, deadline preparation planning, past filtering, ICS recurrence and synthetic tests. Native source access needs WKWebView/WKWebsiteDataStore with explicit user sign-in; keep cookies and API credentials in appropriate Keychain/App Group boundaries. Do not copy Windows ciphertext into a Mac/iOS keychain. On macOS Electron, verify source-browser menu access and repeated authenticated reads; Windows verification alone does not establish Apple support. No SwiftUI/WidgetKit/Android implementation of this new import flow is claimed.

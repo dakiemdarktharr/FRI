@@ -179,7 +179,33 @@
     requestAnimationFrame(frame);
   }
   reduced.addEventListener('change',()=>{if(reduced.matches){paused=true;syncVideo();updatePause()}});
-  window.FRI_WEBSITE.review={async seek(seconds){reviewFrozen=true;elapsed=seconds*1000;lastKey='';renderDemo();const v=$('#surf');v.pause();if(v.readyState<2)await Promise.race([new Promise(r=>v.addEventListener('loadeddata',r,{once:true})),new Promise(r=>setTimeout(r,1500))]);if(v.readyState<2){window.FRI_MOTION?.render(seconds,true);return}const time=Number.isFinite(v.duration)?seconds%v.duration:0;if(Math.abs(v.currentTime-time)>.001)await new Promise(resolve=>{let timer;const done=ok=>{clearTimeout(timer);v.removeEventListener('seeked',onSeek);v.removeEventListener('error',onError);if(!ok)evidence.reviewSeekTimeouts=(evidence.reviewSeekTimeouts||0)+1;resolve()};const onSeek=()=>done(true),onError=()=>done(false);v.addEventListener('seeked',onSeek,{once:true});v.addEventListener('error',onError,{once:true});timer=setTimeout(()=>done(false),1500);v.currentTime=time});window.FRI_MOTION?.render(seconds,true)},resume(){reviewFrozen=false;if(!paused)$('#surf').play().catch(()=>{})},chapter:setChapter};
+  async function seekReviewFrame(seconds){
+    reviewFrozen=true;elapsed=seconds*1000;lastKey='';renderDemo();
+    const v=$('#surf');v.pause();
+    async function waitForMedia(event,predicate){
+      if(predicate())return;
+      await new Promise((resolve,reject)=>{
+        let timer;
+        const finish=error=>{clearTimeout(timer);v.removeEventListener(event,onReady);v.removeEventListener('error',onError);error?reject(error):resolve()};
+        const onReady=()=>{if(predicate())finish()},onError=()=>finish(Error('Ocean video could not decode the review frame.'));
+        v.addEventListener(event,onReady);v.addEventListener('error',onError);
+        // Frame review may run on a loaded software GPU. Never capture a stale frame on timeout.
+        timer=setTimeout(()=>{if(event==='seeked')evidence.reviewSeekTimeouts=(evidence.reviewSeekTimeouts||0)+1;finish(Error('Ocean frame review timed out.'))},5000);
+      });
+    }
+    if(v.readyState<2){
+      try{await waitForMedia('loadeddata',()=>v.readyState>=2)}
+      catch{evidence.reviewMediaUnavailable=true;window.FRI_MOTION?.render(seconds,true);return}
+    }
+    evidence.reviewMediaUnavailable=false;
+    const time=Number.isFinite(v.duration)?seconds%v.duration:0;
+    if(v.seeking||Math.abs(v.currentTime-time)>.001){
+      const ready=waitForMedia('seeked',()=>!v.seeking&&Math.abs(v.currentTime-time)<=.001);
+      v.currentTime=time;await ready;
+    }
+    window.FRI_MOTION?.render(seconds,true);
+  }
+  window.FRI_WEBSITE.review={seek:seekReviewFrame,resume(){reviewFrozen=false;if(!paused)$('#surf').play().catch(()=>{})},chapter:setChapter};
   requestAnimationFrame(frame);
   if(location.pathname.includes('/pricing')||['#pricing','#downloads'].includes(location.hash))enterSite();else startIntro();
 })();

@@ -19,7 +19,15 @@ Private images, account/course content, screenshots, keys, cookies and profile b
 - Desktop: **66 passed**; includes provider/source restrictions, encrypted persistence, planner, Day/updater and native window/widget operations.
 - Preview WebKit: **28 passed**. Packaged EXE: **6 passed**, covering native window, menus, calendar, opaque surfaces, Day and widget create/move/resize/Done/remove.
 - Actual installed 0.6.1: calendar/tasks and settings exactly matched the pre-upgrade state; six classes, key usability and authenticated UEH session survived. A further restart retained all six. [Upgrade receipt](verification/0.6.1/installer-upgrade.json).
-- Website and remote CI/publication receipts are pending the final validation pass.
+- Website: 9 interface checks on each engine, zero Chromium axe violations, plus 276 halftone frames. Initial 1.5-second seek waits timed out under load; the review helper now waits up to 5 seconds for decoded seeks and fails instead of capturing stale frames. Sampling frame midpoints avoids browser time-quantization at boundaries. The final 276 captures had zero seek timeouts and no identical adjacent frames; a contact sheet was visually inspected. [Frame measurements](verification/0.6.1/ocean-frames.json).
+- Windows WebKit lacks the local media codecs in this environment and uses the poster fallback; its UI tests do not establish video playback. Remote Linux WebKit playback is checked separately by CI. The responsive suite covers six viewport widths.
+- Production dependency audits for desktop and preview found zero vulnerabilities. ASAR inspection found all import/Day/update modules and no credentials or project tests.
+
+## Publication
+
+The Windows installer and static review files are published at [v0.6.1](https://github.com/dakiemdarktharr/FRI/releases/tag/v0.6.1). The Windows release asset SHA-256 matches the locally installed artifact; its updater manifest SHA-512 also matches. [PR #2](https://github.com/dakiemdarktharr/FRI/pull/2) merged as `6f7726176bdf77851d44dd66c6fd671f92c58c2a`; desktop source was verified at `2db7febc9fb30ab84374889d5f8920fb0f31df1c`.
+
+[Web CI](https://github.com/dakiemdarktharr/FRI/actions/runs/45190376250) passed Chromium and WebKit. [Desktop/container CI](https://github.com/dakiemdarktharr/FRI/actions/runs/45190376091) passed Windows and container; macOS passed native tests and is still packaging at this record. No new Mac artifact is advertised until verification completes. The separate web review-tool correction is documented in the final main-branch history; the release HTML assets retain their tagged source snapshot.
 
 ## Boundaries
 

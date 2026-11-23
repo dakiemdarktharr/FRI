@@ -140,6 +140,23 @@ public struct CalendarState: Codable, Equatable, Sendable {
 
     public init() {}
 
+    /// Desktop stores a data URL; early Apple builds stored a bare JPEG payload.
+    /// Prefer the legacy Apple photo when both keys exist, because those builds
+    /// retained the old desktop value when the user selected a replacement.
+    public var sidebarImageData: Data? {
+        let limit = 4 * 1024 * 1024
+        func decode(_ value: String) -> Data? {
+            guard value.utf8.count <= ((limit + 2) / 3) * 4,
+                  let data = Data(base64Encoded: value), !data.isEmpty, data.count <= limit else { return nil }
+            return data
+        }
+        if let legacy = settings["appleSidebarImage"]?.string, let data = decode(legacy) { return data }
+        guard let source = settings["image"]?.string,
+              let comma = source.firstIndex(of: ","),
+              ["data:image/png;base64", "data:image/jpeg;base64", "data:image/webp;base64"].contains(String(source[..<comma])) else { return nil }
+        return decode(String(source[source.index(after: comma)...]))
+    }
+
     private enum CodingKeys: CodingKey { case version, tasks, drafts, tabs, active, settings, widgets, collections, finished }
 
     public init(from decoder: any Decoder) throws {
@@ -195,7 +212,14 @@ public struct CalendarBackup: Codable, Sendable {
 
     public static func export(_ state: CalendarState) throws -> Data {
         try state.validate()
-        let data = try JSONEncoder().encode(Self(format: "fri-backup", schema: 1, state: state))
+        var portable = state
+        if let legacy = state.settings["appleSidebarImage"]?.string,
+           let bytes = Data(base64Encoded: legacy), !bytes.isEmpty,
+           bytes == state.sidebarImageData {
+            portable.settings["image"] = .string("data:image/jpeg;base64," + legacy)
+            portable.settings["appleSidebarImage"] = nil
+        }
+        let data = try JSONEncoder().encode(Self(format: "fri-backup", schema: 1, state: portable))
         guard data.count <= sizeLimit else { throw CalendarError.invalidBackup }
         return data
     }

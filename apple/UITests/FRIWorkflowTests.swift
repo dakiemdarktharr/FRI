@@ -3,6 +3,74 @@ import XCTest
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
     #if os(iOS)
+    func testSidebarPhotoBackupAndReplacement() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["FRI_PHOTO_PICKER_TESTS"] == "1",
+                          "Prepare synthetic Files fixtures using apple/Tools/PrepareSidebarPhotoFixtures.py and enable FRI_PHOTO_PICKER_TESTS.")
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        guard app.frame.width >= 1000 else { throw XCTSkip("Photo rendering inspection requires the wide iPad sidebar") }
+        func folder() {
+            XCTAssertTrue(app.otherElements["Browse View (Picker)"].waitForExistence(timeout: 10))
+            if app.cells.matching(NSPredicate(format: "label BEGINSWITH %@", "sidebar-desktop-backup")).firstMatch.exists { return }
+            let local = app.cells.matching(NSPredicate(format: "label IN %@", ["Trên iPad", "On My iPad"])).firstMatch
+            XCTAssertTrue(local.waitForExistence(timeout: 5)); local.tap()
+            let photos = app.cells.matching(NSPredicate(format: "label BEGINSWITH %@", "FRI QA Photos")).firstMatch
+            XCTAssertTrue(photos.waitForExistence(timeout: 8)); photos.doubleTap()
+        }
+        func selectFile(_ name: String) {
+            folder()
+            let file = app.cells.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
+            XCTAssertTrue(file.waitForExistence(timeout: 8)); file.tap()
+        }
+        func screenshot(_ name: String) {
+            XCTAssertTrue(app.buttons["fri.sidebar.settings"].waitForExistence(timeout: 8))
+            let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            shot.name = name; shot.lifetime = .keepAlways; add(shot)
+        }
+        app.buttons["fri.actions"].tap(); app.buttons["Restore backup"].tap()
+        selectFile("sidebar-desktop-backup")
+        XCTAssertTrue(app.alerts["Restore calendar?"].waitForExistence(timeout: 8))
+        app.alerts.buttons["Restore"].tap()
+        app.buttons["fri.sidebar.settings"].tap()
+        XCTAssertTrue(app.buttons["Remove sidebar photo"].waitForExistence(timeout: 8))
+        app.buttons["Close"].firstMatch.tap()
+        screenshot("Sidebar-desktop-photo")
+        app.terminate(); app.launch()
+        screenshot("Sidebar-desktop-photo-reopened")
+        app.buttons["fri.sidebar.settings"].tap()
+        let remove = app.buttons["Remove sidebar photo"]
+        XCTAssertTrue(remove.waitForExistence(timeout: 8))
+        app.buttons["Choose sidebar photo…"].tap()
+        selectFile("sidebar-bands")
+        XCTAssertTrue(remove.waitForExistence(timeout: 8))
+        app.buttons["Close"].firstMatch.tap()
+        screenshot("Sidebar-native-photo")
+        app.buttons["fri.actions"].tap(); app.buttons["Export backup"].tap()
+        folder()
+        let filename = app.textFields["DOCPicker.filenameTextField"]
+        XCTAssertTrue(filename.waitForExistence(timeout: 8)); filename.tap()
+        let exportName = "sidebar-native-export-" + UUID().uuidString
+        filename.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: (filename.value as? String ?? "").count) + exportName)
+        app.buttons["DOCPicker.actionButton"].tap()
+        XCTAssertTrue(app.buttons["fri.sidebar.settings"].waitForExistence(timeout: 8))
+        app.buttons["fri.sidebar.settings"].tap()
+        XCTAssertTrue(remove.waitForExistence(timeout: 8)); remove.tap()
+        XCTAssertFalse(remove.exists)
+        app.buttons["Close"].firstMatch.tap()
+        app.terminate(); app.launch()
+        screenshot("Sidebar-photo-removed")
+        app.buttons["fri.sidebar.settings"].tap()
+        XCTAssertTrue(app.buttons["Choose sidebar photo…"].waitForExistence(timeout: 8))
+        XCTAssertFalse(remove.exists)
+        print("SIDEBAR_EXPORTED_FILE " + exportName + ".json")
+    }
+
     func testAvailabilityFileWorkflow() throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["FRI_AVAILABILITY_PICKER_TESTS"] == "1",
                           "Prepare today's synthetic Files fixtures using apple/Tools/PrepareAvailabilityFixtures.py and enable FRI_AVAILABILITY_PICKER_TESTS.")

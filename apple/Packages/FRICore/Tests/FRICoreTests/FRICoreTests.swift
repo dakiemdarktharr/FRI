@@ -70,6 +70,31 @@ private func withStore(_ action: (CalendarStore, URL) async throws -> Void) asyn
     #expect(try Planning.Availability.compare(local, valid).isEmpty)
 }
 
+@Test func sidebarPhotosRemainPortableAcrossDesktopAndAppleBackups() throws {
+    let desktop = Data([0x89, 0x50, 0x4e, 0x47])
+    let apple = Data([0xff, 0xd8, 0xff, 0xd9])
+    var state = CalendarState()
+    state.settings["sidebar"] = .string("image")
+    state.settings["image"] = .string("data:image/png;base64," + desktop.base64EncodedString())
+    #expect(state.sidebarImageData == desktop)
+    #expect(try CalendarBackup.read(CalendarBackup.export(state)) == state)
+    state.settings["appleSidebarImage"] = .string(apple.base64EncodedString())
+    #expect(state.sidebarImageData == apple)
+    let restored = try CalendarBackup.read(CalendarBackup.export(state))
+    #expect(restored.settings["appleSidebarImage"] == nil)
+    #expect(restored.settings["image"]?.string == "data:image/jpeg;base64," + apple.base64EncodedString())
+    #expect(restored.sidebarImageData == apple)
+    #expect(state.settings["appleSidebarImage"] != nil) // Export must not mutate the live state.
+    state.settings["appleSidebarImage"] = nil
+    for invalid in ["https://example.com/photo.jpg", "data:image/svg+xml;base64,PHN2Zz4=", "data:image/png;base64,?", "data:image/png;base64,"] {
+        state.settings["image"] = .string(invalid)
+        #expect(state.sidebarImageData == nil)
+    }
+    let tooLarge = Data(repeating: 1, count: 4 * 1024 * 1024 + 1)
+    state.settings["image"] = .string("data:image/png;base64," + tooLarge.base64EncodedString())
+    #expect(state.sidebarImageData == nil)
+}
+
 @Test func backupKeepsSettingsDraftsAndLegacyTasks() throws {
     let windows = """
     {"format":"fri-backup","schema":1,"state":{"version":1,

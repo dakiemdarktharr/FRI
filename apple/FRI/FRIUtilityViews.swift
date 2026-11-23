@@ -296,15 +296,18 @@ struct FRIAppearanceView: View {
                     Picker("Sidebar background", selection: setting("sidebar", initial: "gradient")) {
                         Text("Moving gradient").tag("gradient")
                         Text("Solid charcoal").tag("solid")
-                        if calendar.state.settings["appleSidebarImage"] != nil { Text("My image").tag("image") }
-                    }
+                        if calendar.state.sidebarImageData != nil { Text("My image").tag("image") }
+                    }.accessibilityIdentifier("fri.settings.sidebar")
                     Text("Soft movement, a still color, or your own image.")
                         .friFont(.caption).foregroundStyle(.secondary)
                     Button("Choose sidebar photo…") { pickImage = true }
-                    if calendar.state.settings["appleSidebarImage"] != nil {
+                    Text("Photos you choose here are saved as a resized, still JPEG preview without the original file metadata.")
+                        .friFont(.caption).foregroundStyle(.secondary)
+                    if calendar.state.sidebarImageData != nil {
                         Button("Remove sidebar photo", role: .destructive) {
                             _ = calendar.change {
                                 $0.settings["appleSidebarImage"] = nil
+                                $0.settings["image"] = nil
                                 $0.settings["sidebar"] = .string("gradient")
                             }
                         }
@@ -365,9 +368,11 @@ struct FRIAppearanceView: View {
                         let url = try result.get()
                         let encoded = try await Task.detached { try FRIAppearanceView.thumbnail(at: url) }.value
                         _ = calendar.change {
-                            $0.settings["appleSidebarImage"] = .string(encoded)
+                            $0.settings["image"] = .string("data:image/jpeg;base64," + encoded)
+                            $0.settings["appleSidebarImage"] = nil
                             $0.settings["sidebar"] = .string("image")
                         }
+                        error = nil
                     } catch { self.error = error.localizedDescription }
                 }
             }

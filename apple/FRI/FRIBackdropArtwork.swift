@@ -1,9 +1,8 @@
 import SwiftUI
 import FRIDesign
+import ImageIO
 #if os(macOS)
 import AppKit
-#else
-import UIKit
 #endif
 
 struct FRIWindowBackdrop: View {
@@ -49,8 +48,9 @@ private struct FRIMacMaterial: NSViewRepresentable {
 
 struct FRIBackdropArtwork: View {
     let mode: String
-    let image: String?
+    let image: Data?
     let motion: Bool
+    @State private var bitmap: CGImage?
     @Environment(\.accessibilityReduceMotion) private var reduced
     @Environment(\.scenePhase) private var scenePhase
 
@@ -62,12 +62,8 @@ struct FRIBackdropArtwork: View {
                 } else {
                     LinearGradient(colors: [FRIColors.sidebar, FRIColors.marsala.opacity(0.65), FRIColors.muted], startPoint: .topLeading, endPoint: .bottomTrailing)
                 }
-                if mode == "image", let image, let data = Data(base64Encoded: image) {
-                    #if os(macOS)
-                    if let bitmap = NSImage(data: data) { artwork(Image(nsImage: bitmap), size: proxy.size) }
-                    #else
-                    if let bitmap = UIImage(data: data) { artwork(Image(uiImage: bitmap), size: proxy.size) }
-                    #endif
+                if mode == "image", let bitmap {
+                    artwork(Image(decorative: bitmap, scale: 1), size: proxy.size)
                 } else if mode != "solid" {
                     TimelineView(.animation(minimumInterval: 1.0 / 15, paused: reduced || !motion || scenePhase != .active)) { context in
                         let y = reduced || !motion ? 0.72 : 0.65 + 0.17 * sin(context.date.timeIntervalSinceReferenceDate / 12)
@@ -77,10 +73,25 @@ struct FRIBackdropArtwork: View {
                 }
             }.clipped()
         }.accessibilityHidden(true)
+        .task(id: image) {
+            bitmap = nil
+            guard let image else { return }
+            let decoded = await Task.detached(priority: .utility) {
+                guard let source = CGImageSourceCreateWithData(image as CFData, [kCGImageSourceShouldCache: false] as CFDictionary) else { return nil as CGImage? }
+                return CGImageSourceCreateThumbnailAtIndex(source, 0, [
+                    kCGImageSourceCreateThumbnailFromImageAlways: true,
+                    kCGImageSourceCreateThumbnailWithTransform: true,
+                    kCGImageSourceThumbnailMaxPixelSize: 720
+                ] as CFDictionary)
+            }.value
+            guard !Task.isCancelled else { return }
+            bitmap = decoded
+        }
     }
 
     private func artwork(_ image: Image, size: CGSize) -> some View {
-        image.resizable().scaledToFill().opacity(0.16)
-            .frame(width: size.width, height: size.height, alignment: .bottom).clipped()
+        image.resizable().scaledToFill()
+            .frame(width: size.width, height: size.height).clipped()
+            .overlay(FRIColors.sidebar.opacity(0.55))
     }
 }

@@ -267,7 +267,7 @@ struct FRIWorkspaceView: View {
         .foregroundStyle(FRIColors.cream)
         .background {
             FRIBackdropArtwork(mode: calendar.state.settings["sidebar"]?.string ?? "gradient",
-                               image: calendar.state.settings["appleSidebarImage"]?.string,
+                               image: calendar.state.sidebarImageData,
                                motion: calendar.state.settings["motion"]?.bool != false)
         }
         .overlay(alignment: .trailing) { Rectangle().fill(FRIColors.line.opacity(0.2)).frame(width: 1) }

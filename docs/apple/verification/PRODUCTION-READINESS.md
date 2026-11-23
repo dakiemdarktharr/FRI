@@ -18,9 +18,9 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 
 | Gate | Status / evidence |
 |---|---|
-| Native macOS debug build | PASS with planner and availability error handling, `/tmp/fri-availability-mac-final.log`; this is compilation evidence, not a new full-app Mac runtime pass |
-| Native iOS build after current edits | PASS, iPhone/iPad task planner and availability file-picker workflows 2026-11-23 19:36–19:58 UTC. Earlier Day/Spotify/Weather/calendar/widget UI passes are recorded below |
-| Core data regression | 33 core tests + 1 AppKit typography test passed, 1 opt-in network test skipped in current full run; live network passed separately earlier. Includes imported-draft recovery, invalid-restore preservation and cross-platform service-cache semantics |
+| Native macOS debug build | PASS with sidebar photo interoperability, `/tmp/fri-sidebar-photo-mac-final.log`; this is compilation evidence, not a new full-app Mac runtime pass |
+| Native iOS build after current edits | PASS, sidebar photo picker/backup workflow on iPad 2026-11-23 20:07 UTC and final build/run 20:09 UTC. Earlier iPhone/iPad Day/Spotify/Weather/calendar/widget UI passes are recorded below |
+| Core data regression | Current full run: 35 core tests and 8 AppKit design/placement tests passed; 1 opt-in network test skipped. Live network passed separately earlier. Includes imported-draft recovery, invalid-restore preservation, cross-platform caches and photo backup compatibility; `/tmp/fri-sidebar-photo-core-full.log` |
 | Mac create/edit/delete/undo | PASS via CUA with isolated synthetic store: create 10:00/60 min, edit Unicode title, delete 11:00/30 min appointment, Cmd-Z restores it |
 | Mac search and bulk actions | PASS: title/place/notes/category search, no-result feedback, Enter opens detail on correct date, Escape, two-item delete/Cancel/Undo, Finish day and reopening a completed item |
 | Mac overlapping appointments | PASS via CUA: 10:30 conflicts with 10:00–11:00; Change times opens review; 11:00 saves successfully |
@@ -43,6 +43,16 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 ## Current runtime isolation
 
 The native debug Mac run uses `FRI_SYNTHETIC_PREVIEW=1` and UUID-scoped `FRI_TEST_STORE_ID`. It does not touch the installed Electron application's calendar. Preview mode is excluded from Release. The fixed synthetic key must never be used for customer calendar data.
+
+## Sidebar photo interoperability — 2026-11-23 20:07 UTC
+
+- Fixed native sidebar ignoring desktop `settings.image` data URLs. Both desktop PNG/JPEG/WebP payloads and legacy native `appleSidebarImage` JPEG payloads are accepted with a 4 MiB decoded-data bound. Legacy native photos take precedence when both keys exist, preserving the replacement chosen in older native builds.
+- Newly selected photos and exported legacy photos now use the desktop `image` data URL representation. Export promotion changes only the exported copy; restoring/importing existing desktop encoded bytes preserves them. This is format interoperability; desktop 0.5's current restore handler still restores appointments only, as recorded above.
+- Display uses an Image I/O thumbnail bounded to 720 pixels, applying orientation while decoding off the main actor. New native photo selections retain the existing deliberate conversion to a resized still JPEG without source metadata; the Settings caption now states this. Original backup image bytes are not replaced by the display thumbnail.
+- Changed photo cover alignment to center and charcoal tint opacity to 0.55, matching the shipping desktop style. Inspected actual iPad screenshots before/after replacement and after removal: photo fills the sidebar, controls remain legible, removal restores the gradient. This does not certify the entire visual parity matrix, all image formats, or EXIF/HDR/color-profile behavior.
+- Real iPad Files workflow PASS: restore a desktop photo backup → confirm → display → quit/relaunch → choose a PNG → export backup → remove photo → quit/relaunch confirms removal. One XCTest passed, zero failed/skipped, 66.770 seconds of test execution. Result bundle: `~/Library/Developer/MobileBuildMCP/workspaces/MOMO-c7c317bd7fec/result-bundles/test_sim_2026-11-23T20-07-39-404Z_pid22065_e379f68e.xcresult`. Enable `FRI_PHOTO_PICKER_TESTS=1` after running `apple/Tools/PrepareSidebarPhotoFixtures.py` into the Simulator Files folder `FRI QA Photos`.
+- Read actual exported `sidebar-native-export-733D1276-9113-464D-BEB7-D2678A36F55D.json`: canonical JPEG data URL, no legacy key, sidebar mode `image`; decoded output is 10,576 bytes, 480 × 720. Evidence: `/tmp/fri-sidebar-photo-readback.log`, `/tmp/fri-sidebar-export.jpg`; inspected screenshots in `/tmp/fri-sidebar-photo-shots/`.
+- Targeted photo wire-format regression passed; full core regression log `/tmp/fri-sidebar-photo-core-full.log`. Final Mac compilation passed; iOS build/run passed after the caption refinement. Mac Computer Use was retried and still returned `cgWindowNotFound` for the QA bundle; no new Mac photo runtime pass is claimed. Broader visual, accessibility and release gates remain open.
 
 ## Remaining review matrix
 

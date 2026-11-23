@@ -1,0 +1,35 @@
+{
+  "checkedAt": "2026-11-23T14:39:45.323308+00:00",
+  "appRelease": "https://github.com/dakiemdarktharr/FRI/releases/tag/v0.6.1",
+  "appSource": "2db7febc9fb30ab84374889d5f8920fb0f31df1c",
+  "verifiedWebContentCommit": "6463ef4a3912d6a41ad38815de98bdb9e497ca15",
+  "productionAlias": "https://fri-acne-a6cd.vercel.app",
+  "verifiedDeployment": "https://fri-lk2j9w5yv-acne-a6cd.vercel.app",
+  "deploymentId": "dpl_F7S6Xp9aQtttRwwyLSyhQdjYRT5q",
+  "desktopContainerCI": {
+    "run": 45190376091,
+    "result": "success",
+    "platforms": [
+      "Windows x64",
+      "macOS Intel",
+      "Linux container"
+    ]
+  },
+  "finalWebCI": {
+    "run": 45195204907,
+    "result": "success",
+    "engines": [
+      "Chromium",
+      "WebKit"
+    ]
+  },
+  "publicDownloadChecks": {
+    "Windows": "HTTP 200",
+    "macOS Apple silicon": "HTTP 200",
+    "macOS Intel": "HTTP 200",
+    "HTML": "HTTP 200"
+  },
+  "windowsInstallerSHA256": "3500fe65dce33514bddf8f059cd192e00267d3ba1e617235ed0a6f59c378ecf6",
+  "signed": false,
+  "nativeAppleIOSImportParity": false
+}

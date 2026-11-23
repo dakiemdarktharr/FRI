@@ -62,4 +62,4 @@ v0.5 is a Windows-first, keyless release. Calendar data is encrypted locally wit
 
 Premium entitlement, account signup, OAuth/Spotify Web Playback SDK, Google Places/Routes APIs, automatic shared-calendar linking, cloud/multimodal Day AI and an iOS app are not shipped. Day provides local planning shortcuts and on-device spoken playback when a system voice is available. Recurrence expansion, overnight schedules and nested travel/context planning are not exposed in the new desktop interface. The earlier research workspace and its richer domain tests remain in index.html; the current desktop reuses its ICS/JSON-LD parser, not its entire separate data model.
 
-[Apple build and parity guide](docs/apple/00-START-HERE.md) · [0.4 verification](docs/release-verification-0.4.0.md) · [Current release scope](docs/release-plan.md) · [Technology](docs/technology.md) · [Ocean asset license](website/assets/NOTICE.md)
+[Apple build and parity guide](docs/apple/00-START-HERE.md) · [0.5 verification](docs/release-verification-0.5.0.md) · [Current release scope](docs/release-plan.md) · [Technology](docs/technology.md) · [Ocean asset license](website/assets/NOTICE.md)

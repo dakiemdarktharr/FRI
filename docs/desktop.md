@@ -1,12 +1,14 @@
-# Desktop ground truth — v0.5.0
+# Desktop ground truth — v0.6.0
 
 Updated 2026-11-23. Current behavior supersedes the historical records below.
 
 - Native Windows Direct3D refraction remains confined to the main workspace, with material/solid fallbacks. Appointment cards, controls, dialogs and widget surfaces are opaque ivory, charcoal and marsala.
 - Widgets keep fixed type sizes. A larger area reveals date/progress, integration slots and later plans instead of enlarging the UI; empty slots show +.
 - Maps uses an interactive OpenStreetMap view. Weather uses Open-Meteo for a chosen city. Music uses an isolated official Spotify Embed. Each opt-in service retains its provider disclosure and limitations.
-- Windows installer 116,943,574 bytes; unpacked app 337,372,537 bytes. Maximum compression and two English language resources reduce size without removing features.
-- [0.5 verification](release-verification-0.5.0.md) records packaged tests, upgrade preservation, CI and publication. Apple native widgets/signing remain separate. Android starts in [mobile/](../mobile/README.md) with its own local alpha scope.
+- Windows installer 116,980,487 bytes. Maximum compression and two English language resources reduce size without removing features.
+- [0.6 verification](release-verification-0.6.0.md) records packaged tests, upgrade preservation, CI and publication. Apple native widgets/signing remain separate. Android starts in [mobile/](../mobile/README.md) with its own local alpha scope.
+
+- Smart image/link import, protected-source sessions and deadline work planning are described in [smart import](smart-import.md).
 
 ## Historical v0.3 record
 

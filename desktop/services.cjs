@@ -4,11 +4,21 @@ async function json(url){const response=await fetch(url,{signal:AbortSignal.time
 const short=(s,max=100)=>{if(typeof s!=='string'||!s.trim()||s.length>max)throw Error('Enter a valid value');return s.trim()};
 function createServices({store,changed}){
  const maps=require('./maps.cjs').createMap();
+ const electron=require('electron'), ai=require('./ai-import.cjs').createAI({directory:electron.app.getPath('userData'),crypto:electron.safeStorage});
+ const sources=require('./source-browser.cjs').createSourceBrowser({directory:electron.app.getPath('userData')});
  let music=null,musicUrl=null,weatherGeneration=0,refreshing=false,lastRefreshAttempt=0;const notified=new Set(),lastCall=new Map();
  async function setting(key,value){const base=store.read().state,next=structuredClone(base);next.settings[key]=value;await store.commit(base,next);changed()}
  const timer=setInterval(()=>{const state=store.read().state;if(!state?.settings?.reminders)return;const now=new Date(),date=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');for(const t of state.tasks){const at=new Date(t.date+'T'+t.time+':00').getTime(),key=t.id+':'+at;if(t.done||t.date!==date||notified.has(key)||at-Date.now()>5*60000||at-Date.now() < -60000)continue;notified.add(key);if(Notification.isSupported())new Notification({title:'FRI · Coming up',body:state.settings.reminderDetails?t.title+' · '+t.time:'You have an appointment soon. Open FRI to view it.'}).show()}},15000);timer.unref();
  const weatherTimer=setInterval(async()=>{const w=store.read().state?.settings?.weather;if(!w||refreshing||Date.now()-w.fetchedAt<1800000||Date.now()-lastRefreshAttempt<300000)return;refreshing=true;lastRefreshAttempt=Date.now();try{await api.call('weather-forecast',{name:w.city,latitude:w.latitude,longitude:w.longitude})}catch{}finally{refreshing=false}},60000);weatherTimer.unref();
- const api={stop(){clearInterval(timer);clearInterval(weatherTimer);maps.close();music?.destroy()},async call(action,input){
+ const api={stop(){clearInterval(timer);clearInterval(weatherTimer);maps.close();music?.destroy();sources.close()},async call(action,input){
+  if(action==='ai-status')return ai.status();
+  if(action==='ai-extract')return ai.extract(input);
+  if(action==='ai-config'){const fs=require('node:fs/promises');try{await fs.access(ai.configPath)}catch{await fs.writeFile(ai.configPath,JSON.stringify({provider:'openai',apiKey:'',model:require('./ai-import.cjs').DEFAULT_MODEL,enabled:true},null,2))}await shell.openPath(ai.configPath);return true}
+  if(action==='source-read')return sources.read(input);
+  if(action==='source-related')return sources.related(input);
+  if(action==='source-open')return sources.open(input);
+  if(action==='source-sessions')return sources.list();
+  if(action==='source-forget')return sources.forget(input);
   if(action.startsWith('weather-')&&action!=='weather-disconnect'){const now=Date.now();if(now-(lastCall.get(action)||0)<750)throw Error('Please wait a moment before trying again.');lastCall.set(action,now)}
   if(action==='read-source')return require('./public-source.cjs').readPublicSource(input);
   if(action==='ocr')return require('./ocr.cjs').recognize(input,require('electron').app.getPath('userData'));

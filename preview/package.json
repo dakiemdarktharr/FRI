@@ -5,12 +5,13 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node --test preview.test.cjs intake.test.cjs"
+    "test": "node --test preview.test.cjs intake.test.cjs import-plan.test.cjs calendar-source.test.cjs"
   },
   "dependencies": {
     "@react-three/fiber": "9.8.2",
     "@shadergradient/react": "2.4.20",
     "camera-controls": "^3.1.2",
+    "ical.js": "2.2.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "three": "^0.182.0",

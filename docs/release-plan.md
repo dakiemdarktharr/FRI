@@ -2,7 +2,11 @@
 
 Updated 23 November 2026. Current user instruction authorizes GitHub commits, public web deployment on Vercel, desktop packaging and guidebook publication. Premium is **Coming soon**, with no billing. Spotify/Google/account/signing credentials are not available; implement and verify the parts that need no keys first. Never claim keyed integrations are live before configuring and testing them.
 
-## Current milestone — v0.5.0 and Android local alpha
+## Current milestone — v0.6.0 smart import
+
+Windows 0.6 adds optional OpenAI image/page extraction, isolated source sign-in, encrypted remembered cookies, missing-field cards, local deadline planning, past filtering and richer ICS handling. [Behavior and limits](smart-import.md). macOS download remains the previously tested 0.5 development build; Apple/Android import parity is not yet implemented.
+
+## Previous milestone — v0.5.0 and Android local alpha
 
 Desktop 0.5.0 and the revised website are released. Eight answer-led product sections use headlines and motion diagrams. Fri colors pair an actual glass workspace with opaque cards and controls. Desktop widgets reveal more content with size; empty slots use +. The installer is 6.8% smaller and unpacked footprint 12.9% smaller.
 

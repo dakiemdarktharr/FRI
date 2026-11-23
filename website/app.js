@@ -3,8 +3,9 @@
   const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const site=$('#site'), intro=$('#intro'), noise=$('#noise'), quiet=$('#quiet');
-  const release='https://github.com/dakiemdarktharr/FRI/releases/download/v0.5.0/';
-  const releases='https://github.com/dakiemdarktharr/FRI/releases/tag/v0.5.0';
+  const release='https://github.com/dakiemdarktharr/FRI/releases/download/v0.6.0/';
+  const macRelease='https://github.com/dakiemdarktharr/FRI/releases/download/v0.5.0/';
+  const releases='https://github.com/dakiemdarktharr/FRI/releases/tag/v0.6.0';
   const evidence={spamDuration:1300,events:[],demoFrames:0,seaFrames:0,os:'',entered:false};
   window.FRI_WEBSITE={evidence};
   site.inert=true;
@@ -94,7 +95,7 @@
   });
   $('.skip-link').addEventListener('click',()=>{if(!entered)enterSite()});
 
-  // Downloads use published v0.5.0 artifacts. CPU architecture is never guessed.
+  // Windows uses v0.6.0; macOS remains on the separately tested v0.5.0 development build. CPU architecture is never guessed.
   const platform=(navigator.userAgentData?.platform||navigator.platform||navigator.userAgent).toLowerCase();
   const touchMac=platform.includes('mac')&&navigator.maxTouchPoints>1;
   const os=platform.includes('win')?'windows':platform.includes('mac')&&!touchMac?'macos':'other';
@@ -103,12 +104,12 @@
   const label=os==='windows'?'Download for Windows':os==='macos'?'Download for macOS':'Download Fri';
   $$('.download').forEach(a=>{
     a.querySelector('.download-label').textContent=label;
-    if(os==='windows'){a.href=release+'FRI-0.5.0-win-x64.exe';a.querySelector('.os-icon').innerHTML=iconWindows;a.querySelector('.os-icon').style.width='15px'}
+    if(os==='windows'){a.href=release+'FRI-0.6.0-win-x64.exe';a.querySelector('.os-icon').innerHTML=iconWindows;a.querySelector('.os-icon').style.width='15px'}
     else {a.href=releases;a.addEventListener('click',e=>{e.preventDefault();openDialog('download')})}
   });
   const dialog=$('#info-dialog');
   function options(){
-    return '<div class="download-options"><a class="download-option" href="'+release+'FRI-0.5.0-win-x64.exe"><span>Windows<small>x64 · Unsigned</small></span><span>↓</span></a><a class="download-option" href="'+release+'FRI-0.5.0-mac-arm64.dmg"><span>macOS<small>Apple silicon · Development build</small></span><span>↓</span></a><a class="download-option" href="'+release+'FRI-0.5.0-mac-x64.dmg"><span>macOS<small>Intel · Development build</small></span><span>↓</span></a></div>';
+    return '<div class="download-options"><a class="download-option" href="'+release+'FRI-0.6.0-win-x64.exe"><span>Windows<small>x64 · Unsigned</small></span><span>↓</span></a><a class="download-option" href="'+macRelease+'FRI-0.5.0-mac-arm64.dmg"><span>macOS<small>Apple silicon · Development build</small></span><span>↓</span></a><a class="download-option" href="'+macRelease+'FRI-0.5.0-mac-x64.dmg"><span>macOS<small>Intel · Development build</small></span><span>↓</span></a></div>';
   }
   function openDialog(type){
     if(type==='pricing'){
@@ -120,7 +121,7 @@
       $('#choose-download').addEventListener('click',()=>openDialog('download'));
     }else{
       $('#dialog-title').textContent='Take a little space.';
-      $('#dialog-content').innerHTML=options()+'<a class="dialog-release" href="'+releases+'" target="_blank" rel="noopener noreferrer">Version 0.5.0 · Release notes ↗</a>';
+      $('#dialog-content').innerHTML=options()+'<a class="dialog-release" href="'+releases+'" target="_blank" rel="noopener noreferrer">Windows 0.6.0 · Release notes ↗</a>';
     }
     if(!dialog.open)dialog.showModal();
     $('.dialog-close').focus();

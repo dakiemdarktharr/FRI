@@ -2,6 +2,48 @@ import XCTest
 
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
+    func testWidgetAutoFitAtEverySize() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_WIDGET_PREVIEW"] = "1"
+        app.launch()
+        #if os(macOS)
+        XCTAssertTrue(app.radioButtons["Small"].waitForExistence(timeout: 15))
+        #else
+        let sizes = app.segmentedControls["fri.widget.size"]
+        XCTAssertTrue(sizes.waitForExistence(timeout: 15))
+        #endif
+        for largeText in [false, true] {
+            if largeText {
+                #if os(macOS)
+                app.checkBoxes["Preview large text"].click()
+                #else
+                app.switches["Preview large text"].tap()
+                #endif
+            }
+            for size in ["Small", "Medium", "Large"] {
+                #if os(macOS)
+                app.radioButtons[size].click()
+                #else
+                sizes.buttons[size].tap()
+                #endif
+                let title = app.staticTexts["fri.widget.title"].firstMatch
+                let done = app.descendants(matching: .any)["fri.widget.done"].firstMatch
+                let preview = app.descendants(matching: .any)["fri.widget.preview"].firstMatch
+                XCTAssertTrue(title.waitForExistence(timeout: 3))
+                XCTAssertTrue(done.exists)
+                let bounds = preview.frame.insetBy(dx: -1, dy: -1)
+                XCTAssertTrue(bounds.contains(title.frame), "Title must fit \(size), large text: \(largeText)")
+                XCTAssertTrue(bounds.contains(done.frame), "Done must fit \(size), large text: \(largeText)")
+                let attachment = XCTAttachment(screenshot: app.screenshot())
+                attachment.name = "Widget-\(size)-largeText-\(largeText)"
+                attachment.lifetime = .keepAlways
+                add(attachment)
+            }
+        }
+    }
+
     func testDeadlineClarificationAndPersistence() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

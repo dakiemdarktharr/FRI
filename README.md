@@ -23,6 +23,10 @@ The Windows x64 workspace uses a guarded Direct3D desktop-refraction layer from 
 
 The [Android local alpha](mobile/README.md) starts with an Expo/React Native app, Kotlin/Room storage, native Compose configuration, and two Glance home-screen widgets. Read its [verification status](mobile/docs/verification.md) before relying on a feature. Android does not yet include all desktop integrations; APKs are local test builds, not a store release.
 
+## Native Apple development
+
+The `apple/FRI.xcodeproj` project contains SwiftUI macOS and iOS apps with embedded WidgetKit extensions. Select `FRIMac` or `FRIiOS` in Xcode. Native widgets adapt their content to the system size and Dynamic Type; the app includes size previews and native placement instructions. This is separate from the Electron download described above. Signed installation and shared App Group/Keychain verification still require the owning Apple Developer team. [Widget build and verification](docs/apple/verification/WIDGETS-2026-11-23.md).
+
 ## Develop and verify
 
 Use Node.js 24. Run commands from the repository root:

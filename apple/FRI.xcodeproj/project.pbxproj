@@ -23,13 +23,16 @@
 		50132F54CB07203841064B23 /* FRIMacWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FA17A58D3F8DDE5F4F0C1DF7 /* FRIMacWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		5ED4FA8052335CE3E6B9E093 /* FRIApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F187CB02BB0E038B703CE008 /* FRIApp.swift */; };
 		6292BBBBFF2B1936AD029586 /* FRIWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E6A093A9562979FC902AF2 /* FRIWorkflowTests.swift */; };
+		64BF26E983C44AB8EA51A791 /* FRIWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BAEC6BF9E2B8A9280E645C7 /* FRIWidgetContent.swift */; };
 		6E8584C03C13EEED7CD7651A /* FRIWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E6A093A9562979FC902AF2 /* FRIWorkflowTests.swift */; };
 		73577334302B193D5AE860F4 /* FRICompleteTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82CE1C7FFD8F3E9124F52232 /* FRICompleteTaskIntent.swift */; };
 		742A9BBFFB73A9E52A55CE13 /* FRIServicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FDC5569BA10EDCDB07AE7D9 /* FRIServicesView.swift */; };
 		81073E6A043F95F77F5BEFAD /* FRICore in Frameworks */ = {isa = PBXBuildFile; productRef = 5D1C65206F3BA0517545C7BF /* FRICore */; };
 		86B5B2584257FFDB185EB7F8 /* FRIDesign in Frameworks */ = {isa = PBXBuildFile; productRef = F939A185A4D93CC9EAD44D04 /* FRIDesign */; };
 		9E6BD96D5B4F47B6C11E085C /* FRIBackdropArtwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D136FF0073B214ECE0A2A66 /* FRIBackdropArtwork.swift */; };
+		A6EB3C271EEF511443A5CDCC /* FRIWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BAEC6BF9E2B8A9280E645C7 /* FRIWidgetContent.swift */; };
 		A8410D18CBE99EB182AEBB63 /* FRIWorkspaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F1B5D46497D7D064246138 /* FRIWorkspaceView.swift */; };
+		AB9E6F4FF71465A2E313910F /* FRIWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BAEC6BF9E2B8A9280E645C7 /* FRIWidgetContent.swift */; };
 		C1C04721D3A964419B0BE71E /* FRICore in Frameworks */ = {isa = PBXBuildFile; productRef = C77DAF069FF4678C20AA1B09 /* FRICore */; };
 		C386C7A1B6CC6C6A5910FFDB /* FRICalendarGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C43C4A035AAA8EB1A0277E6 /* FRICalendarGridView.swift */; };
 		C3B9E0109310570258AF952D /* FRICore in Frameworks */ = {isa = PBXBuildFile; productRef = E97ED3375431C052B4D7ECD3 /* FRICore */; };
@@ -45,6 +48,7 @@
 		E2E104CBB24CD42A94A5916D /* FRIUtilityViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200831043D48BD48B9EEAE58 /* FRIUtilityViews.swift */; };
 		E4475538FBF5B1C09E050A35 /* FRIiOSWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 17CCA72EA3562B08CE006A63 /* FRIiOSWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		EF9F8D14F6E5ECCFEA121312 /* FRIPlanEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F62E156B7FCB8DA9F19ABDE /* FRIPlanEditorView.swift */; };
+		F0910EF7FD01083CAEE88844 /* FRIWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BAEC6BF9E2B8A9280E645C7 /* FRIWidgetContent.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -113,6 +117,7 @@
 		31E6A093A9562979FC902AF2 /* FRIWorkflowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FRIWorkflowTests.swift; sourceTree = "<group>"; };
 		3C5BAFCD75D006CAE52A341C /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		4A65C1DBBDD305821ED10600 /* FRIImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FRIImportView.swift; sourceTree = "<group>"; };
+		4BAEC6BF9E2B8A9280E645C7 /* FRIWidgetContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FRIWidgetContent.swift; sourceTree = "<group>"; };
 		5D136FF0073B214ECE0A2A66 /* FRIBackdropArtwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FRIBackdropArtwork.swift; sourceTree = "<group>"; };
 		5E833F87841BBDB3A9FA0693 /* FRIDayWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FRIDayWidget.swift; sourceTree = "<group>"; };
 		5FDC5569BA10EDCDB07AE7D9 /* FRIServicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FRIServicesView.swift; sourceTree = "<group>"; };
@@ -192,6 +197,7 @@
 			isa = PBXGroup;
 			children = (
 				82CE1C7FFD8F3E9124F52232 /* FRICompleteTaskIntent.swift */,
+				4BAEC6BF9E2B8A9280E645C7 /* FRIWidgetContent.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -485,6 +491,7 @@
 			files = (
 				73577334302B193D5AE860F4 /* FRICompleteTaskIntent.swift in Sources */,
 				CFB707A3CFE773C0C5F0E3F5 /* FRIDayWidget.swift in Sources */,
+				AB9E6F4FF71465A2E313910F /* FRIWidgetContent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -494,6 +501,7 @@
 			files = (
 				CB99BC69DA8A7A10F2A3D27A /* FRICompleteTaskIntent.swift in Sources */,
 				C6938E8AAB5D5495D4AD0E7E /* FRIDayWidget.swift in Sources */,
+				64BF26E983C44AB8EA51A791 /* FRIWidgetContent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -509,6 +517,7 @@
 				EF9F8D14F6E5ECCFEA121312 /* FRIPlanEditorView.swift in Sources */,
 				0CC874FDFEEF1DD3CA8FABA6 /* FRIServicesView.swift in Sources */,
 				E2E104CBB24CD42A94A5916D /* FRIUtilityViews.swift in Sources */,
+				A6EB3C271EEF511443A5CDCC /* FRIWidgetContent.swift in Sources */,
 				06DA5C0DCC2A7AAE6DF7DF41 /* FRIWorkspaceView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -525,6 +534,7 @@
 				2C2745A6AB2DDBBFD95982C4 /* FRIPlanEditorView.swift in Sources */,
 				742A9BBFFB73A9E52A55CE13 /* FRIServicesView.swift in Sources */,
 				0838EE7ACEF6BD5AA671CEC7 /* FRIUtilityViews.swift in Sources */,
+				F0910EF7FD01083CAEE88844 /* FRIWidgetContent.swift in Sources */,
 				A8410D18CBE99EB182AEBB63 /* FRIWorkspaceView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

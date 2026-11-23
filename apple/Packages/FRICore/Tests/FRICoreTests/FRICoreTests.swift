@@ -192,3 +192,44 @@ func directPublicHTTPSConnectsUsingTheVerifiedHostname() async throws {
     let text = try await PublicCalendarSource.read("https://example.com/")
     #expect(text.contains("Example Domain"))
 }
+
+@Test func widgetPrioritizesActiveThenUpcomingAndCompletedState() throws {
+    let day = try #require(CalendarClock.date("2026-11-23"))
+    let now = try #require(CalendarClock.local.date(bySettingHour: 10, minute: 30, second: 0, of: day))
+    var state = CalendarState()
+    state.tasks = [task("Past", time: "08:00", duration: 30),
+                   task("Upcoming", time: "11:00", duration: 30),
+                   task("Active", time: "10:00", duration: 60)]
+    let snapshot = WidgetSnapshot(state: state, day: day, now: now)
+    #expect(snapshot.tasks.map(\.title) == ["Active", "Upcoming", "Past"])
+    #expect(snapshot.total == 3 && snapshot.completed == 0)
+    state.tasks = state.tasks.map { var item = $0; item.done = true; return item }
+    let completed = WidgetSnapshot(state: state, day: day, now: now)
+    #expect(completed.tasks.isEmpty && completed.completed == 3)
+    #expect(WidgetSnapshot(state: CalendarState(), day: day, now: now).total == 0)
+}
+
+@Test func widgetTimelineContainsStartsEndsAndStaysBounded() throws {
+    let day = try #require(CalendarClock.date("2026-11-23"))
+    let now = try #require(CalendarClock.local.date(bySettingHour: 8, minute: 0, second: 0, of: day))
+    var state = CalendarState()
+    state.tasks = [task("Read", time: "09:00", duration: 60), task("Walk", time: "10:00", duration: 30)]
+    let dates = WidgetSnapshot.refreshDates(state: state, day: day, now: now)
+    #expect(dates.map { CalendarClock.local.component(.hour, from: $0) } == [8, 9, 10, 10])
+    #expect(dates.count == Set(dates).count)
+    let tomorrow = try #require(CalendarClock.local.date(byAdding: .day, value: 1, to: day))
+    #expect(WidgetSnapshot.refreshDates(state: state, day: tomorrow, now: now) == [now])
+    state.tasks = (0..<100).map { task("Task \($0)", time: CalendarClock.time(500 + $0 * 5), duration: 2) }
+    #expect(WidgetSnapshot.refreshDates(state: state, day: day, now: now).count == 31)
+    #expect(WidgetSnapshot(state: state, day: day, now: now).tasks.count == 5)
+}
+
+@Test func widgetServicesRespectOptOutAndCachedAge() throws {
+    let day = try #require(CalendarClock.date("2026-11-23"))
+    var state = CalendarState()
+    state.settings["appleWeatherCache"] = .object(["summary": .string("Sunny"), "fetchedAt": .number(day.timeIntervalSince1970 - 3601)])
+    #expect(WidgetSnapshot(state: state, day: day, now: day).service == "Sunny · cached")
+    #expect(WidgetSnapshot(state: state, day: day, now: day, showServices: false).service == nil)
+    state.settings["activity"] = .object(["date": .string("2026-11-23"), "steps": .number(3200)])
+    #expect(WidgetSnapshot(state: state, day: day, now: day).service == "3200 steps")
+}

@@ -76,7 +76,12 @@ struct FRIWorkspaceView: View {
         .tint(colorScheme == .dark ? .white : .black)
         .environment(\.dynamicTypeSize, effectiveType)
         .background { FRIWindowBackdrop(enabled: glass).ignoresSafeArea() }
-        .task { calendar.open() }
+        .task {
+            calendar.open()
+            #if DEBUG
+            if ProcessInfo.processInfo.environment["FRI_WIDGET_PREVIEW"] == "1" { calendar.panel = .widget }
+            #endif
+        }
         .task(id: scenePhase) {
             if scenePhase == .active {
                 calendar.open()
@@ -102,7 +107,7 @@ struct FRIWorkspaceView: View {
             }
             case .manage: FRIManageView(tasks: dayTasks) { calendar.remove($0); calendar.panel = nil }
             case .importPlans: FRIImportView(calendar: calendar)
-            case .widget: FRIWidgetHelpView()
+            case .widget: FRIWidgetHelpView(calendar: calendar)
             case .appearance: FRIAppearanceView(calendar: calendar)
             case .services: FRIServicesView(calendar: calendar)
             case .planner: FRIPlannerView(calendar: calendar)

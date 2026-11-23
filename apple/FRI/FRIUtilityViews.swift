@@ -1,6 +1,7 @@
 import FRICore
 import ImageIO
 import SwiftUI
+import WidgetKit
 import UniformTypeIdentifiers
 
 struct FRISearchView: View {
@@ -124,19 +125,73 @@ struct FRIAvailabilityView: View {
 }
 
 struct FRIWidgetHelpView: View {
+    let calendar: FRICalendarSession
+    @State private var size = 0
+    @State private var useExample = true
+    @State private var largeText = false
+
+    private var family: WidgetFamily {
+        switch size {
+        case 1: .systemMedium
+        case 2: .systemLarge
+        default: .systemSmall
+        }
+    }
+
     var body: some View {
         FRISheetView(title: "Add FRI Widget") {
-            Form {
-                #if os(macOS)
-                Text("Control-click the desktop, choose Edit Widgets, then search for FRI and pick a size.")
-                #else
-                Text("Touch and hold the Home Screen, tap Edit, then Add Widget. Search for FRI and choose a size.")
-                #endif
-                Text("Tap the checkmark to finish the current appointment. Tap elsewhere on the widget to open its day in FRI.")
-                if ProcessInfo.processInfo.environment["FRI_SYNTHETIC_PREVIEW"] == "1" {
-                    Text("Development sample data is private to this preview.")
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("Auto fit").font(.title2.bold())
+                    Text("Your widget adapts to its size. The next appointment and Done stay first; more details appear when there is room.")
+                        .foregroundStyle(.secondary)
+                    Picker("Widget size", selection: $size) {
+                        Text("Small").tag(0)
+                        Text("Medium").tag(1)
+                        Text("Large").tag(2)
+                    }
+                    .pickerStyle(.segmented)
+                    .accessibilityIdentifier("fri.widget.size")
+                    Toggle("Example appointments", isOn: $useExample)
+                    Toggle("Preview large text", isOn: $largeText)
+                    GeometryReader { geometry in
+                        let width = min(geometry.size.width, size == 0 ? 160 : 340)
+                        FRIWidgetContent(
+                            snapshot: WidgetSnapshot(state: useExample ? .widgetSample : calendar.state,
+                                                     day: .now, now: .now),
+                            family: family
+                        ) {
+                            Image(systemName: "checkmark.circle.fill").font(.title2)
+                                .accessibilityLabel("Complete appointment preview")
+                        }
+                        .environment(\.dynamicTypeSize, largeText ? .accessibility1 : .large)
+                        .padding(16)
+                        .frame(width: width, height: size == 2 ? 340 : 160)
+                        .background(.background, in: RoundedRectangle(cornerRadius: 24))
+                        .overlay(RoundedRectangle(cornerRadius: 24).strokeBorder(.secondary.opacity(0.25)))
+                        .frame(maxWidth: .infinity)
+                        .accessibilityElement(children: .contain)
+                        .accessibilityIdentifier("fri.widget.preview")
+                    }
+                    .frame(height: size == 2 ? 340 : 160)
+                    Text("Size preview · add the actual widget from the system gallery. Preview controls do not change your appointments.")
+                        .font(.caption).foregroundStyle(.secondary)
+                    Divider()
+                    #if os(macOS)
+                    Text("Add to your desktop").font(.headline)
+                    Text("Control-click the desktop → Edit Widgets → FRI → choose a size. Drag the widget from the gallery onto your desktop.")
+                    Text("Move or resize").font(.headline)
+                    Text("Drag a desktop widget to move it. Control-click it to choose Small, Medium or Large, edit its date, or remove it.")
+                    #else
+                    Text("Add to your Home Screen").font(.headline)
+                    Text("Touch and hold the Home Screen → Edit → Add Widget → FRI. On iOS 17, tap + instead of Edit. Choose a size and tap Add Widget.")
+                    Text("Move or resize").font(.headline)
+                    Text("Touch and hold the widget, choose Edit Home Screen, then drag it to a new position. On iOS 18 or later, use the size choices in its menu. On iOS 17, remove it and add the size you want.")
+                    #endif
+                    Text("Tap the checkmark to finish an appointment. Tap elsewhere to open its day. Removing a widget keeps your appointments.")
                 }
-            }.formStyle(.grouped)
+                .padding(20)
+            }
         }
     }
 }

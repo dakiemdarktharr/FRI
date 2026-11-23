@@ -3,6 +3,67 @@ import XCTest
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
     #if os(iOS)
+    func testSidebarAndUpNextWithLargerText() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+        guard app.frame.width >= 1000 else { throw XCTSkip("Wide sidebar layout requires an iPad landscape destination") }
+        let settings = app.buttons["fri.sidebar.settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 8))
+        let google = app.buttons["fri.sidebar.google"]
+        reveal(google, in: app, form: "fri.sidebar.content")
+        let ordinaryHeight = google.frame.height
+        settings.tap()
+        let larger = app.switches["fri.settings.largeText"]
+        reveal(larger, in: app, form: "fri.settings.form")
+        larger.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        reveal(larger, in: app, form: "fri.settings.form")
+        XCTAssertEqual(larger.value as? String, "1")
+        app.buttons["Close"].firstMatch.tap()
+        XCTAssertTrue(settings.isHittable)
+        XCTAssertTrue(app.frame.contains(settings.frame))
+        XCTAssertGreaterThanOrEqual(settings.frame.height, 44)
+        XCTAssertGreaterThanOrEqual(app.buttons["fri.sidebar.services"].frame.height, 44)
+        reveal(google, in: app, form: "fri.sidebar.content")
+        XCTAssertGreaterThan(google.frame.height, ordinaryHeight * 1.25, "Quick-link text must wrap instead of truncating")
+        let music = app.buttons["fri.sidebar.music"]
+        reveal(music, in: app, form: "fri.sidebar.content")
+        XCTAssertTrue(settings.isHittable, "Settings must remain available while the sidebar scrolls")
+        music.tap()
+        XCTAssertTrue(app.buttons["Close"].firstMatch.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["Services"].firstMatch.exists)
+        app.buttons["Close"].firstMatch.tap()
+        let empty = app.staticTexts["fri.upNext.emptyMessage"]
+        reveal(empty, in: app, form: "fri.calendar.content")
+        XCTAssertGreaterThan(empty.frame.height, 60, "The narrow Up next card must show the complete multiline message")
+        XCTAssertTrue(app.frame.contains(empty.frame))
+        let upcoming = app.buttons["fri.upNext.toggle"]
+        reveal(upcoming, in: app, form: "fri.calendar.content")
+        let remaining = app.staticTexts["fri.upNext.remaining"]
+        XCTAssertGreaterThanOrEqual(upcoming.frame.height, 44)
+        XCTAssertGreaterThanOrEqual(upcoming.frame.minY, remaining.frame.maxY,
+                                    "The narrow card footer must stack rather than truncate its labels")
+        let beforeToggle = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        beforeToggle.name = "Up-next-before-toggle"; beforeToggle.lifetime = .keepAlways; add(beforeToggle)
+        upcoming.tap()
+        XCTAssertEqual(upcoming.value as? String, "Expanded")
+        upcoming.tap()
+        XCTAssertEqual(upcoming.value as? String, "Collapsed")
+        let card = app.descendants(matching: .any)["fri.upNext.card"].firstMatch
+        XCTAssertTrue(card.frame.contains(upcoming.frame), "The footer must remain inside the Up next card")
+        XCTAssertTrue(card.frame.contains(empty.frame), "The complete description must remain inside the card")
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = "Sidebar-and-Up-next-larger-text"; shot.lifetime = .keepAlways; add(shot)
+        settings.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.1)).tap()
+        reveal(larger, in: app, form: "fri.settings.form")
+        XCTAssertEqual(larger.value as? String, "1")
+    }
+
     func testDayConversationWithLargerTextAndKeyboard() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

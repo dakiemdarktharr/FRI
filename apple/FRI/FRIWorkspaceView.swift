@@ -211,51 +211,64 @@ struct FRIWorkspaceView: View {
 
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 18) {
-            HStack(alignment: .firstTextBaseline, spacing: 0) {
-                Text("fri").font(.system(size: 48, weight: .semibold)).tracking(-4)
-                Text(".").font(.system(size: 48, weight: .semibold)).foregroundStyle(FRIColors.marsala)
-                Spacer()
-                Button("Search appointments", systemImage: "magnifyingglass") { calendar.panel = .search }
-                    .labelStyle(.iconOnly).frame(width: 40, height: 40)
-                    .background(FRIColors.control, in: Circle())
-            }.padding(.bottom, 8)
-            dayButtons.frame(maxWidth: .infinity).padding(5)
-                .background(FRIColors.control, in: RoundedRectangle(cornerRadius: 18))
-            newMenu.frame(maxWidth: .infinity, alignment: .leading).padding(14)
-                .background(FRIColors.marsala, in: RoundedRectangle(cornerRadius: 16))
-            Text("YOUR SPACE").friFont(.caption2, weight: .semibold).tracking(2).padding(.top, 12)
-            navigation
-            if !calendar.state.collections.isEmpty {
-                Text("COLLECTIONS").friFont(.caption2, weight: .semibold).tracking(2)
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(Array(Set(calendar.state.collections.compactMap(\.string))).sorted(), id: \.self) { name in
-                            Button {
-                                calendar.collection = calendar.collection == name ? nil : name
-                                calendar.view = .day
-                            } label: {
-                                Label(name, systemImage: "folder").lineLimit(2)
-                                    .frame(maxWidth: .infinity, alignment: .leading).padding(8)
-                                    .background(calendar.collection == name ? FRIColors.marsala : .clear, in: RoundedRectangle(cornerRadius: 10))
-                            }.accessibilityAddTraits(calendar.collection == name ? .isSelected : [])
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    HStack(alignment: .firstTextBaseline, spacing: 0) {
+                        Text("fri").font(.system(size: 48, weight: .semibold)).tracking(-4)
+                        Text(".").font(.system(size: 48, weight: .semibold)).foregroundStyle(FRIColors.marsala)
+                        Spacer()
+                        Button("Search appointments", systemImage: "magnifyingglass") { calendar.panel = .search }
+                            .labelStyle(.iconOnly).frame(width: 40, height: 40)
+                            .background(FRIColors.control, in: Circle())
+                    }.padding(.bottom, 8)
+                    dayButtons.frame(maxWidth: .infinity).padding(5)
+                        .background(FRIColors.control, in: RoundedRectangle(cornerRadius: 18))
+                    newMenu.frame(maxWidth: .infinity, alignment: .leading).padding(14)
+                        .background(FRIColors.marsala, in: RoundedRectangle(cornerRadius: 16))
+                    Text("YOUR SPACE").friFont(.caption2, weight: .semibold).tracking(2).padding(.top, 12)
+                    navigation
+                    if !calendar.state.collections.isEmpty {
+                        Text("COLLECTIONS").friFont(.caption2, weight: .semibold).tracking(2)
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(Array(Set(calendar.state.collections.compactMap(\.string))).sorted(), id: \.self) { name in
+                                Button {
+                                    calendar.collection = calendar.collection == name ? nil : name
+                                    calendar.view = .day
+                                } label: {
+                                    Label(name, systemImage: "folder").fixedSize(horizontal: false, vertical: true)
+                                        .frame(maxWidth: .infinity, alignment: .leading).padding(8)
+                                        .background(calendar.collection == name ? FRIColors.marsala : .clear, in: RoundedRectangle(cornerRadius: 10))
+                                }.accessibilityAddTraits(calendar.collection == name ? .isSelected : [])
+                            }
                         }
                     }
-                }.frame(maxHeight: 110)
+                    Text("QUICK LINKS").friFont(.caption2, weight: .semibold).tracking(2).padding(.top, 10)
+                    Button("Google Calendar", systemImage: "link") {
+                        if let url = URL(string: "https://calendar.google.com") { openURL(url) }
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("fri.sidebar.google")
+                    .background(FRIColors.sidebar, in: RoundedRectangle(cornerRadius: 13))
+                    Button("A little focus music", systemImage: "music.note") { calendar.panel = .services }
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityIdentifier("fri.sidebar.music")
+                        .background(FRIColors.sidebar, in: RoundedRectangle(cornerRadius: 13))
+                }.frame(maxWidth: .infinity, alignment: .leading)
             }
-            Text("QUICK LINKS").friFont(.caption2, weight: .semibold).tracking(2).padding(.top, 10)
-            Button("Google Calendar", systemImage: "link") {
-                if let url = URL(string: "https://calendar.google.com") { openURL(url) }
-            }
-            .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-            .background(FRIColors.sidebar, in: RoundedRectangle(cornerRadius: 13))
-            Button("A little focus music", systemImage: "music.note") { calendar.panel = .services }
-                .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-                .background(FRIColors.sidebar, in: RoundedRectangle(cornerRadius: 13))
-            Spacer(minLength: 20)
+            .accessibilityIdentifier("fri.sidebar.content")
             HStack {
-                Button("Services", systemImage: "square.grid.2x2") { calendar.panel = .services }
-                Spacer()
-                Button("Settings", systemImage: "gearshape") { calendar.panel = .appearance }.labelStyle(.iconOnly)
+                Button { calendar.panel = .services } label: {
+                    Label("Services", systemImage: "square.grid.2x2")
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                }.accessibilityIdentifier("fri.sidebar.services")
+                Button { calendar.panel = .appearance } label: {
+                    Label("Settings", systemImage: "gearshape")
+                        .labelStyle(.iconOnly).frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }.accessibilityIdentifier("fri.sidebar.settings")
             }.padding(12).background(FRIColors.control, in: RoundedRectangle(cornerRadius: 18))
         }.buttonStyle(.plain).padding(18)
         .foregroundStyle(FRIColors.cream)
@@ -513,13 +526,20 @@ struct FRIWorkspaceView: View {
                 } else {
                     Rectangle().fill(FRIColors.line).frame(height: 3)
                     Text(dayTasks.isEmpty ? "A fresh page." : "Room to breathe.").friFont(.title2, weight: .medium)
+                        .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("fri.upNext.emptyTitle")
                     Text(dayTasks.isEmpty ? "Your next appointment will find a home here." : "You have finished every appointment. Enjoy this little moment.").friFont(.callout).foregroundStyle(FRIColors.muted)
+                        .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("fri.upNext.emptyMessage")
                 }
-                HStack {
-                    Text("\(dayTasks.count - complete) remaining").friFont(.caption)
-                    Spacer(minLength: 0)
-                    Button(showUpcoming ? "Less" : "Coming up") { showUpcoming.toggle() }
-                        .friFont(.caption).buttonStyle(.plain).foregroundStyle(FRIColors.muted)
+                ViewThatFits(in: .horizontal) {
+                    HStack {
+                        upNextRemaining
+                        Spacer(minLength: 8)
+                        upNextToggle
+                    }
+                    VStack(alignment: .leading, spacing: 8) {
+                        upNextRemaining
+                        upNextToggle
+                    }
                 }
                 if showUpcoming {
                     ForEach(dayTasks.filter { !$0.done && $0.id != nextID }) { item in
@@ -532,7 +552,9 @@ struct FRIWorkspaceView: View {
                     }
                 }
             }.padding(20).frame(maxWidth: .infinity, minHeight: 240, alignment: .topLeading)
+                .fixedSize(horizontal: false, vertical: true)
                 .modifier(FRISurface(glass: glass, radius: 26))
+                .accessibilityElement(children: .contain).accessibilityIdentifier("fri.upNext.card")
             }
             FRIServiceCardsView(calendar: calendar)
             Button("Add a widget", systemImage: "plus") { calendar.panel = .widget }
@@ -545,6 +567,20 @@ struct FRIWorkspaceView: View {
                 }.frame(maxWidth: .infinity)
             }.buttonStyle(.plain).accessibilityLabel("Talk to Day")
         }
+    }
+
+    private var upNextRemaining: some View {
+        Text("\(dayTasks.count - complete) remaining").friFont(.caption).fixedSize()
+            .accessibilityIdentifier("fri.upNext.remaining")
+    }
+
+    private var upNextToggle: some View {
+        Button { showUpcoming.toggle() } label: {
+            Text(showUpcoming ? "Less" : "Coming up").friFont(.caption).fixedSize()
+                .frame(minHeight: 44).contentShape(Rectangle())
+        }.buttonStyle(.plain).foregroundStyle(FRIColors.muted)
+            .accessibilityIdentifier("fri.upNext.toggle")
+            .accessibilityValue(showUpcoming ? "Expanded" : "Collapsed")
     }
 
     private var dayButtons: some View {

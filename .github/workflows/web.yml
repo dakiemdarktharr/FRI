@@ -14,6 +14,14 @@ jobs:
     name: ${{ matrix.browser }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    # Browsers and OS libraries are preinstalled; avoid slow apt mirrors during CI.
+    # Keep the image and the version check below aligned with tests/package-lock.json.
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
+      options: --ipc=host
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
@@ -30,7 +38,18 @@ jobs:
           cache: npm
           cache-dependency-path: tests/package-lock.json
       - run: npm ci --prefix tests
-      - run: npm exec --prefix tests -- playwright install --with-deps "$FRI_BROWSER"
+      - name: Verify bundled browser matches Playwright
+        run: |
+          node <<'NODE'
+          const assert = require('node:assert/strict');
+          const fs = require('node:fs');
+          const playwright = require('./tests/node_modules/playwright');
+          assert.equal(require('./tests/node_modules/playwright/package.json').version, '1.64.1',
+            'Update the pinned Playwright container when upgrading the test dependency');
+          const executable = playwright[process.env.FRI_BROWSER].executablePath();
+          assert.ok(fs.existsSync(executable), `Bundled browser missing: ${executable}`);
+          console.log(`Using bundled ${process.env.FRI_BROWSER}: ${executable}`);
+          NODE
       - if: matrix.browser == 'chromium'
         run: npm run test:domain --prefix tests
       - run: npm run test:browser --prefix tests

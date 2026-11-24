@@ -1,0 +1,38 @@
+[
+  {
+    "name": "desktop-258x698-t6.png",
+    "meanAbsoluteRGB": 0.4629043483411445,
+    "maxAbsoluteRGB": 1.0,
+    "pixelsOver2": 0
+  },
+  {
+    "name": "desktop-258x698-t18.png",
+    "meanAbsoluteRGB": 0.46219912189126555,
+    "maxAbsoluteRGB": 1.0,
+    "pixelsOver2": 0
+  },
+  {
+    "name": "desktop-258x698-t42.png",
+    "meanAbsoluteRGB": 0.4602056077534188,
+    "maxAbsoluteRGB": 1.0,
+    "pixelsOver2": 0
+  },
+  {
+    "name": "desktop-235x740-t6.png",
+    "meanAbsoluteRGB": 0.4630649798734905,
+    "maxAbsoluteRGB": 1.0,
+    "pixelsOver2": 0
+  },
+  {
+    "name": "desktop-235x740-t18.png",
+    "meanAbsoluteRGB": 0.46191489361702126,
+    "maxAbsoluteRGB": 1.0,
+    "pixelsOver2": 0
+  },
+  {
+    "name": "desktop-235x740-t42.png",
+    "meanAbsoluteRGB": 0.4587962430515622,
+    "maxAbsoluteRGB": 1.0,
+    "pixelsOver2": 0
+  }
+]

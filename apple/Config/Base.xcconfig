@@ -1,0 +1,8 @@
+FRI_BUNDLE_PREFIX = com.fri.calendar.native
+FRI_APP_GROUP = group.com.fri.calendar.native
+FRI_KEYCHAIN_GROUP = $(DEVELOPMENT_TEAM).$(FRI_BUNDLE_PREFIX).shared
+CODE_SIGN_STYLE = Automatic
+FRI_STORAGE_MODE = shared
+FRI_MAC_STORAGE_MODE = standalone
+FRI_MAC_ENTITLEMENTS = Config/MacStandalone.entitlements
+#include? "Local.xcconfig"

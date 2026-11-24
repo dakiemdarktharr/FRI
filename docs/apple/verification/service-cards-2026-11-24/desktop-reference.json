@@ -1,0 +1,51 @@
+[
+  {
+    "text": "MAPS\nExplore\n\nRestaurants and places in an area you choose.\n\nOpen Maps",
+    "background": "rgb(250, 247, 242)",
+    "color": "rgb(38, 35, 35)",
+    "padding": "20px",
+    "radius": "26px",
+    "width": 218,
+    "action": "Open Maps",
+    "buttonBackground": "rgb(233, 222, 215)"
+  },
+  {
+    "text": "HEALTH\nActivity\n\nSteps · manual entry\n\nUpdate steps",
+    "background": "rgb(250, 247, 242)",
+    "color": "rgb(38, 35, 35)",
+    "padding": "20px",
+    "radius": "26px",
+    "width": 218,
+    "action": "Update steps",
+    "buttonBackground": "rgb(233, 222, 215)"
+  },
+  {
+    "text": "SPOTIFY\nYour music\n\nBring a playlist into your day.\n\nOpen Spotify",
+    "background": "rgb(250, 247, 242)",
+    "color": "rgb(38, 35, 35)",
+    "padding": "20px",
+    "radius": "26px",
+    "width": 218,
+    "action": "Open Spotify",
+    "buttonBackground": "rgb(233, 222, 215)"
+  },
+  {
+    "text": "WEATHER\nWeather\n\nChoose a city for its forecast.\n\nChoose city",
+    "background": "rgb(250, 247, 242)",
+    "color": "rgb(38, 35, 35)",
+    "padding": "20px",
+    "radius": "26px",
+    "width": 218,
+    "action": "Choose city",
+    "buttonBackground": "rgb(233, 222, 215)"
+  },
+  {
+    "text": "UP NEXT\nA fresh page.\n\nYour next appointment will find a home here.\n\n0 remaining\nComing up",
+    "background": "rgb(250, 247, 242)",
+    "color": "rgb(38, 35, 35)",
+    "padding": "20px",
+    "radius": "26px",
+    "width": 218,
+    "buttonBackground": null
+  }
+]

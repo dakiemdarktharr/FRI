@@ -7,11 +7,11 @@ let browser;
 before(async()=>{browser=await (process.env.FRI_BROWSER==='webkit'?webkit:chromium).launch()});
 after(async()=>{await browser?.close()});
 const task=(id,title,time,duration,extra={})=>({id,title,date:'2030-01-01',time,duration,kind:'schedule',done:false,category:'Work',location:'',notes:'',...extra});
-async function fresh(t,width=1200){
+async function fresh(t,width=1200,fixedTitle='Họp nhóm'){
  const context=await browser.newContext({viewport:{width,height:950},reducedMotion:'reduce'});t.after(()=>context.close());
  const p=await context.newPage();await p.clock.install({time:new Date('2030-01-01T08:00:00')});
  await p.addInitScript(tasks=>{if(!localStorage.getItem('fri-liquid-preview-v1'))localStorage.setItem('fri-liquid-preview-v1',JSON.stringify({version:1,tasks,settings:{motion:false,glass:false,palette:'fri-v2',accent:'#955251',layout:'list',sidebar:'solid'},tabs:['2030-01-01'],active:'2030-01-01',drafts:[],finished:[],collections:['Work'],widgets:['upnext']}))},[
-  task('fixed','Họp nhóm','10:00',60,{imported:true,sourceKey:'calendar-1'}),
+  task('fixed',fixedTitle,'10:00',60,{imported:true,sourceKey:'calendar-1'}),
   task('focus','Viết báo cáo','10:30',45,{flexible:true,flexibleUntil:'12:00',planningOrigin:'focus'}),
   task('due','Nộp báo cáo','16:00',0,{kind:'deadline'})
  ]);
@@ -54,9 +54,12 @@ test('mobile Day panel escapes calendar content and stays within viewport',async
  await p.screenshot({path:path.resolve(__dirname,'.build/day-mobile.png'),fullPage:true});
 });
 test('calendar titles render as text rather than executable HTML in Day',async t=>{
- const p=await fresh(t);
- await p.evaluate(()=>{const state=FRI_PREVIEW.getState();state.tasks[0].title='<img src=x onerror="window.dayInjected=true">';localStorage.setItem('fri-liquid-preview-v1',JSON.stringify(state))});
- await p.reload();await p.waitForFunction(()=>window.FRI_PREVIEW);await p.evaluate(()=>FRI_COMMAND('insights'));
+ // Seed before startup so pending application saves cannot overwrite the fixture.
+ const title='<img src=x onerror="window.dayInjected=true">';
+ const p=await fresh(t,1200,title);
+ assert.equal(await p.evaluate(()=>FRI_PREVIEW.getState().tasks.find(t=>t.id==='fixed').title),title);
+ await p.evaluate(()=>FRI_COMMAND('insights'));
+
  assert.equal(await p.locator('#day-panel img').count(),0);assert.equal(await p.evaluate(()=>window.dayInjected),undefined);
  assert.match(await p.locator('#day-panel').textContent(),/<img src=x/);
 });

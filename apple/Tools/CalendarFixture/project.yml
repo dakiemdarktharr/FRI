@@ -1,0 +1,24 @@
+name: FRICalendarFixture
+options:
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  FRICalendarFixture:
+    type: application
+    platform: iOS
+    sources: [Sources]
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        PRODUCT_BUNDLE_IDENTIFIER: com.fri.qa.calendarfixture
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: FRI Calendar QA
+        INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription: Creates and removes only its named QA calendar in this Simulator.
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGNING_ALLOWED: NO
+schemes:
+  FRICalendarFixture:
+    build:
+      targets:
+        FRICalendarFixture: all

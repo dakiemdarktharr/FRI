@@ -1,8 +1,10 @@
 # Xcode project and reproducible build
 
-Use current stable Xcode supported by the Mac and required submission SDK. Check [system requirements](https://developer.apple.com/xcode/system-requirements/) and [upload requirements](https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds/); do not select a beta merely because it is first in the table. Capture xcodebuild -version, xcodebuild -showsdks, sw_vers and uname -m. Proposed deployment floors: iOS 17/macOS 14 for interactive widgets, glass available only on 26+ with fallback. These are proposed settings, not an existing compiled project.
+Use current stable Xcode supported by the Mac and required submission SDK. Check [system requirements](https://developer.apple.com/xcode/system-requirements/) and [upload requirements](https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds/); do not select a beta merely because it is first in the table. Capture xcodebuild -version, xcodebuild -showsdks, sw_vers and uname -m. The tracked XcodeGen project configures iOS 17/macOS 14 deployment floors. Current runtime evidence and unverified minimum-OS cases are recorded in the production-readiness ledger.
 
-## Create once
+The [verification receipt](verification/RELEASE.md) records the tracked Xcode project, synthetic Debug run and signing setup.
+
+## Original setup checklist
 
 1. Clone and branch codex/apple-native; read parity/PDF and run existing JS domain tests.
 2. Create macOS SwiftUI App FRIMac and iOS SwiftUI App FRIiOS in apple/FRI.xcodeproj. Display name FRI. Register bundle IDs under the actual team; keep com.fri.calendar on Mac only if the team can provision it. Do not assume identifier ownership.
@@ -15,7 +17,9 @@ Use current stable Xcode supported by the Mac and required submission SDK. Check
 
 ## Commands after project creation
 
-These are target paths/schemes to create, not files already present. Confirm names first. Keep signing enabled for device/archive work; simulator-only builds can disable it.
+The project and shared app schemes are now tracked. Keep signing enabled for device and archive work. Simulator development builds can disable it.
+
+The native sidebar compiles `FRIGradient.metal`. If Xcode reports a missing Metal Toolchain, install Apple's component with `xcodebuild -downloadComponent MetalToolchain`, then rebuild. New source/resource membership is generated from `apple/project.yml` with XcodeGen; do not hand-edit the generated project. Current development uses branch `macos`, host macOS and iOS Simulator only, superseding the original device setup checklist above.
 
 ```sh
 xcode-select -p

@@ -1,6 +1,6 @@
 # Feature parity ledger
 
-Native Apple implementation is pending for every row. Compare the released Windows artifact as well as source/tests. Record implementation path, test and observed result against each row before claiming parity.
+This is the parity target. See [current production readiness](verification/PRODUCTION-READINESS.md) for the latest user decisions and observations. See the [native verification ledger](verification/RELEASE.md) for the implementation and observed result of each row. Compare the released Windows artifact as well as source and tests when closing the remaining rows.
 
 | Behavior | Windows reference | Apple requirement |
 |---|---|---|
@@ -14,14 +14,14 @@ Native Apple implementation is pending for every row. Compare the released Windo
 | ICS/CSV/text/image/PDF/public HTTPS intake | preview/intake.js, desktop/ocr.cjs/public-source.cjs | FileImporter, PDFKit/Vision, source review and errors. Match supported recurrence behavior; do not claim full CalDAV sync. |
 | JSON backup/restore | preview/app.js, desktop/store.cjs | Interoperable export, transactional restore, validation and rollback. |
 | Calendar/drafts/settings, concurrent widget Done | desktop/store.cjs/core.test.cjs | Protected shared store, interprocess transaction, revision, idempotent Done; no lost edits. |
-| Monochrome glass, sidebar image/motion, large text | preview/style.css/gradient.jsx | Same visual hierarchy, local images, reduced motion/transparency and contrast. |
+| Desktop 0.5 cream/marsala palette, sidebar image/motion, large text | preview/style.css/gradient.jsx | Same visual hierarchy, local images, reduced motion/transparency and contrast. |
 | File/Edit/View/Help, search, shortcuts | desktop/main.cjs | Mac menu/traffic lights; iOS toolbar and menus with equivalent actions, no fake minimize/close. |
-| Create/move/resize/remove widget | desktop/widgets.cjs/widget.html | Native WidgetKit gallery/families and OS-controlled placement; optional Mac custom panels are a separate feature. |
+| Create/move/resize/remove widget | desktop/widgets.cjs/widget.html | Mac AppKit panels with drag, resize and adaptive content; keep WidgetKit gallery/families for iOS and future signed shared-store Mac configuration. |
 | Widget priority | desktop/widget.html | Current task + Done → weekday → date → progress → services → later tasks; omit lower priorities in small families. |
 | Reminders | desktop/services.cjs | UNUserNotificationCenter opt-in; reconcile after edit/delete/Done; generic private text default. |
 | Weather/Spotify/maps/manual steps | desktop/services.cjs/maps.* | Same consent/disconnect and stale-state handling; widget links into app for interactive providers. |
 | Data-preserving upgrades | desktop/verify-upgrade.ps1 | Stable bundle/App Group/Keychain IDs; signed A→B test with app and widgets active. |
-| Day | Current user decision | Deferred; no new cloud/voice dependency. |
+| Day | Desktop 0.5 local conversation | Local conversation, draft suggestions and system read-aloud; no new cloud dependency. |
 
 ## Required platform differences
 

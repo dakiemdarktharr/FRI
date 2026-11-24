@@ -2,14 +2,18 @@
 
 Keep bundle ID, team, App Group and Keychain group stable. Mac direct distribution uses Developer ID Application, Hardened Runtime and necessary entitlements. Sign nested helpers/frameworks/extensions properly; no ad-hoc signing or codesign --deep repair. [Developer ID](https://developer.apple.com/help/account/certificates/create-developer-id-certificates).
 
-After project creation:
+The current direct-Mac scheme is `FRIMac`: it produces `FRIMac.app`, uses standalone encrypted storage and AppKit desktop widget windows, and embeds no WidgetKit extension. `FRIMacWidgetKit` produces `FRIMacWidgetKit.app` with the shared-store extension. They use the same configured Mac bundle identifier; choose one distribution mode and verify any storage migration before switching an installed product. The WidgetKit variant still requires the owning team's shared App Group and Keychain configuration.
+
+The [current Release compilation receipt](verification/release-build-2026-11-24/README.md) covers both Mac architectures, both Mac schemes, and iOS Simulator/device compilation. These unsigned outputs are not installers or signed release artifacts. The export-option plist paths below must be generated from the actual team's current Xcode export configuration before running export.
+
+For the standalone Mac distribution:
 
 ```sh
 mkdir -p artifacts
 xcodebuild archive -project apple/FRI.xcodeproj -scheme FRIMac -configuration Release -destination 'generic/platform=macOS' -archivePath artifacts/FRIMac.xcarchive
 xcodebuild -exportArchive -archivePath artifacts/FRIMac.xcarchive -exportOptionsPlist apple/ExportOptions-Mac.plist -exportPath artifacts/mac
-codesign --verify --strict --verbose=2 artifacts/mac/FRI.app
-codesign -d --entitlements :- artifacts/mac/FRI.app
+codesign --verify --strict --verbose=2 artifacts/mac/FRIMac.app
+codesign -d --entitlements :- artifacts/mac/FRIMac.app
 ```
 
 Generate/review export options for current Xcode, developer-id method and real team/identities. Inspect .appex signatures individually. Package signed .app + Applications shortcut in DMG. Optional PKG requires Developer ID Installer (different certificate). Data stays outside install directory. [Packaging](https://developer.apple.com/documentation/xcode/packaging-mac-software-for-distribution).

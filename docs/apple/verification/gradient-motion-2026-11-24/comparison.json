@@ -1,0 +1,7 @@
+{
+  "measurement": "Mean absolute byte difference in decoded PNG pixel buffers, including alpha; identical capture rectangle and interaction sequence",
+  "threshold": 2,
+  "before": 16.97366794064748,
+  "after": 0.29197111061151076,
+  "pauseSeconds": 20
+}

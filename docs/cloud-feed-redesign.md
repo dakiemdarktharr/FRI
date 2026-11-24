@@ -16,10 +16,10 @@
 
 - [x] User direction confirmed.
 - [x] Intake inbox and refresh semantics implemented; deterministic planner + browser regressions pass.
-- [x] Desktop feed, calendar views, Day visual reviewed at 1440 and 390 pixels; native packaging still pending.
+- [x] Desktop feed, calendar views, Day visual reviewed at 1440 and 390 pixels; native package verified.
 - [x] Website/demo/intro/mobile responsive pass.
 - [x] Android/widget update and native checks.
-- [ ] Windows installer, GitHub and production deployment verified.
+- [x] Windows installer, GitHub release and production deployment verified; see release-verification-0.7.0.md.
 
 Figma connector returned reauthentication required. Use repo source and screenshots as reviewable design artifacts until the connection is restored.
 
@@ -43,4 +43,6 @@ Android 0.2.0 ARM64/x86_64 release builds completed; launcher create/move/resize
 
 ### Publication checkpoint
 
-Windows 0.7.0 installed successfully over 0.6.1; encrypted user calendar bytes remained unchanged and the seeded upgrade probe retained its deadline and large-text preference. Native Apple work from main was merged without replacing it; Apple currently follows the earlier 0.5 UI, and the updated handoff specifies the 0.7 feed/source contract. PR #3 carries this redesign. CI and public release/deployment verification are in progress.
+Windows 0.7.0 installed successfully over 0.6.1; encrypted user calendar bytes remained unchanged and the seeded upgrade probe retained its deadline and large-text preference. Native Apple work from main was merged without replacing it; Apple currently follows the earlier 0.5 UI, and the updated handoff specifies the 0.7 feed/source contract. PR #3 carries this redesign. Final CI passed on Windows, Intel macOS, Chromium/WebKit, Android source and Docker. Release 0.7.0 is published and the website is deployed. See release-verification-0.7.0.md for receipts and platform limits.
+
+Final intake correction: extraction cache keys include the local date. Refresh still performs local deterministic validation, with no additional model call.

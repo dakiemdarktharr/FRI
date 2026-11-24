@@ -6,4 +6,4 @@ Add links, images, files or a selected folder to Sources. Local readers handle s
 
 Desktop and Android widgets use the new palette. The website includes the new source-intake demo, varied notification designs and an updated autoplay widget walkthrough. The Windows installer preserves existing calendar data and settings.
 
-Windows builds are unsigned. Android 0.2.0 is a local alpha with calendar/home-screen widgets, not desktop feature parity. Premium remains 50,000 VND/month, coming soon; no payment or account backend is enabled. Provider sessions can require signing in again. See [verification and limitations](release-verification-0.7.0.md).
+Windows builds are unsigned. Mac Electron builds are unsigned and not notarized; Apple silicon hardware validation is pending. Android 0.2.0 is a local alpha with calendar/home-screen widgets, not desktop feature parity. Premium remains 50,000 VND/month, coming soon; no payment or account backend is enabled. Provider sessions can require signing in again. See [verification and limitations](release-verification-0.7.0.md).

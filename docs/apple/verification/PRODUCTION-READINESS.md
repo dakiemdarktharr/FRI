@@ -20,7 +20,8 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 |---|---|
 | Native macOS debug build | PASS with native Metal sidebar, `/tmp/fri-gradient-mac-final.log`; fresh Mac UI and notification delivery remain unverified |
 | Native iOS build after current edits | PASS, iPad system-notification UI tests 2026-11-23 20:33–20:37 UTC, foreground and background. WidgetKit timeline, photo picker and earlier iPhone/iPad UI evidence are recorded below |
-| Core data regression | Current full run: 35 core tests and 8 AppKit design/placement tests passed; 1 opt-in network test skipped. Live network passed separately earlier. Includes imported-draft recovery, invalid-restore preservation, cross-platform caches and photo backup compatibility; `/tmp/fri-sidebar-photo-core-full.log` |
+| Release compilation / bundle contents | PASS for standalone Mac and Mac WidgetKit universal, iOS Simulator and generic-device arm64; seven bundles inspected. Unsigned, no Release runtime or minimum-OS runtime claim; see 2026-11-24 receipt |
+| Core data regression | Current full Release run: 42 core tests and 13 AppKit design/placement tests passed; 1 opt-in network test skipped. Live network passed separately earlier. Includes store integrity, imports, reminders, weather cancellation, prepared widget timelines and layout/placement; `/tmp/fri-release-core-audit.log` |
 | Mac create/edit/delete/undo | PASS via CUA with isolated synthetic store: create 10:00/60 min, edit Unicode title, delete 11:00/30 min appointment, Cmd-Z restores it |
 | Mac search and bulk actions | PASS: title/place/notes/category search, no-result feedback, Enter opens detail on correct date, Escape, two-item delete/Cancel/Undo, Finish day and reopening a completed item |
 | Mac overlapping appointments | PASS via CUA: 10:30 conflicts with 10:00–11:00; Change times opens review; 11:00 saves successfully |
@@ -43,6 +44,13 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 ## Current runtime isolation
 
 The native debug Mac run uses `FRI_SYNTHETIC_PREVIEW=1` and UUID-scoped `FRI_TEST_STORE_ID`. It does not touch the installed Electron application's calendar. Preview mode is excluded from Release. The fixed synthetic key must never be used for customer calendar data.
+
+## Release compilation and artifact audit — 2026-11-24 00:24 UTC
+
+- Rebuilt production source `eaf6ce1` in Release: standalone Mac universal (arm64/x86_64), Mac WidgetKit host plus extension universal, iOS Simulator arm64 host plus extension, and generic iOS-device arm64 host plus extension. All four matrix builds passed with no warning/error diagnostics. No physical device, installation or Release app launch occurred. The [receipt and seven-bundle inspection](release-build-2026-11-24/README.md) contain exact paths, hashes, toolchain and reproduction commands.
+- Full optimized package regression PASS: 42 core + 13 AppKit/design tests completed, zero failures, one opt-in public HTTPS test skipped. Log `/tmp/fri-release-core-audit.log`. Prepared timeline/layout/store checks are not signed WidgetKit or full-app runtime evidence.
+- Confirmed expected embedded extensions, App Intent metadata, privacy manifests and app Metal resources. Debug fixture activation/store strings are absent from all seven binaries; source creation paths are excluded by `#if DEBUG`. Preview-label text remains compiled behind the false Release synthetic flag; this was recorded rather than misclassified as enabled test data.
+- Distribution is still NOT READY: all seven unsigned signature checks fail, shared Keychain identifiers lack the owning Team ID, and runtime/accessibility/visual-parity/upgrade gates remain incomplete. Standalone Mac does not use the shared group. Updated distribution instructions to use the actual `FRIMac.app` product and distinguish standalone from the shared-store WidgetKit scheme. No signing identity, permissions or data were modified. Status remains IN PROGRESS.
 
 ## Maps draft isolation and runtime follow-up — 2026-11-24
 

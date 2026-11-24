@@ -155,6 +155,68 @@ final class FRIWorkflowTests: XCTestCase {
         unchanged.name = "EventKit-source-unchanged"; unchanged.lifetime = .keepAlways; add(unchanged)
     }
 
+    func testManualActivityRejectsInvalidInputAndPersists() throws {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        app.launch()
+        if ProcessInfo.processInfo.environment["FRI_SERVICE_LARGE_TEXT"] == "1" {
+            XCTAssertTrue(app.buttons["fri.navigation.menu"].waitForExistence(timeout: 15))
+            app.buttons["fri.navigation.menu"].tap(); app.buttons["Settings"].tap()
+            let larger = app.switches["fri.settings.largeText"]
+            reveal(larger, in: app, form: "fri.settings.form")
+            if larger.value as? String != "1" {
+                larger.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+            }
+            app.buttons["Close"].firstMatch.tap()
+        }
+        func openServices() {
+            XCTAssertTrue(app.buttons["fri.navigation.menu"].waitForExistence(timeout: 15))
+            app.buttons["fri.navigation.menu"].tap(); app.buttons["Services"].tap()
+        }
+        openServices()
+        let steps = app.textFields["fri.services.activity.steps"]
+        let save = app.buttons["Save steps"]
+        func enter(_ value: String) {
+            reveal(steps, in: app, form: "fri.services.form")
+            steps.tap()
+            let previous = steps.value as? String ?? ""
+            let count = previous == "Steps today" ? 0 : previous.count
+            steps.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: count) + value + "\n")
+            reveal(save, in: app, form: "fri.services.form"); save.tap()
+        }
+        func reopen() {
+            app.buttons["Close"].firstMatch.tap(); openServices()
+            reveal(steps, in: app, form: "fri.services.form")
+        }
+        enter("4321"); reopen()
+        XCTAssertEqual((steps.value as? String)?.filter(\.isNumber), "4321")
+        let error = app.staticTexts["Enter a whole number from 0 to 100,000."]
+        for invalid in ["abc", "", "-1", "1.5", "100001"] {
+            enter(invalid)
+            XCTAssertTrue(error.waitForExistence(timeout: 3), "Invalid input must not silently save the previous number: \(invalid)")
+            reveal(error, in: app, form: "fri.services.form")
+            XCTAssertTrue(error.isHittable && app.frame.contains(error.frame))
+        }
+        let evidence = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        evidence.name = "Activity-invalid-input"; evidence.lifetime = .keepAlways; add(evidence)
+        reopen()
+        XCTAssertEqual((steps.value as? String)?.filter(\.isNumber), "4321")
+        enter("0"); reopen()
+        XCTAssertEqual(steps.value as? String, "0")
+        enter("100000")
+        app.buttons["Close"].firstMatch.tap(); app.terminate(); app.launch(); openServices()
+        reveal(steps, in: app, form: "fri.services.form")
+        XCTAssertEqual((steps.value as? String)?.filter(\.isNumber), "100000")
+        XCTAssertTrue(app.staticTexts["Steps today"].exists, "A filled field must retain its visible label")
+        let clear = app.buttons["Clear activity"]
+        reveal(clear, in: app, form: "fri.services.form"); clear.tap(); reopen()
+        XCTAssertEqual(steps.value as? String, "0")
+        XCTAssertFalse(clear.exists)
+    }
+
     func testSidebarGradientMotionAndPause() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

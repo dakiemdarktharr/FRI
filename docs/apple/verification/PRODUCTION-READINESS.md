@@ -44,6 +44,13 @@ Every item needs observed evidence before being marked PASS. Successful compilat
 
 The native debug Mac run uses `FRI_SYNTHETIC_PREVIEW=1` and UUID-scoped `FRI_TEST_STORE_ID`. It does not touch the installed Electron application's calendar. Preview mode is excluded from Release. The fixed synthetic key must never be used for customer calendar data.
 
+## Manual activity input and persistent Services labels — 2026-11-24 00:03 UTC
+
+- Reproduced silent numeric-field fallback: after editing a saved 4321 count to invalid text, the old formatted binding displayed/saved 4 without an error. The app now validates the complete String before saving. Empty, fractional, negative, nonnumeric and out-of-range entries produce an inline error without changing persisted activity. Locale grouping is accepted only when canonical; bounds remain 0–100,000. Clear resets the field only after successful persistence. Save failures surface the calendar error; success reports the saved count.
+- Added persistent labels to City, City or place, Spotify link and Steps today. Activity feedback posts an accessibility announcement, but actual VoiceOver speech is not verified.
+- Core parser PASS: two tests, `/tmp/fri-manual-activity-core.log`. iPad normal-text activity workflow PASS (94.136 seconds), `test_sim_2026-11-23T23-56-35-720Z_pid22065_892b8d5b.xcresult`. iPhone app-larger-text activity and real-network weather workflows PASS: two tests, zero failures/skips, `test_sim_2026-11-23T23-59-49-400Z_pid22065_dad38c41.xcresult` (105.443 / 46.811 seconds). Covers invalid-entry data retention, both bounds, relaunch persistence and clear. Reviewed [original screenshots and reproduction details](manual-activity-2026-11-24/README.md).
+- macOS Debug build PASS, no warning/error diagnostics, `/tmp/fri-activity-mac-final.log`. No new Mac onscreen, offline, signed WidgetKit or release pass inferred. Full visual parity and remaining gates stay open; production status is IN PROGRESS.
+
 ## Sidebar motion restart — 2026-11-23 23:43–23:48 UTC
 
 - Fixed a visible difference from the shipping desktop: enabling Gentle motion after a pause now starts the native animation clock again. Previously the renderer retained its creation time, so the resumed shape depended on how long the sidebar had existed. Only off-to-on resets the monotonic start; normal SwiftUI updates, shader/camera/palette and the 15 fps budget are unchanged.

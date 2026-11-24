@@ -13,10 +13,11 @@ struct FRIServicesView: View {
     @State private var spotifyMessage: String?
     @FocusState private var spotifyFocused: Bool
     @State private var mapQuery = ""
-    @State private var steps = 0
+    @State private var stepsText = "0"
+    @FocusState private var stepsFocused: Bool
     @State private var mapItem: MKMapItem?
     @State private var mapPosition: MapCameraPosition = .automatic
-    @State private var message: String?
+    @State private var activityMessage: String?
     @State private var weatherTask: Task<Void, Never>?
     @State private var mapTask: Task<Void, Never>?
     @State private var mapSearch: MKLocalSearch?
@@ -39,10 +40,12 @@ struct FRIServicesView: View {
                         .friFont(.caption).foregroundStyle(.secondary)
                     Text("Saved locations refresh every 30 minutes while FRI is running. On iOS, refresh resumes when you open the app.")
                         .friFont(.caption).foregroundStyle(.secondary)
-                    TextField("City", text: $city).accessibilityIdentifier("fri.services.weather.city")
-                        .focused($cityFocused)
-                        .submitLabel(.search)
-                        .onSubmit { searchWeather() }
+                    serviceField("City") {
+                        TextField("City", text: $city).accessibilityIdentifier("fri.services.weather.city")
+                            .focused($cityFocused)
+                            .submitLabel(.search)
+                            .onSubmit { searchWeather() }
+                    }
                     Button("Find city") { searchWeather() }.disabled(loadingWeather || city.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     if loadingWeather {
                         ProgressView("Loading weather…")
@@ -85,7 +88,10 @@ struct FRIServicesView: View {
                 Section("Maps") {
                     Text("MapKit sends the place you enter to Apple Maps.")
                         .friFont(.caption).foregroundStyle(.secondary)
-                    TextField("City or place", text: $mapQuery)
+                    serviceField("City or place") {
+                        TextField("City or place", text: $mapQuery)
+                            .accessibilityIdentifier("fri.services.maps.query")
+                    }
                     Button("Show on map") { refreshMap() }.disabled(loadingMap || mapQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     if loadingMap {
                         ProgressView("Finding place…")
@@ -112,10 +118,12 @@ struct FRIServicesView: View {
                 Section("Spotify") {
                     Text("Spotify receives your IP address and playback activity when you open the player. FRI sends no calendar details. Full playback depends on your Spotify account.")
                         .friFont(.caption).foregroundStyle(.secondary)
-                    TextField("Spotify link", text: $spotify)
-                        .focused($spotifyFocused)
-                        .accessibilityIdentifier("fri.services.spotify.url")
-                        .onSubmit { openSpotify() }
+                    serviceField("Spotify link") {
+                        TextField("Spotify link", text: $spotify)
+                            .focused($spotifyFocused)
+                            .accessibilityIdentifier("fri.services.spotify.url")
+                            .onSubmit { openSpotify() }
+                    }
                     Button("Open player") { openSpotify() }
                         .accessibilityIdentifier("fri.services.spotify.open")
                     if let spotifyMessage { Text(spotifyMessage).foregroundStyle(.secondary) }
@@ -125,16 +133,28 @@ struct FRIServicesView: View {
                 }
                 Section("Manual activity") {
                     Text("Steps are entered by you; FRI does not read Health data.").friFont(.caption).foregroundStyle(.secondary)
-                    TextField("Steps today", value: $steps, format: .number)
-                    Button("Save steps") {
-                        guard (0...100_000).contains(steps) else { message = "Enter 0–100,000 steps."; return }
-                        calendar.updateSetting("activity", .object(["date": .string(CalendarClock.day()), "steps": .number(Double(steps))]))
+                    serviceField("Steps today") {
+                        TextField("Steps today", text: $stepsText)
+                            .accessibilityIdentifier("fri.services.activity.steps")
+                            .focused($stepsFocused)
+                            .submitLabel(.done)
+                            .onSubmit { stepsFocused = false }
                     }
+                    if let activityMessage {
+                        Text(activityMessage).foregroundStyle(.secondary)
+                            .accessibilityIdentifier("fri.services.activity.message")
+                    }
+                    Button("Save steps") { saveSteps() }
                     if calendar.state.settings["activity"] != nil {
-                        Button("Clear activity", role: .destructive) { calendar.updateSetting("activity", nil); steps = 0 }
+                        Button("Clear activity", role: .destructive) {
+                            stepsFocused = false
+                            if calendar.change({ $0.settings.removeValue(forKey: "activity") }) {
+                                stepsText = "0"
+                                activityMessage = nil
+                            } else { activityMessage = calendar.message }
+                        }
                     }
                 }
-                if let message { Text(message).foregroundStyle(.secondary) }
             }
             .formStyle(.grouped)
             .accessibilityIdentifier("fri.services.form")
@@ -153,7 +173,7 @@ struct FRIServicesView: View {
             city = savedWeather?.city ?? ""
             if case .object(let activity) = calendar.state.settings["activity"],
                activity["date"]?.string == CalendarClock.day(), case .number(let value) = activity["steps"],
-               value.isFinite, (0...100_000).contains(value) { steps = Int(value) }
+               value.isFinite, (0...100_000).contains(value) { stepsText = String(Int(value)) }
         }
         .onChange(of: calendar.state.settings["spotifyUrl"]?.string) { _, saved in
             spotify = saved ?? ""
@@ -164,7 +184,31 @@ struct FRIServicesView: View {
             weatherChoices = []
             weatherMessage = nil
         }
+        .onChange(of: stepsText) { _, _ in activityMessage = nil }
+        .onChange(of: activityMessage) { _, message in
+            if let message { AccessibilityNotification.Announcement(message).post() }
+        }
         .onDisappear { cancelWeather(); cancelMap() }
+    }
+
+    private func serviceField<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).friFont(.caption).foregroundStyle(.secondary)
+            content()
+        }
+    }
+
+    private func saveSteps() {
+        stepsFocused = false
+        guard let steps = ManualActivity.steps(from: stepsText) else {
+            activityMessage = "Enter a whole number from 0 to 100,000."
+            return
+        }
+        if calendar.change({
+            $0.settings["activity"] = .object(["date": .string(CalendarClock.day()), "steps": .number(Double(steps))])
+        }) {
+            activityMessage = "Saved \(steps.formatted()) steps."
+        } else { activityMessage = calendar.message }
     }
 
     private func openSpotify() {

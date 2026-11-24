@@ -62,3 +62,4 @@ jobs:
           FRI_SKIP_FRAMES: '1'
 
       - run: node website/verify-responsive.cjs
+      - run: node website/verify-positioning.cjs

@@ -9,8 +9,9 @@ const widgetWebm=await readFile(new URL('assets/widget-walkthrough.webm',root));
 const widgetPoster='data:image/jpeg;base64,'+(await readFile(new URL('assets/widget-poster.jpg',root))).toString('base64');
 const poster='data:image/jpeg;base64,'+(await readFile(new URL('assets/ocean-poster.jpg',root))).toString('base64');
 const cloudCss=await read('cloud.css');
+const positioningCss=await read('positioning.css'),productStories=await read('product-stories.html');
 const storiesCss=await read('stories.css'),storiesJs=await read('stories.js');
-const html=shell.replace('/*__STYLE__*/',()=>css+'\n'+refine+'\n'+storiesCss+'\n'+cloudCss).replace('/*__SCRIPT__*/',()=>js).replace('/*__MOTION__*/',()=>motion).replace('/*__STORIES__*/',()=>storiesJs)
+const html=shell.replace('<!--__PRODUCT_STORIES__-->',()=>productStories).replace('/*__STYLE__*/',()=>css+'\n'+refine+'\n'+storiesCss+'\n'+cloudCss+'\n'+positioningCss).replace('/*__SCRIPT__*/',()=>js).replace('/*__MOTION__*/',()=>motion).replace('/*__STORIES__*/',()=>storiesJs)
   .replaceAll('__POSTER__',poster).replaceAll('__WIDGET_POSTER__',widgetPoster)
   .replaceAll('__POLE__',logo.replace('fill="#955251"','fill="currentColor"').replace('<svg ','<svg aria-hidden="true" '));
 await writeFile(new URL('../FRI-website.html',root),html.replace('__SURF__','data:video/mp4;base64,'+surf.toString('base64')).replace('__WIDGET_VIDEO__','data:video/mp4;base64,'+widgetVideo.toString('base64')).replace('__WIDGET_WEBM__','data:video/webm;base64,'+widgetWebm.toString('base64')));

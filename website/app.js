@@ -106,11 +106,6 @@
     dialogContent.replaceChildren($('#mac-download-options').content.cloneNode(true));
     showDialog('macOS');
   });
-  $('[data-dialog="signup"]').addEventListener('click',()=>{
-    dialogContent.innerHTML='<p>Accounts aren’t open yet. The desktop app works without one.</p><a class="pill dark" id="choose-download" href="'+downloadPage+'">Download Fri <span aria-hidden="true">↓</span></a>';
-    $('#choose-download').addEventListener('click',()=>dialog.close());
-    showDialog('Your space. Soon.');
-  });
   $('.dialog-close').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('click',e=>{const r=dialog.getBoundingClientRect();if(e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))dialog.close()});
 

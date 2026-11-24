@@ -35,8 +35,8 @@ struct FRIServiceCardsView: View {
                         .frame(width: 44, height: 44).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(FRIColors.cardControlText)
-                .background(FRIColors.cardControl, in: RoundedRectangle(cornerRadius: 8))
+                .foregroundStyle(FRIColors.ink)
+                .background(FRIColors.control, in: RoundedRectangle(cornerRadius: 8))
                 .accessibilityLabel("Remove \(service.name) widget")
                 .accessibilityIdentifier("fri.serviceCard.\(service.rawValue).remove")
             }
@@ -57,8 +57,8 @@ struct FRIServiceCardsView: View {
                     .frame(minHeight: 44, alignment: .leading).contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .foregroundStyle(FRIColors.cardControlText)
-            .background(FRIColors.cardControl, in: RoundedRectangle(cornerRadius: 12))
+            .foregroundStyle(FRIColors.ink)
+            .background(FRIColors.control, in: RoundedRectangle(cornerRadius: 12))
             .accessibilityIdentifier("fri.serviceCard.\(service.rawValue).open")
         }
         .padding(20).frame(maxWidth: .infinity, alignment: .leading)

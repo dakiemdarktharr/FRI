@@ -2,6 +2,14 @@
 
 Status: IN PROGRESS. This is an acceptance ledger, not a release approval.
 
+## Native 0.7.0 development build · 2026-11-24
+
+The Cloud feed, week selector and staged Sources workflow follow Windows v0.7.0 at upstream commit `1a2a7ea`. The standalone Mac scheme ran in Xcode on My Mac. Feed and Week were exercised in the Mac window. The separate Mac WidgetKit scheme built. Widget placement on a signed device remains unverified for this revision.
+
+The Swift package passed 46 core and 13 design checks with the public HTTPS check enabled. The Windows import-planner and inbox reference suites passed 13 checks. The cross-platform backup probe passed its encrypted round trip and invalid-fixture checks, including preservation of a staged source on Apple. Three iPhone 18 Pro Simulator UI tests passed for Feed/Week selection, appointment details/completion with Dark and larger text, and source persistence/Refresh with an overlap and a duplicate retry.
+
+The Apple source browser supports manual sign-in and selection of the visible timetable. Optional OpenAI extraction accepts explicitly selected text or an image. Paid live extraction, third-party sign-in and automatic reading of linked course pages were outside this verification. Day retains its existing local conversation.
+
 ## User decisions — 2026-11-23
 
 - Implement in Swift/SwiftUI with Xcode.

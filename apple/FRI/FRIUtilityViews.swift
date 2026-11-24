@@ -28,7 +28,7 @@ struct FRICollectionsView: View {
                         if !state.collections.contains(.string(value)) { state.collections.append(.string(value)) }
                     }) { calendar.panel = nil }
                     else { error = calendar.message }
-                }.buttonStyle(.borderedProminent).tint(FRIColors.marsala).foregroundStyle(FRIColors.cream)
+                }.buttonStyle(.borderedProminent).tint(FRIColors.accent).foregroundStyle(FRIColors.onAccent)
             }.formStyle(.grouped)
         }
     }
@@ -221,7 +221,7 @@ struct FRIWidgetHelpView: View {
                     Text("Desktop widgets").friFont(.title2, weight: .bold)
                     Text("Add a Swift desktop widget, drag its top bar to move it, and drag the bottom-right corner to resize. Your position and size are restored when FRI reopens.")
                     Button("Create desktop widget", systemImage: "plus") { calendar.addDesktopWidget() }
-                        .buttonStyle(.borderedProminent).tint(FRIColors.marsala).foregroundStyle(FRIColors.cream)
+                        .buttonStyle(.borderedProminent).tint(FRIColors.accent).foregroundStyle(FRIColors.onAccent)
                     Button("Show desktop widgets") { calendar.showDesktopWidgets() }
                     Text("Desktop widgets use this app’s calendar. FRI must be running. The system WidgetKit gallery uses a separately configured shared store.")
                         .friFont(.caption).foregroundStyle(.secondary)
@@ -295,9 +295,13 @@ struct FRIAppearanceView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .listRowBackground(Color.clear)
                 Section("Appearance") {
-                    Picker("Sidebar background", selection: setting("sidebar", initial: "gradient")) {
+                    Picker("Theme", selection: setting("theme", initial: "light")) {
+                        Text("Light").tag("light")
+                        Text("Dark").tag("dark")
+                    }.accessibilityIdentifier("fri.settings.theme")
+                    Picker("Sidebar background", selection: setting("sidebar", initial: "solid")) {
                         Text("Moving gradient").tag("gradient")
-                        Text("Solid charcoal").tag("solid")
+                        Text("Cloud").tag("solid")
                         if calendar.state.sidebarImageData != nil { Text("My image").tag("image") }
                     }.accessibilityIdentifier("fri.settings.sidebar")
                     Text("Soft movement, a still color, or your own image.")
@@ -310,24 +314,24 @@ struct FRIAppearanceView: View {
                             _ = calendar.change {
                                 $0.settings["appleSidebarImage"] = nil
                                 $0.settings["image"] = nil
-                                $0.settings["sidebar"] = .string("gradient")
+                                $0.settings["sidebar"] = .string("solid")
                             }
                         }
                     }
                     LabeledContent("Palette") {
                         HStack(spacing: 8) {
-                            ForEach([FRIColors.cream, FRIColors.ink, FRIColors.marsala], id: \.self) { color in
+                            ForEach([FRIColors.surface, FRIColors.ink, FRIColors.accent], id: \.self) { color in
                                 Circle().fill(color).overlay(Circle().strokeBorder(FRIColors.line)).frame(width: 22, height: 22)
                             }
                         }
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("Ivory, charcoal and Fri marsala")
+                        .accessibilityLabel("Cloud, Ink and Teal")
                     }
                 }
                 Section("Reminders") {
                     Toggle("Appointment reminders", isOn: Binding(get: { calendar.state.settings["reminders"]?.bool == true }, set: { value in
                         Task { await calendar.setReminders(value) }
-                    })).tint(FRIColors.marsala)
+                    })).tint(FRIColors.accent)
                     Text("A private reminder arrives five minutes before each appointment. Notifications hide appointment details.")
                         .friFont(.caption).foregroundStyle(.secondary)
                 }
@@ -335,28 +339,25 @@ struct FRIAppearanceView: View {
                     Toggle(isOn: toggle("glass", initial: true)) {
                         Text("Liquid glass")
                         Text("Turn off for solid, quieter surfaces.").friFont(.caption).foregroundStyle(.secondary)
-                    }.tint(FRIColors.marsala).accessibilityLabel("Liquid glass")
+                    }.tint(FRIColors.accent).accessibilityLabel("Liquid glass")
                     Toggle(isOn: toggle("motion", initial: true)) {
                         Text("Gentle motion")
                         Text("Includes the moving sidebar. Respects Reduce Motion.").friFont(.caption).foregroundStyle(.secondary)
-                    }.tint(FRIColors.marsala).accessibilityLabel("Gentle motion")
+                    }.tint(FRIColors.accent).accessibilityLabel("Gentle motion")
                     Toggle(isOn: toggle("large", initial: false)) {
                         Text("Larger text")
                         Text("A little more room to read.").friFont(.caption).foregroundStyle(.secondary)
-                    }.tint(FRIColors.marsala).accessibilityLabel("Larger text")
+                    }.tint(FRIColors.accent).accessibilityLabel("Larger text")
                         .accessibilityIdentifier("fri.settings.largeText")
-                    Picker("Layout", selection: setting("layout", initial: "mosaic")) {
-                        Text("Duration mosaic").tag("mosaic")
-                        Text("List").tag("list")
-                    }.accessibilityIdentifier("fri.settings.layout")
+
                 }
                 Button("Restore look") {
                     _ = calendar.change {
                         $0.settings["glass"] = .bool(true)
                         $0.settings["motion"] = .bool(true)
                         $0.settings["large"] = .bool(false)
-                        $0.settings["sidebar"] = .string("gradient")
-                        $0.settings["layout"] = .string("mosaic")
+                        $0.settings["sidebar"] = .string("solid")
+                        $0.settings["theme"] = .string("light")
                     }
                 }
                 if let error { Text(error).foregroundStyle(.red) }

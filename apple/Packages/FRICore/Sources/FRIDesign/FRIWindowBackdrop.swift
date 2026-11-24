@@ -13,12 +13,13 @@ public struct FRIWindowBackdrop: View {
     public var body: some View {
         #if os(macOS)
         ZStack {
-            FRIColors.workspace
-            FRIMacMaterial(enabled: enabled && !reduce && contrast != .increased)
-                .opacity(0.25)
+            if enabled && !reduce && contrast != .increased {
+                FRIMacMaterial(enabled: true)
+                FRIColors.cloud.opacity(0.76)
+            } else { FRIColors.cloud }
         }
         #else
-        Rectangle().fill(FRIColors.workspace)
+        Rectangle().fill(FRIColors.cloud)
         #endif
     }
 }

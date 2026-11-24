@@ -12,21 +12,19 @@ struct FRISheetView<Content: View>: View {
             content
                 .friFont(.body)
                 .scrollContentBackground(.hidden)
-                .background(FRIColors.sidebar)
-                .foregroundStyle(FRIColors.cream)
+                .background(FRIColors.cloud)
+                .foregroundStyle(FRIColors.ink)
                 .textFieldStyle(FRISheetTextFieldStyle())
                 .navigationTitle(title)
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
         }
-        .tint(FRIColors.cream)
-        .preferredColorScheme(.dark)
+        .tint(FRIColors.accent)
         #if os(macOS)
         .frame(minWidth: 510, minHeight: 430)
         #endif
     }
 }
 
-/// Desktop 0.5 pairs its brown dialogs with light, clearly bounded input fields.
 /// Keep native text editing and accessibility rather than drawing replacement controls.
 struct FRISheetTextFieldStyle: TextFieldStyle {
     func _body(configuration: TextField<Self._Label>) -> some View {
@@ -34,9 +32,8 @@ struct FRISheetTextFieldStyle: TextFieldStyle {
             .textFieldStyle(.plain)
             .padding(8)
             .foregroundStyle(FRIColors.ink)
-            .tint(FRIColors.marsala)
-            .environment(\.colorScheme, .light)
-            .background(FRIColors.cream, in: RoundedRectangle(cornerRadius: 8))
+            .tint(FRIColors.accent)
+            .background(FRIColors.surface, in: RoundedRectangle(cornerRadius: 8))
             .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(FRIColors.line))
     }
 }
@@ -96,7 +93,7 @@ struct FRIPlanEditorView: View {
                         }.disabled(draft.title.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
                     Button("Done") { submitForm() }
-                        .buttonStyle(.borderedProminent).tint(FRIColors.marsala).foregroundStyle(FRIColors.cream)
+                        .buttonStyle(.borderedProminent).tint(FRIColors.accent).foregroundStyle(FRIColors.onAccent)
                         .accessibilityIdentifier("fri.editor.submit")
                 }
                 if let error { Text(error).foregroundStyle(.red) }

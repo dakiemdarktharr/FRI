@@ -7,6 +7,7 @@ struct FRICalendarGridView: View {
     @Binding var cursor: Date
     let tasks: [Appointment]
     let select: (String) -> Void
+    var open: (Appointment) -> Void
     let showMonth: (Date) -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -18,13 +19,14 @@ struct FRICalendarGridView: View {
                 HStack { heading; Spacer(minLength: 12); paging }
                 VStack(alignment: .leading, spacing: 8) { heading; paging }
             }
-            if mode == .month { month }
+            if mode == .week { week }
+            else if mode == .month { month }
             else { year }
         }
     }
 
     private var heading: some View {
-        Text(cursor, format: mode == .year ? .dateTime.year() : .dateTime.month(.wide).year())
+        Text(mode == .week ? "\(weekStart.formatted(.dateTime.month().day())) – \(weekEnd.formatted(.dateTime.month().day()))" : cursor.formatted(mode == .year ? .dateTime.year() : .dateTime.month(.wide).year()))
             .friFont(.title2, weight: .medium).fixedSize(horizontal: false, vertical: true)
             .accessibilityAddTraits(.isHeader).accessibilityIdentifier("fri.calendar.heading")
             .accessibilityValue(String(CalendarClock.day(cursor).prefix(mode == .year ? 4 : 7)))
@@ -42,8 +44,40 @@ struct FRICalendarGridView: View {
             Image(systemName: symbol).frame(width: 44, height: 44).contentShape(Rectangle())
         }.buttonStyle(.plain)
             .background(FRIColors.control, in: RoundedRectangle(cornerRadius: 12))
-            .accessibilityLabel("\(direction < 0 ? "Previous" : "Next") \(mode == .year ? "year" : "month")")
+            .accessibilityLabel("\(direction < 0 ? "Previous" : "Next") \(mode.rawValue.lowercased())")
             .accessibilityIdentifier(direction < 0 ? "fri.calendar.previous" : "fri.calendar.next")
+    }
+
+    private var weekStart: Date {
+        clock.date(byAdding: .day, value: -((clock.component(.weekday, from: cursor) + 5) % 7), to: cursor) ?? cursor
+    }
+    private var weekEnd: Date { clock.date(byAdding: .day, value: 6, to: weekStart) ?? cursor }
+
+    private var week: some View {
+        ScrollView(.horizontal) {
+            HStack(alignment: .top, spacing: 8) {
+                ForEach(0..<7) { index in
+                    if let date = clock.date(byAdding: .day, value: index, to: weekStart) {
+                        let key = CalendarClock.day(date)
+                        let items = tasks.filter { $0.date == key }.sorted { ($0.time, $0.id) < ($1.time, $1.id) }
+                        VStack(alignment: .leading, spacing: 10) {
+                            Button(date.formatted(.dateTime.weekday(.abbreviated).day())) { select(key) }
+                                .friFont(.headline).frame(minHeight: 44)
+                            ForEach(items) { item in
+                                Button { open(item) } label: {
+                                    VStack(alignment: .leading) {
+                                        Text(item.time).friFont(.caption)
+                                        Text(item.title).friFont(.subheadline).strikethrough(item.done)
+                                    }
+                                }
+                            }
+                            if items.isEmpty { Text("No plans").friFont(.caption).foregroundStyle(FRIColors.muted) }
+                        }.padding(12).frame(width: 115, alignment: .topLeading)
+                            .modifier(FRISurface(glass: false, radius: 12))
+                    }
+                }
+            }
+        }.buttonStyle(.plain)
     }
 
     private func gridStart(for month: Date) -> Date {
@@ -80,8 +114,8 @@ struct FRICalendarGridView: View {
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .frame(minHeight: 44).aspectRatio(1, contentMode: .fit)
-                        .foregroundStyle(clock.isDateInToday(date) ? FRIColors.cream : FRIColors.ink)
-                        .background(clock.isDateInToday(date) ? FRIColors.marsala : FRIColors.cream, in: RoundedRectangle(cornerRadius: 15))
+                        .foregroundStyle(clock.isDateInToday(date) ? FRIColors.onAccent : FRIColors.ink)
+                        .background(clock.isDateInToday(date) ? FRIColors.accent : FRIColors.surface, in: RoundedRectangle(cornerRadius: 15))
                         .overlay(RoundedRectangle(cornerRadius: 15).strokeBorder(FRIColors.line))
                     }
                     .buttonStyle(.plain)
@@ -119,9 +153,9 @@ struct FRICalendarGridView: View {
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                         .padding(15).aspectRatio(1, contentMode: .fit).frame(minHeight: minimumMonthWidth)
-                        .foregroundStyle(FRIColors.cream)
-                        .background(FRIColors.sidebar.opacity(0.8), in: RoundedRectangle(cornerRadius: 20))
-                        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(FRIColors.cream.opacity(0.18)))
+                        .foregroundStyle(FRIColors.ink)
+                        .background(FRIColors.cloud.opacity(0.8), in: RoundedRectangle(cornerRadius: 20))
+                        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(FRIColors.surface.opacity(0.18)))
                     }.buttonStyle(.plain)
                         .accessibilityLabel("\(month.formatted(.dateTime.month(.wide).year())), \(count) appointments")
                         .accessibilityIdentifier("fri.calendar.month.\(CalendarClock.day(month).prefix(7))")
@@ -137,7 +171,7 @@ struct FRICalendarGridView: View {
                 if let date = clock.date(byAdding: .day, value: index, to: start) {
                     Text(date, format: .dateTime.day()).friFont(.caption2).monospacedDigit()
                         .lineLimit(1).minimumScaleFactor(0.8).frame(maxWidth: .infinity)
-                        .background(clock.isDateInToday(date) ? FRIColors.marsala : .clear, in: RoundedRectangle(cornerRadius: 3))
+                        .background(clock.isDateInToday(date) ? FRIColors.accent : .clear, in: RoundedRectangle(cornerRadius: 3))
                         .opacity(clock.isDate(date, equalTo: month, toGranularity: .month) ? 1 : 0.25)
                 }
             }
@@ -145,6 +179,6 @@ struct FRICalendarGridView: View {
     }
 
     private func move(_ value: Int) {
-        cursor = clock.date(byAdding: mode == .year ? .year : .month, value: value, to: cursor) ?? cursor
+        cursor = clock.date(byAdding: mode == .week ? .weekOfYear : mode == .year ? .year : .month, value: value, to: cursor) ?? cursor
     }
 }

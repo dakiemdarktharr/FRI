@@ -29,6 +29,7 @@
 		32500D9E95542A595839F6DA /* import-text.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 3BD070EA870CAA088C08414C /* import-text.pdf */; };
 		358E25E473CAFD544EB05B1F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DBE9960CECCB9F0CD8E45698 /* Assets.xcassets */; };
 		369F59051619FFFB21ED80B0 /* FRIBackdropArtwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D136FF0073B214ECE0A2A66 /* FRIBackdropArtwork.swift */; };
+		3CA4C991DE6102A014A15C7B /* FRISourceWebsite.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2290DC99CB6A406D477A1DC /* FRISourceWebsite.swift */; };
 		3F67965DDA7CA97391A3AC2A /* import-scan.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 32CBC5CAE60AC421103982D5 /* import-scan.pdf */; };
 		42EE9DACE386D20320D933D3 /* FRIImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A65C1DBBDD305821ED10600 /* FRIImportView.swift */; };
 		445CC0B30157C2EE90849C0B /* Gradient-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = C5F38879EF6E888D42A8EE18 /* Gradient-LICENSE.txt */; };
@@ -42,6 +43,7 @@
 		59D35E9F3AB1AB49D18E5484 /* FRIDayAssistantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F387F2A0D3DF5A33BC469CD7 /* FRIDayAssistantView.swift */; };
 		5B96E0236C348B2C446708EE /* FRIGradient.metal in Sources */ = {isa = PBXBuildFile; fileRef = C64FD6F47362F424583CFCB8 /* FRIGradient.metal */; };
 		5C45EDC74F63D33D82F10149 /* import-review.csv in Resources */ = {isa = PBXBuildFile; fileRef = 6A18C851F277E618DAA12F5E /* import-review.csv */; };
+		5E7AA1CFA31BF586B0826046 /* FRISourceWebsite.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2290DC99CB6A406D477A1DC /* FRISourceWebsite.swift */; };
 		5ED4FA8052335CE3E6B9E093 /* FRIApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F187CB02BB0E038B703CE008 /* FRIApp.swift */; };
 		6292BBBBFF2B1936AD029586 /* FRIWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E6A093A9562979FC902AF2 /* FRIWorkflowTests.swift */; };
 		62A76FE1ABCA7553C3AA740E /* FRISpotifyPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDAC49D16F623958FF10495 /* FRISpotifyPlayer.swift */; };
@@ -55,6 +57,7 @@
 		7B1AF5340D439E193B56C8A6 /* FRISpotifyPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDAC49D16F623958FF10495 /* FRISpotifyPlayer.swift */; };
 		7BC213029D6A0744AD4D5316 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = BDDB35E3A60066B4CC661A06 /* README.md */; };
 		7C39A68D74FA62CBD9BA8257 /* FRIWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BAEC6BF9E2B8A9280E645C7 /* FRIWidgetContent.swift */; };
+		7EF38C912AA4DAEA3706DAFA /* FRISourceWebsite.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2290DC99CB6A406D477A1DC /* FRISourceWebsite.swift */; };
 		7F4C9CDC49C811922B10EDF9 /* FRIServiceCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB68307D8DFBC4F216C8E3F /* FRIServiceCardsView.swift */; };
 		81073E6A043F95F77F5BEFAD /* FRICore in Frameworks */ = {isa = PBXBuildFile; productRef = 5D1C65206F3BA0517545C7BF /* FRICore */; };
 		835012197CB74E295B8A608D /* FRIServiceCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB68307D8DFBC4F216C8E3F /* FRIServiceCardsView.swift */; };
@@ -191,6 +194,7 @@
 		910ADF3AF76D471C61D3A4BC /* FRIMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FRIMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C6E98D4AD848E4800B338F6 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A0C32B74F333674EFA2D3253 /* FRIDesktopWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FRIDesktopWidgets.swift; sourceTree = "<group>"; };
+		A2290DC99CB6A406D477A1DC /* FRISourceWebsite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FRISourceWebsite.swift; sourceTree = "<group>"; };
 		A75D245D0B10BD0EAD562FAC /* FRICore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = FRICore; path = Packages/FRICore; sourceTree = SOURCE_ROOT; };
 		B77D5E57945576EFCC5261ED /* desktop-service-cache-backup.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "desktop-service-cache-backup.json"; sourceTree = "<group>"; };
 		BDDB35E3A60066B4CC661A06 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -316,6 +320,7 @@
 				0F62E156B7FCB8DA9F19ABDE /* FRIPlanEditorView.swift */,
 				0AB68307D8DFBC4F216C8E3F /* FRIServiceCardsView.swift */,
 				5FDC5569BA10EDCDB07AE7D9 /* FRIServicesView.swift */,
+				A2290DC99CB6A406D477A1DC /* FRISourceWebsite.swift */,
 				1FDAC49D16F623958FF10495 /* FRISpotifyPlayer.swift */,
 				200831043D48BD48B9EEAE58 /* FRIUtilityViews.swift */,
 				16F1B5D46497D7D064246138 /* FRIWorkspaceView.swift */,
@@ -692,6 +697,7 @@
 				44F0040B6099BFE51916FB54 /* FRIPlanEditorView.swift in Sources */,
 				835012197CB74E295B8A608D /* FRIServiceCardsView.swift in Sources */,
 				A1BD739A26FD3ECD27B80920 /* FRIServicesView.swift in Sources */,
+				7EF38C912AA4DAEA3706DAFA /* FRISourceWebsite.swift in Sources */,
 				CCA62672FD5D749B34D9C85F /* FRISpotifyPlayer.swift in Sources */,
 				DDE1031F34646C4688BFFA44 /* FRIUtilityViews.swift in Sources */,
 				7C39A68D74FA62CBD9BA8257 /* FRIWidgetContent.swift in Sources */,
@@ -725,6 +731,7 @@
 				EF9F8D14F6E5ECCFEA121312 /* FRIPlanEditorView.swift in Sources */,
 				4FC3B0E24A1DF6EE5449B8EC /* FRIServiceCardsView.swift in Sources */,
 				0CC874FDFEEF1DD3CA8FABA6 /* FRIServicesView.swift in Sources */,
+				5E7AA1CFA31BF586B0826046 /* FRISourceWebsite.swift in Sources */,
 				62A76FE1ABCA7553C3AA740E /* FRISpotifyPlayer.swift in Sources */,
 				E2E104CBB24CD42A94A5916D /* FRIUtilityViews.swift in Sources */,
 				A6EB3C271EEF511443A5CDCC /* FRIWidgetContent.swift in Sources */,
@@ -748,6 +755,7 @@
 				2C2745A6AB2DDBBFD95982C4 /* FRIPlanEditorView.swift in Sources */,
 				7F4C9CDC49C811922B10EDF9 /* FRIServiceCardsView.swift in Sources */,
 				742A9BBFFB73A9E52A55CE13 /* FRIServicesView.swift in Sources */,
+				3CA4C991DE6102A014A15C7B /* FRISourceWebsite.swift in Sources */,
 				7B1AF5340D439E193B56C8A6 /* FRISpotifyPlayer.swift in Sources */,
 				0838EE7ACEF6BD5AA671CEC7 /* FRIUtilityViews.swift in Sources */,
 				F0910EF7FD01083CAEE88844 /* FRIWidgetContent.swift in Sources */,
@@ -841,7 +849,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -855,7 +863,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.7.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1007,7 +1015,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -1027,7 +1035,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.7.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

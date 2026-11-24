@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import FRICore
 
 /// Compiled with the real FRICore sources by verify-backup-interop.cjs.
 /// All files and encryption keys are disposable fixtures, never a user's store.

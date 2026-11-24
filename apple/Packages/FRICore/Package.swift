@@ -9,7 +9,7 @@ let package = Package(
         .library(name: "FRIDesign", targets: ["FRIDesign"])
     ],
     targets: [
-        .target(name: "FRICore"),
+        .target(name: "FRICore", resources: [.process("Resources")]),
         .target(name: "FRIDesign"),
         .testTarget(name: "FRICoreTests", dependencies: ["FRICore"]),
         .testTarget(name: "FRIDesignTests", dependencies: ["FRIDesign"])

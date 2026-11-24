@@ -157,95 +157,42 @@ final class FRIWorkflowTests: XCTestCase {
         let connect = app.buttons["fri.import.connectCalendar"]
         reveal(connect, in: app, form: "fri.import.form"); connect.tap(); answerCalendar(allowAccess: !denied)
         if denied {
-            let message = app.staticTexts["Calendar access was declined. File import is still available."]
-            XCTAssertTrue(message.waitForExistence(timeout: 10))
-            XCTAssertTrue(message.isHittable && app.frame.contains(message.frame))
-            XCTAssertFalse(app.buttons["fri.import.accept"].exists)
-            let rejected = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-            rejected.name = "EventKit-permission-denied"; rejected.lifetime = .keepAlways; add(rejected)
-            app.buttons["fri.import.feedback.dismiss"].tap()
+            XCTAssertTrue(app.staticTexts["fri.import.feedback.message"].waitForExistence(timeout: 10))
             let source = app.textFields["fri.import.text"]
             reveal(source, in: app, form: "fri.import.form", upward: false)
-            source.tap(); source.typeText("QA Calendar denied fallback 2031-06-15 15:30")
-            reveal(app.buttons["fri.import.reviewText"], in: app, form: "fri.import.form")
+            source.tap(); source.typeText("QA fallback 2031-06-15 15:30 30 min")
             app.buttons["fri.import.reviewText"].tap()
-            XCTAssertTrue(app.textFields["fri.editor.title"].waitForExistence(timeout: 5))
-            reveal(app.buttons["fri.import.accept"], in: app, form: "fri.import.form")
-            app.buttons["fri.import.accept"].tap()
-            let duration = app.textFields["fri.editor.missingDuration"]
-            XCTAssertTrue(duration.waitForExistence(timeout: 8))
-            duration.tap(); duration.typeText("30\n")
-            reveal(app.buttons["fri.editor.continue"], in: app, form: "fri.editor.form")
-            app.buttons["fri.editor.continue"].tap()
-            XCTAssertTrue(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'fri.card.' AND label CONTAINS 'QA Calendar denied fallback'")).firstMatch.waitForExistence(timeout: 8))
-            XCTAssertEqual(app.staticTexts["fri.day.progress"].label, "0 of 1 appointments done")
+            XCTAssertTrue(app.buttons["fri.import.refresh"].waitForExistence(timeout: 8))
+            app.buttons["fri.import.refresh"].tap()
+            XCTAssertTrue(app.staticTexts["Added 1 · Needs attention 0 · Skipped 0"].waitForExistence(timeout: 8))
             return
         }
-        let title = app.textFields["fri.editor.title"]
         let timed = "FRI QA timed \(runID)"
         let allDay = "FRI QA all day \(runID)"
         let skipped = "FRI QA skip \(runID)"
-        var seen = Set<String>()
-        for _ in 0..<3 {
-            XCTAssertTrue(title.waitForExistence(timeout: 10), app.debugDescription)
-            let name = try XCTUnwrap(title.value as? String)
-            XCTAssertTrue([timed, allDay, skipped].contains(name), "Only the three events within seven days should be offered")
-            XCTAssertTrue(seen.insert(name).inserted)
-            if name == timed {
-                reveal(app.textFields["fri.editor.time"], in: app, form: "fri.import.form")
-                XCTAssertEqual(app.textFields["fri.editor.time"].value as? String, "09:00")
-                reveal(app.textFields["fri.editor.duration"], in: app, form: "fri.import.form")
-                XCTAssertEqual(app.textFields["fri.editor.duration"].value as? String, "45")
-            }
-            let action = app.buttons[name == skipped ? "fri.import.skip" : "fri.import.accept"]
-            reveal(action, in: app, form: "fri.import.form"); action.tap()
-            if seen.count < 3 { reveal(title, in: app, form: "fri.import.form", upward: false) }
-        }
-        XCTAssertEqual(seen, Set([timed, allDay, skipped]))
-        let time = app.textFields["fri.editor.missingTime"]
-        XCTAssertTrue(time.waitForExistence(timeout: 10), "An all-day event must ask for a time rather than invent midnight")
-        time.tap(); time.typeText("16:00\n")
-        reveal(app.buttons["fri.editor.continue"], in: app, form: "fri.editor.form")
-        app.buttons["fri.editor.continue"].tap()
-        let duration = app.textFields["fri.editor.missingDuration"]
-        XCTAssertTrue(duration.waitForExistence(timeout: 5))
-        duration.tap(); duration.typeText("30\n")
-        reveal(app.buttons["fri.editor.continue"], in: app, form: "fri.editor.form")
-        app.buttons["fri.editor.continue"].tap()
+        // The fixture puts all three events tomorrow. Remove the all-day row so
+        // the timed meeting can be applied without displacing a fixed event.
+        let allDayRow = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", allDay)).firstMatch
+        XCTAssertTrue(allDayRow.waitForExistence(timeout: 10))
+        allDayRow.tap()
+        app.buttons["Skip this plan"].tap()
+        let skipRow = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", skipped)).firstMatch
+        skipRow.tap(); app.buttons["Skip this plan"].tap()
+        app.buttons["fri.import.refresh"].tap()
+        XCTAssertTrue(app.staticTexts["Added 1 · Needs attention 0 · Skipped 0"].waitForExistence(timeout: 10))
+        app.buttons["Close"].firstMatch.tap()
         let timedCard = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'fri.card.' AND label CONTAINS %@", timed)).firstMatch
-        XCTAssertTrue(timedCard.waitForExistence(timeout: 10))
-        XCTAssertEqual(app.staticTexts["fri.day.progress"].label, "0 of 2 appointments done")
-        XCTAssertTrue(timedCard.label.contains("QA Room"))
-        let dayFormat = DateFormatter()
-        dayFormat.calendar = Calendar(identifier: .gregorian)
-        dayFormat.locale = Locale(identifier: "en_US_POSIX")
-        dayFormat.dateFormat = "yyyy-MM-dd"
-        let tomorrow = try XCTUnwrap(dayFormat.calendar.date(byAdding: .day, value: 1, to: .now))
-        XCTAssertTrue(app.buttons["fri.tab." + dayFormat.string(from: tomorrow)].isSelected)
-        let allDayCard = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'fri.card.' AND label CONTAINS %@", allDay)).firstMatch
-        reveal(allDayCard, in: app, form: "fri.calendar.content")
-        XCTAssertTrue(allDayCard.label.contains("16:00") && allDayCard.label.contains("30 min"))
-        let imported = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-        imported.name = "EventKit-selected-events-saved"; imported.lifetime = .keepAlways; add(imported)
+        XCTAssertTrue(timedCard.waitForExistence(timeout: 8))
+        XCTAssertTrue(timedCard.label.contains("QA Room") && timedCard.label.contains("09:00"))
         app.terminate(); app.launch()
         XCTAssertTrue(timedCard.waitForExistence(timeout: 15))
-        XCTAssertEqual(app.staticTexts["fri.day.progress"].label, "0 of 2 appointments done")
         app.buttons["fri.actions"].tap(); app.buttons["Import plans"].tap()
         reveal(connect, in: app, form: "fri.import.form"); connect.tap()
-        var seenAgain = Set<String>()
-        for _ in 0..<3 {
-            reveal(title, in: app, form: "fri.import.form", upward: false)
-            XCTAssertTrue(title.waitForExistence(timeout: 10))
-            let name = try XCTUnwrap(title.value as? String)
-            XCTAssertTrue([timed, allDay, skipped].contains(name))
-            XCTAssertTrue(seenAgain.insert(name).inserted)
-            let action = app.buttons[name == skipped ? "fri.import.skip" : "fri.import.accept"]
-            reveal(action, in: app, form: "fri.import.form"); action.tap()
-        }
-        XCTAssertEqual(seenAgain, Set([timed, allDay, skipped]))
-        XCTAssertTrue(app.staticTexts["This source is already in your calendar or saved drafts."].waitForExistence(timeout: 5))
+        let again = app.buttons["fri.import.refresh"]
+        XCTAssertTrue(again.waitForExistence(timeout: 10))
+        again.tap()
+        XCTAssertTrue(app.staticTexts["Added 1 · Needs attention 1 · Skipped 1"].waitForExistence(timeout: 8))
         app.buttons["Close"].firstMatch.tap()
-        XCTAssertEqual(app.staticTexts["fri.day.progress"].label, "0 of 2 appointments done")
         reveal(timedCard, in: app, form: "fri.calendar.content"); timedCard.tap()
         app.buttons["fri.detail.done"].tap()
         XCTAssertEqual(app.buttons["fri.detail.done"].label, "Mark as pending")
@@ -330,6 +277,11 @@ final class FRIWorkflowTests: XCTestCase {
         guard app.frame.width >= 1000 else { throw XCTSkip("Requires a wide iPad sidebar") }
         let settings = app.buttons["fri.sidebar.settings"]
         XCTAssertTrue(settings.waitForExistence(timeout: 8))
+        settings.tap()
+        let sidebarMode = app.buttons["fri.settings.sidebar"]
+        sidebarMode.tap()
+        app.buttons["Moving gradient"].tap()
+        app.buttons["Close"].firstMatch.tap()
         func setMotion(_ enabled: Bool) {
             settings.tap()
             let motion = app.switches["Gentle motion"]
@@ -396,44 +348,21 @@ final class FRIWorkflowTests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
         let day = app.buttons["Open month calendar"]
-        let add = app.buttons["fri.day.add"]
-        let manage = app.buttons["fri.day.manage"]
-        func inspect(_ name: String) {
+        let selector = app.buttons["fri.view.selector"]
+        for orientation in [UIDeviceOrientation.portrait, .landscapeLeft] {
+            XCUIDevice.shared.orientation = orientation
             XCTAssertTrue(day.waitForExistence(timeout: 8))
-            XCTAssertGreaterThanOrEqual(add.frame.minX, day.frame.maxX)
-            XCTAssertGreaterThanOrEqual(manage.frame.minX, day.frame.maxX)
-            for control in [day, add, manage] {
-                XCTAssertTrue(control.isHittable)
-                XCTAssertTrue(app.frame.contains(control.frame))
-                XCTAssertGreaterThanOrEqual(control.frame.width, 44)
-                XCTAssertGreaterThanOrEqual(control.frame.height, 44)
-            }
-            let header = day.frame.union(add.frame).union(manage.frame)
-            XCTAssertLessThanOrEqual(header.height, 250, "The compact header must leave space for appointments")
-            let image = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-            image.name = name; image.lifetime = .keepAlways; self.add(image)
+            XCTAssertLessThan(day.frame.height, 150)
+            XCTAssertTrue(selector.isHittable)
+            selector.tap()
+            app.buttons["Week"].tap()
+            XCTAssertTrue(app.buttons["fri.calendar.next"].waitForExistence(timeout: 8))
+            selector.tap()
+            app.buttons["Feed"].tap()
         }
-        inspect("Day-heading-portrait")
-        add.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.15)).tap()
-        XCTAssertTrue(app.textFields["fri.editor.title"].waitForExistence(timeout: 8))
-        app.buttons["Close"].firstMatch.tap()
-        manage.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.15)).tap()
-        XCTAssertTrue(app.staticTexts["Manage appointments"].waitForExistence(timeout: 8))
-        app.buttons["Close"].firstMatch.tap()
-        day.tap()
-        XCTAssertTrue(app.staticTexts["fri.calendar.heading"].waitForExistence(timeout: 8))
-        app.buttons["fri.navigation.menu"].tap(); app.buttons["fri.navigation.day"].tap()
-        app.buttons["fri.navigation.menu"].tap(); app.buttons["Settings"].tap()
-        let larger = app.switches["fri.settings.largeText"]
-        reveal(larger, in: app, form: "fri.settings.form")
-        larger.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
-        app.buttons["Close"].firstMatch.tap()
-        inspect("Day-heading-larger-text")
-        XCUIDevice.shared.orientation = .landscapeLeft
-        inspect("Day-heading-landscape")
     }
 
-    func testMosaicCardDetailsAndCompletion() throws {
+    func testFeedCardDetailsAndCompletion() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
@@ -466,7 +395,7 @@ final class FRIWorkflowTests: XCTestCase {
         }
         revealCard()
         let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-        shot.name = "Duration-mosaic-portrait"; shot.lifetime = .keepAlways; add(shot)
+        shot.name = "Feed-portrait"; shot.lifetime = .keepAlways; add(shot)
         // Open from the empty middle of the card, away from all text.
         first.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.45)).tap()
         XCTAssertTrue(app.buttons["Edit"].waitForExistence(timeout: 8))
@@ -479,31 +408,22 @@ final class FRIWorkflowTests: XCTestCase {
         XCTAssertEqual(done.label, "Mark as pending")
         XCTAssertFalse(app.buttons["Edit"].exists, "Completion must not open appointment details")
         let completed = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-        completed.name = "Duration-mosaic-completed"; completed.lifetime = .keepAlways; add(completed)
+        completed.name = "Feed-completed"; completed.lifetime = .keepAlways; add(completed)
         app.terminate(); app.launch()
         XCTAssertTrue(done.waitForExistence(timeout: 15))
         XCTAssertEqual(done.label, "Mark as pending")
-        let mosaicWidth = first.frame.width
         app.buttons["fri.navigation.menu"].tap(); app.buttons["Settings"].tap()
-        let layout = app.buttons["fri.settings.layout"]
-        reveal(layout, in: app, form: "fri.settings.form"); layout.tap()
-        app.buttons["List"].tap()
-        app.buttons["Close"].firstMatch.tap()
-        revealCard()
-        XCTAssertGreaterThan(first.frame.width, mosaicWidth * 1.5)
-        let list = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-        list.name = "Appointment-list"; list.lifetime = .keepAlways; add(list)
-        app.buttons["fri.navigation.menu"].tap(); app.buttons["Settings"].tap()
-        reveal(layout, in: app, form: "fri.settings.form"); layout.tap()
-        app.buttons["Duration mosaic"].tap()
+        let theme = app.buttons["fri.settings.theme"]
+        reveal(theme, in: app, form: "fri.settings.form"); theme.tap()
+        app.buttons["Dark"].tap()
         let larger = app.switches["fri.settings.largeText"]
         reveal(larger, in: app, form: "fri.settings.form")
         larger.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
         app.buttons["Close"].firstMatch.tap()
         revealCard()
-        XCTAssertGreaterThan(first.frame.width, mosaicWidth * 1.5)
+        XCTAssertTrue(first.isHittable && done.isHittable)
         let large = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-        large.name = "Duration-mosaic-larger-text"; large.lifetime = .keepAlways; add(large)
+        large.name = "Feed-dark-larger-text"; large.lifetime = .keepAlways; add(large)
     }
 
     func testToolbarHitAreasAndNavigation() throws {
@@ -534,7 +454,7 @@ final class FRIWorkflowTests: XCTestCase {
         // when the full screen is wider than the sidebar breakpoint.
         if app.buttons["fri.navigation.menu"].exists {
             cornerTap(app.buttons["fri.navigation.menu"])
-            app.buttons["fri.navigation.day"].tap()
+            app.buttons["fri.navigation.feed"].tap()
         } else {
             cornerTap(app.buttons["Sidebar"])
             XCTAssertFalse(app.buttons["fri.sidebar.settings"].exists)
@@ -1701,7 +1621,7 @@ final class FRIWorkflowTests: XCTestCase {
         func openImport() {
             #if os(macOS)
             app.menuBars.menuBarItems["File"].click()
-            app.menuItems["Import Plans…"].click()
+            app.menuItems["Add a source…"].click()
             #else
             app.buttons["fri.actions"].tap()
             app.buttons["Import plans"].tap()
@@ -1721,130 +1641,50 @@ final class FRIWorkflowTests: XCTestCase {
         read("https://127.0.0.1/calendar.ics")
         let rejection = app.staticTexts["FRI cannot read links on private or local networks."]
         XCTAssertTrue(rejection.waitForExistence(timeout: 15))
-        XCTAssertTrue(rejection.isHittable && app.frame.contains(rejection.frame), "Feedback must appear without scrolling")
-        XCTAssertFalse(app.buttons["fri.import.accept"].exists)
-        #if os(iOS)
-        if largerText {
-            for orientation in [UIDeviceOrientation.landscapeLeft, .portrait] {
-                XCUIDevice.shared.orientation = orientation
-                let panel = app.descendants(matching: .any)["fri.import.feedback"].firstMatch
-                XCTAssertTrue(panel.waitForExistence(timeout: 5))
-                XCTAssertTrue(app.frame.contains(panel.frame))
-                XCTAssertGreaterThanOrEqual(panel.frame.minY, app.navigationBars.firstMatch.frame.maxY)
-                for id in ["fri.import.feedback.details", "fri.import.feedback.dismiss"] {
-                    let button = app.buttons[id]
-                    XCTAssertTrue(button.isHittable && app.frame.contains(button.frame))
-                    XCTAssertGreaterThanOrEqual(button.frame.height, 44)
-                }
-                let rotated = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-                rotated.name = "Import-feedback-large-text-\(orientation.rawValue)"
-                rotated.lifetime = .keepAlways; add(rotated)
-            }
-        }
-        #endif
-        app.buttons["fri.import.feedback.details"].tap()
-        XCTAssertTrue(app.navigationBars["Import feedback"].waitForExistence(timeout: 5))
-        XCTAssertTrue(rejection.exists)
-        app.buttons["Close"].firstMatch.tap()
-        XCTAssertTrue(app.buttons["fri.import.feedback.dismiss"].waitForExistence(timeout: 5))
-        let feedback = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-        feedback.name = "Public-link-error-without-scrolling"; feedback.lifetime = .keepAlways; add(feedback)
-        app.buttons["fri.import.feedback.dismiss"].tap()
-        XCTAssertFalse(app.staticTexts["fri.import.feedback.message"].exists)
-        XCTAssertEqual(app.textFields["fri.import.link"].value as? String, "https://127.0.0.1/calendar.ics")
+        XCTAssertFalse(app.buttons["fri.import.refresh"].exists)
         app.buttons["Close"].firstMatch.tap()
 
-        // Pinned upstream ical.js fixture: one 60-minute event, 2012-06-30
-        // 06:00 America/Los_Angeles. No fixture or network stub enters the app.
-        let url = "https://raw.githubusercontent.com/kewisch/ical.js/4b28e296c6f2e9742fcde82fd2cde39b9ad382da/samples/minimal.ics"
-        let name = "Really long event name thing"
-        openImport(); read(url)
-        let title = app.textFields["fri.editor.title"]
-        XCTAssertTrue(title.waitForExistence(timeout: 40), app.debugDescription)
-        XCTAssertEqual(title.value as? String, name)
-        let start = try XCTUnwrap(ISO8601DateFormatter().date(from: "2012-06-30T13:00:00Z"))
-        let localTime = DateFormatter()
-        localTime.locale = Locale(identifier: "en_US_POSIX")
-        localTime.timeZone = .current
-        localTime.dateFormat = "HH:mm"
-        reveal(app.textFields["fri.editor.time"], in: app, form: "fri.import.form")
-        XCTAssertEqual(app.textFields["fri.editor.time"].value as? String, localTime.string(from: start))
-        XCTAssertTrue(app.staticTexts["Time (HH:mm)"].exists)
-        reveal(app.textFields["fri.editor.duration"], in: app, form: "fri.import.form")
-        XCTAssertEqual(app.textFields["fri.editor.duration"].value as? String, "60")
-        XCTAssertTrue(app.staticTexts["Duration in minutes"].exists)
-        let reviewed = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-        reviewed.name = "Public-HTTPS-calendar-review"; reviewed.lifetime = .keepAlways; add(reviewed)
-        let accept = app.buttons["fri.import.accept"]
-        reveal(accept, in: app, form: "fri.import.form"); accept.tap()
-        let cards = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'fri.card.' AND label CONTAINS %@", name))
-        let card = cards.firstMatch
-        XCTAssertTrue(card.waitForExistence(timeout: 10), app.debugDescription)
-        app.terminate(); app.launch()
-        XCTAssertTrue(card.waitForExistence(timeout: 15), "Imported event must survive a relaunch")
-        openImport(); read(url)
-        XCTAssertTrue(title.waitForExistence(timeout: 40))
-        reveal(accept, in: app, form: "fri.import.form"); accept.tap()
-        let duplicate = app.staticTexts["This source is already in your calendar or saved drafts."]
-        XCTAssertTrue(duplicate.waitForExistence(timeout: 8))
-        XCTAssertTrue(duplicate.isHittable && app.frame.contains(duplicate.frame))
-        app.buttons["fri.import.feedback.details"].tap()
-        XCTAssertTrue(app.navigationBars["Import feedback"].waitForExistence(timeout: 5))
-        XCTAssertTrue(duplicate.exists)
-        XCTAssertTrue(app.staticTexts["No new drafts were added."].exists)
+        // Windows 0.7 skips elapsed occurrences. This pinned public fixture
+        // ended in 2012 and must never add anything to today's calendar.
+        openImport()
+        read("https://raw.githubusercontent.com/kewisch/ical.js/4b28e296c6f2e9742fcde82fd2cde39b9ad382da/samples/minimal.ics")
+        XCTAssertTrue(app.staticTexts["No plans found in this source."].waitForExistence(timeout: 40))
         app.buttons["Close"].firstMatch.tap()
-        app.buttons["fri.import.feedback.dismiss"].tap()
-        app.buttons["Close"].firstMatch.tap()
-        XCTAssertTrue(card.waitForExistence(timeout: 8))
-        XCTAssertEqual(Set(cards.allElementsBoundByIndex.map(\.identifier)).count, 1)
-        XCTAssertEqual(app.staticTexts["fri.day.progress"].label, "0 of 1 appointments done")
+        app.buttons["fri.sources.refresh"].tap()
+        XCTAssertTrue(app.staticTexts["Added 0 · Needs attention 0 · Skipped 0"].waitForExistence(timeout: 8))
+
     }
 
-    func testTextImportRequiresExplicitDateAndReviewsOnlyAcceptedPlans() throws {
+    func testPreparedSourceSurvivesRelaunchAndRefreshHoldsOverlap() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launch()
-        XCTAssertTrue(app.descendants(matching: .any)["fri.calendar.content"].waitForExistence(timeout: 15))
-        #if os(macOS)
-        app.menuBars.menuBarItems["File"].click()
-        app.menuItems["Import Plans…"].click()
-        #else
-        app.buttons["fri.actions"].tap()
-        app.buttons["Import plans"].tap()
-        #endif
-        let source = app.textFields["fri.import.text"]
-        XCTAssertTrue(source.waitForExistence(timeout: 8))
-        source.tap()
-        source.typeText("QA text import 15:30")
-        XCTAssertEqual(source.value as? String, "QA text import 15:30")
-        #if os(iOS)
-        let hideKeyboard = app.keyboards.buttons["Hide keyboard"]
-        if hideKeyboard.waitForExistence(timeout: 2) {
-            hideKeyboard.tap()
-            XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        func openSources() {
+            #if os(macOS)
+            app.buttons["fri.sources"].click()
+            #else
+            app.buttons["fri.actions"].tap()
+            app.buttons["Import plans"].tap()
+            #endif
         }
-        #endif
-        reveal(app.buttons["fri.import.reviewText"], in: app, form: "fri.import.form")
-        XCTAssertTrue(app.buttons["fri.import.reviewText"].isEnabled)
+        let day = Date.now.addingTimeInterval(86400).formatted(.iso8601.year().month().day().dateSeparator(.dash))
+        XCTAssertTrue(app.buttons["fri.sources.refresh"].waitForExistence(timeout: 20))
+        openSources()
+        let text = app.descendants(matching: .any)["fri.import.text"].firstMatch
+        text.tap()
+        text.typeText("QA Physics \(day) 09:00 60 min\nQA Overlap \(day) 09:30 30 min")
         app.buttons["fri.import.reviewText"].tap()
-        XCTAssertTrue(app.textFields["fri.editor.title"].waitForExistence(timeout: 5), app.debugDescription)
-        reveal(app.buttons["Use today"], in: app, form: "fri.import.form")
-        XCTAssertTrue(app.buttons["Use today"].waitForExistence(timeout: 5))
-        reveal(app.buttons["fri.import.accept"], in: app, form: "fri.import.form")
-        app.buttons["fri.import.accept"].tap()
-        XCTAssertTrue(app.staticTexts["Enter a name and choose a date."].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Enter a name and choose a date."].isHittable)
-        reveal(app.buttons["Use today"], in: app, form: "fri.import.form", upward: false)
-        app.buttons["Use today"].tap()
-        reveal(app.buttons["fri.import.accept"], in: app, form: "fri.import.form")
-        app.buttons["fri.import.accept"].tap()
-        let duration = app.textFields["fri.editor.missingDuration"]
-        XCTAssertTrue(duration.waitForExistence(timeout: 8))
-        duration.tap()
-        duration.typeText("45")
-        app.buttons["fri.editor.continue"].tap()
-        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "QA text import")).firstMatch.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["fri.import.refresh"].waitForExistence(timeout: 10))
+        app.terminate(); app.launch()
+        XCTAssertTrue(app.buttons["fri.sources.refresh"].waitForExistence(timeout: 15))
+        let card = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'fri.card.' AND label CONTAINS 'QA Physics'")).firstMatch
+        XCTAssertFalse(card.exists)
+        app.buttons["fri.sources.refresh"].tap()
+        XCTAssertTrue(app.staticTexts["Added 1 · Needs attention 1 · Skipped 0"].waitForExistence(timeout: 10))
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        app.buttons["fri.sources.refresh"].tap()
+        XCTAssertTrue(app.staticTexts["Added 0 · Needs attention 1 · Skipped 0"].waitForExistence(timeout: 10))
     }
 }

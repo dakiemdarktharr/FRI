@@ -1,17 +1,32 @@
 import SwiftUI
 
-/// FRI 0.5 desktop brand tokens from preview/brand.css.
+/// Semantic colors shared by the calendar and its widgets (desktop preview/brand.css).
 public enum FRIColors {
-    public static let cream = Color(red: 250 / 255, green: 247 / 255, blue: 242 / 255)
-    public static let ink = Color(red: 38 / 255, green: 35 / 255, blue: 35 / 255)
-    public static let marsala = Color(red: 149 / 255, green: 82 / 255, blue: 81 / 255)
-    public static let sidebar = Color(red: 48 / 255, green: 41 / 255, blue: 41 / 255)
-    public static let control = Color(red: 64 / 255, green: 54 / 255, blue: 53 / 255)
-    public static let cardControl = Color(red: 233 / 255, green: 222 / 255, blue: 215 / 255)
-    public static let cardControlText = Color(red: 82 / 255, green: 58 / 255, blue: 56 / 255)
-    public static let dialogControl = Color(red: 83 / 255, green: 68 / 255, blue: 64 / 255)
-    public static let muted = Color(red: 98 / 255, green: 84 / 255, blue: 78 / 255)
-    public static let line = Color(red: 215 / 255, green: 205 / 255, blue: 198 / 255)
-    public static let completed = Color(red: 233 / 255, green: 225 / 255, blue: 218 / 255)
-    public static let workspace = Color(red: 68 / 255, green: 66 / 255, blue: 66 / 255)
+    public static let cloud = pair(0xF4F7FA, 0x111D27)
+    public static let ink = pair(0x172B3A, 0xEAF2F6)
+    public static let accent = pair(0x087F8C, 0x64D4D0)
+    public static let onAccent = pair(0xFFFFFF, 0x111D27)
+    public static let surface = pair(0xFFFFFF, 0x1C2D3B)
+    public static let control = pair(0xEAF0F4, 0x273C4B)
+    public static let muted = pair(0x586D7C, 0xA8BAC6)
+    public static let line = pair(0xDBE4EB, 0x354B5A)
+    public static let tint = pair(0xE0F2F2, 0x193F46)
+
+    private static func pair(_ light: Int, _ dark: Int) -> Color {
+        func components(_ hex: Int) -> (CGFloat, CGFloat, CGFloat) {
+            (CGFloat((hex >> 16) & 255) / 255, CGFloat((hex >> 8) & 255) / 255, CGFloat(hex & 255) / 255)
+        }
+        let day = components(light), night = components(dark)
+        #if os(macOS)
+        return Color(nsColor: NSColor(name: nil) { appearance in
+            let rgb = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? night : day
+            return NSColor(srgbRed: rgb.0, green: rgb.1, blue: rgb.2, alpha: 1)
+        })
+        #else
+        return Color(uiColor: UIColor { traits in
+            let rgb = traits.userInterfaceStyle == .dark ? night : day
+            return UIColor(red: rgb.0, green: rgb.1, blue: rgb.2, alpha: 1)
+        })
+        #endif
+    }
 }

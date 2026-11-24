@@ -29,7 +29,7 @@ struct FRIDayAssistantView: View {
                 ScrollView {
                     VStack(spacing: 16) {
                         HStack(spacing: 18) {
-                            Image("DayBackdrop").resizable().scaledToFit().frame(width: 85, height: 85).accessibilityHidden(true)
+                            FRIDayWave(motion: calendar.state.settings["motion"]?.bool != false).frame(width: 64, height: 64)
                             Text("Your day, with a little company.").friFont(.title3)
                         }
                         if verticalSizeClass == .compact {
@@ -52,7 +52,7 @@ struct FRIDayAssistantView: View {
                                 .onSubmit(send).accessibilityIdentifier("fri.day.message")
                             Button(action: send) {
                                 Image(systemName: "arrow.up").frame(width: 46, height: 46)
-                                    .background(FRIColors.marsala, in: RoundedRectangle(cornerRadius: 14))
+                                    .background(FRIColors.accent, in: RoundedRectangle(cornerRadius: 14))
                             }.buttonStyle(.plain).accessibilityLabel("Send")
                                 .accessibilityIdentifier("fri.day.send")
                                 .disabled(message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -86,8 +86,8 @@ struct FRIDayAssistantView: View {
                     Text(item.text).textSelection(.enabled)
                         .padding(.horizontal, 16).padding(.vertical, 14)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .foregroundStyle(FRIColors.cream)
-                        .background(item.fromUser ? FRIColors.marsala : FRIColors.dialogControl,
+                        .foregroundStyle(item.fromUser ? FRIColors.onAccent : FRIColors.ink)
+                        .background(item.fromUser ? FRIColors.accent : FRIColors.control,
                                     in: UnevenRoundedRectangle(topLeadingRadius: 18,
                                         bottomLeadingRadius: item.fromUser ? 18 : 4,
                                         bottomTrailingRadius: item.fromUser ? 4 : 18,
@@ -97,7 +97,7 @@ struct FRIDayAssistantView: View {
             }
             if let draftTitle {
                 Button("Create this appointment") { createDraft(draftTitle) }
-                    .buttonStyle(.borderedProminent).tint(FRIColors.marsala).foregroundStyle(FRIColors.cream)
+                    .buttonStyle(.borderedProminent).tint(FRIColors.accent).foregroundStyle(FRIColors.onAccent)
                     .accessibilityIdentifier("fri.day.create")
             }
             Color.clear.frame(height: 1).id("conversation-end")
@@ -154,10 +154,10 @@ private struct FRIDayChipStyle: ButtonStyle {
         configuration.label
             .padding(.horizontal, 12)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            .foregroundStyle(FRIColors.cream)
-            .background(FRIColors.dialogControl.opacity(configuration.isPressed ? 0.7 : 1),
+            .foregroundStyle(FRIColors.ink)
+            .background(FRIColors.control.opacity(configuration.isPressed ? 0.7 : 1),
                         in: RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(FRIColors.cream.opacity(0.16)))
+            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(FRIColors.surface.opacity(0.16)))
             .contentShape(RoundedRectangle(cornerRadius: 12))
     }
 }

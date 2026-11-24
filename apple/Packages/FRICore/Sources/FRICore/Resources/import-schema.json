@@ -1,0 +1,143 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "schedule",
+              "deadline",
+              "task",
+              "unknown"
+            ]
+          },
+          "date": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "time": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "duration": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "dueDate": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dueTime": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "effortMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "leadDays": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "periods": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "periodMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "weekdays": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "repeatFrom": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "repeatUntil": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "location": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "title",
+          "kind",
+          "date",
+          "time",
+          "duration",
+          "dueDate",
+          "dueTime",
+          "effortMinutes",
+          "leadDays",
+          "periods",
+          "periodMinutes",
+          "weekdays",
+          "repeatFrom",
+          "repeatUntil",
+          "location",
+          "evidence",
+          "notes"
+        ]
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "events",
+    "warnings"
+  ]
+}

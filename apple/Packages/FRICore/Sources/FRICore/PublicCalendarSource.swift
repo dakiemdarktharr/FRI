@@ -46,6 +46,13 @@ public enum PublicCalendarSource {
         return try decodeResponse(payload)
     }
 
+    /// Check top-level addresses before displaying a user-selected HTTPS source in WebKit.
+    public static func permitsWebsite(_ url: URL) async -> Bool {
+        guard url.scheme == "https", url.user == nil, url.password == nil, url.port == nil || url.port == 443,
+              let host = url.host, !host.isEmpty else { return false }
+        return (try? await Task.detached { try resolve(host.trimmingCharacters(in: CharacterSet(charactersIn: "[]"))) }.value) != nil
+    }
+
     static func isPublic(_ string: String) -> Bool {
         if let ip = IPv4Address(string) {
             let octets = Array(ip.rawValue)

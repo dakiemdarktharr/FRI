@@ -20,7 +20,7 @@ public enum CalendarError: LocalizedError, Sendable {
     }
 }
 
-public enum JSONValue: Codable, Equatable, Sendable {
+public enum JSONValue: Codable, Hashable, Sendable {
     case string(String), number(Double), bool(Bool), array([Self]), object([String: Self]), null
 
     public init(from decoder: any Decoder) throws {
@@ -96,6 +96,14 @@ public struct Appointment: Codable, Identifiable, Equatable, Sendable {
     public var notes = ""
     public var done = false
     public var kind: String?
+    public var allDay: Bool?
+    public var flexible: Bool?
+    public var flexibleUntil: String?
+    public var sourceId: String?
+    public var seriesKey: String?
+    public var assignmentKey: String?
+    public var dueDate: String?
+    public var dueTime: String?
     public var sourceKey: String?
 
     public init() {}
@@ -131,6 +139,9 @@ public struct CalendarState: Codable, Equatable, Sendable {
     public var version = 1
     public var tasks: [Appointment] = []
     public var drafts: [Appointment] = []
+    public var importCache: [SourceCacheEntry] = []
+    public var importQueue: [PreparedSource] = []
+    public var sourceLibrary: [SavedSource] = []
     public var tabs: [String] = []
     public var active = CalendarClock.day()
     public var settings: [String: JSONValue] = [:]
@@ -157,7 +168,7 @@ public struct CalendarState: Codable, Equatable, Sendable {
         return decode(String(source[source.index(after: comma)...]))
     }
 
-    private enum CodingKeys: CodingKey { case version, tasks, drafts, tabs, active, settings, widgets, collections, finished }
+    private enum CodingKeys: CodingKey { case version, tasks, drafts, importCache, importQueue, sourceLibrary, tabs, active, settings, widgets, collections, finished }
 
     public init(from decoder: any Decoder) throws {
         self.init()
@@ -165,6 +176,9 @@ public struct CalendarState: Codable, Equatable, Sendable {
         version = try values.decode(Int.self, forKey: .version)
         tasks = try values.decode([Appointment].self, forKey: .tasks)
         drafts = try values.decodeIfPresent([Appointment].self, forKey: .drafts) ?? []
+        importCache = try values.decodeIfPresent([SourceCacheEntry].self, forKey: .importCache) ?? []
+        importQueue = try values.decodeIfPresent([PreparedSource].self, forKey: .importQueue) ?? []
+        sourceLibrary = try values.decodeIfPresent([SavedSource].self, forKey: .sourceLibrary) ?? []
         tabs = try values.decodeIfPresent([String].self, forKey: .tabs) ?? []
         active = try values.decodeIfPresent(String.self, forKey: .active) ?? CalendarClock.day()
         settings = try values.decodeIfPresent([String: JSONValue].self, forKey: .settings) ?? [:]

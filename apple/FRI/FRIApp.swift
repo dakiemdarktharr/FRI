@@ -37,7 +37,8 @@ struct FRIApp: App {
                 Button("New Deadline") { calendar.newDraft(deadline: true) }
                     .keyboardShortcut("n", modifiers: [.command, .shift])
                 Divider()
-                Button("Import Plans…") { calendar.show(.importPlans) }
+                Button("Refresh sources") { calendar.refreshSources() }
+                Button("Add a source…") { calendar.show(.importPlans) }
                 Button("Export Backup…") { calendar.requestFile(.exportBackup) }
                 Button("Restore Backup…") { calendar.requestFile(.restoreBackup) }
                 Button("New Desktop Widget") { calendar.addDesktopWidget() }
@@ -61,7 +62,7 @@ struct FRIApp: App {
 @MainActor
 @Observable
 final class FRICalendarSession {
-    enum CalendarView: String, CaseIterable { case day = "Day", month = "Month", year = "Year" }
+    enum CalendarView: String, CaseIterable { case day = "Feed", week = "Week", month = "Month", year = "Year" }
     enum Panel: String, Identifiable {
         case draft, search, manage, importPlans, widget, appearance, services, planner, availability, dayAssistant, collections
         var id: String { rawValue }
@@ -92,6 +93,9 @@ final class FRICalendarSession {
     private var reminderSchedule = ReminderSchedule()
     var canUndo: Bool { undoState != nil }
     var message: String?
+    private(set) var readingSource = false
+    @ObservationIgnored private var sourceRead: Task<Void, Never>?
+    var selectedSource: String?
     var panel: Panel?
     var serviceToShow: FRIService?
     var fileAction: FileAction?
@@ -318,6 +322,59 @@ final class FRICalendarSession {
             cursor = CalendarClock.date(state.active) ?? .now
             appointment = appointment.flatMap { selected in state.tasks.first { $0.id == selected.id } }
         }
+    }
+
+    func cancelSourceRead() {
+        sourceRead?.cancel()
+        sourceRead = nil
+        readingSource = false
+    }
+
+    func readSource(label: String, links: [String], cacheKey: String? = nil, work: @escaping @Sendable () async throws -> SourceRead) {
+        cancelSourceRead()
+        readingSource = true
+        message = nil
+        sourceRead = Task {
+            defer { if !Task.isCancelled { readingSource = false } }
+            do {
+                let result: SourceRead
+                if let cached = state.importCache.first(where: { $0.key == cacheKey }) {
+                    result = SourceRead(rows: cached.rows, warnings: cached.warnings)
+                } else { result = try await work() }
+                try Task.checkCancellation()
+                guard !result.rows.isEmpty else { throw SourceFailure(result.warnings.first ?? "No plans found in this source.") }
+                let planner = try SourcePlanner()
+                let candidates = try result.rows.prefix(500).map { try planner.normalized($0) }
+                let rows = try candidates.filter { try !planner.past($0) }
+                guard !rows.isEmpty else { throw SourceFailure("All plans in this source have already passed.") }
+                var warnings = result.warnings
+                if rows.count < result.rows.count { warnings.append("\(result.rows.count - rows.count) past or excess plans skipped.") }
+                var batch = PreparedSource(label: label, rows: rows, links: links, warnings: warnings)
+                if try rows.contains(where: { try planner.question($0) != nil }) { batch.status = "attention" }
+                if change({ state in
+                    try state.stageSource(batch)
+                    if let cacheKey {
+                        let entry = SourceCacheEntry(key: cacheKey, result: SourceRead(rows: rows, warnings: result.warnings))
+                        if try JSONEncoder().encode(entry).count < 200_000 {
+                            state.importCache.removeAll { $0.key == cacheKey }
+                            state.importCache.insert(entry, at: 0)
+                            state.importCache = Array(state.importCache.prefix(12))
+                        }
+                    }
+                }) {
+                    selectedSource = batch.id
+                    message = "\(rows.count) prepared · Refresh to add to calendar."
+                }
+            } catch { if !Task.isCancelled { message = error.localizedDescription } }
+        }
+    }
+
+    func refreshSources() {
+        var feedback = ""
+        if change({ state in
+            let result = try SourcePlanner().refresh(&state)
+            feedback = "Added \(result.added) · Needs attention \(result.held) · Skipped \(result.skipped)"
+        }) { message = feedback }
     }
 
     func addDrafts(_ drafts: [Appointment]) -> Bool {

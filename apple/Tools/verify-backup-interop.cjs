@@ -76,18 +76,31 @@ async function restoreInDesktop(backup, expectedTasks) {
 }
 
 async function main() {
-  const core = path.join(root, 'apple/Packages/FRICore/Sources/FRICore');
-  const executable = path.join(temporary, 'backup-probe');
-  const build = spawnSync('xcrun', ['swiftc', '-swift-version', '6', '-parse-as-library', '-o', executable,
-    ...fs.readdirSync(core).filter(file => file.endsWith('.swift')).map(file => path.join(core, file)),
-    path.join(__dirname, 'BackupInterop.swift')], { encoding: 'utf8' });
-  assert.equal(build.status, 0, build.stderr);
+  const core = path.join(root, 'apple/Packages/FRICore');
+  const sources = path.join(temporary, 'Sources/BackupProbe');
+  fs.mkdirSync(sources, { recursive: true });
+  fs.copyFileSync(path.join(__dirname, 'BackupInterop.swift'), path.join(sources, 'BackupInterop.swift'));
+  fs.writeFileSync(path.join(temporary, 'Package.swift'), `// swift-tools-version: 6.0
+import PackageDescription
+let package = Package(name: "BackupProbe", platforms: [.macOS(.v14)],
+    dependencies: [.package(path: ${JSON.stringify(core)})],
+    targets: [.executableTarget(name: "BackupProbe", dependencies: [.product(name: "FRICore", package: "FRICore")])])
+`);
+  const args = ['swift', 'build', '--package-path', temporary];
+  const build = spawnSync('xcrun', args, { encoding: 'utf8' });
+  assert.equal(build.status, 0, build.stdout + build.stderr);
+  const bin = spawnSync('xcrun', [...args, '--show-bin-path'], { encoding: 'utf8' });
+  assert.equal(bin.status, 0, bin.stderr);
+  const executable = path.join(bin.stdout.trim(), 'BackupProbe');
   const state = vm.runInNewContext(`${dateHelpers}\nlet today='2026-11-23';\n${desktopSeed}\nseed()`);
   const fixture = { format: 'fri-backup', schema: 1, state: clone(state) };
   fixture.state.tasks.push({ id: 'desktop-deadline', title: 'Hạn nộp — 🗓️', date: '2026-11-24',
     time: '23:59', duration: 0, kind: 'deadline', category: 'Work', location: '', notes: 'First\nSecond, third', done: false });
   fixture.state.drafts = [{ ...fixture.state.tasks[0], id: 'unfinished-import', title: 'Chưa chọn giờ',
     date: '', time: '', duration: 0, kind: 'schedule', done: false, sourceKey: 'fixture:unfinished' }];
+  fixture.state.importQueue = [{ id: 'qa-source', label: 'Timetable', rows: [{ title: 'Vật lý', date: '', kind: 'schedule', sourceKey: 'qa-row' }],
+    links: [], warnings: [], status: 'attention', settings: { workStart: 540, workEnd: 1080 } }];
+  fixture.state.sourceLibrary = [{ id: 'qa-source', label: 'Timetable', links: [], readAt: 1 }];
   fixture.state.settings.futureOption = { nested: [true, 3.5, 'giữ nguyên', null] };
   assert.deepEqual(await exportInDesktop(fixture.state), fixture);
   validate(fixture.state);
@@ -99,6 +112,8 @@ async function main() {
   assert.equal(converted.status, 0, converted.stderr);
   const native = JSON.parse(fs.readFileSync(output, 'utf8'));
   validate(native.state);
+  assert.deepEqual(native.state.importQueue, fixture.state.importQueue);
+  assert.deepEqual(native.state.sourceLibrary, fixture.state.sourceLibrary);
   assert.deepEqual(native.state.tasks.slice(0, -1), fixture.state.tasks);
   for (const key of ['settings', 'drafts', 'tabs', 'active', 'collections', 'widgets', 'finished']) {
     assert.deepEqual(native.state[key], fixture.state[key], `Swift lost ${key}`);
@@ -127,7 +142,7 @@ async function main() {
     assert.deepEqual(fs.readFileSync(output), before, `${name}: output was overwritten`);
     console.log(`PASS both readers reject ${name}`);
   }
-  console.log('LIMIT: desktop 0.5 restore imports appointments only; native retains full compatible state. No GUI, signing or release claim.');
+  console.log('LIMIT: desktop restore imports appointments only; native retains full compatible state. No GUI, signing or release claim.');
 }
 
 main().catch(error => { console.error(error); process.exitCode = 1; })

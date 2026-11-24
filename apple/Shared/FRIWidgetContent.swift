@@ -7,7 +7,7 @@ import WidgetKit
 struct FRIWidgetContent<Completion: View>: View {
     let snapshot: WidgetSnapshot
     let family: WidgetFamily
-    var tint = Color(red: 149 / 255, green: 82 / 255, blue: 81 / 255)
+    var tint = FRIColors.accent
     var secondaryColor: Color = .secondary
     @ViewBuilder let completion: () -> Completion
     @Environment(\.dynamicTypeSize) private var typeSize

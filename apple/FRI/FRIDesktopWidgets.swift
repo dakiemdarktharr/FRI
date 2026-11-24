@@ -208,22 +208,22 @@ private struct FRIDesktopWidgetView: View {
                     let selected = day.flatMap { CalendarClock.date($0) } ?? context.date
                     let snapshot = calendar.ready ? WidgetSnapshot(state: calendar.state, day: selected, now: context.date) : WidgetSnapshot(day: selected, locked: true)
                     FRIWidgetContent(snapshot: snapshot,
-                                     family: geometry.size.height >= 290 ? .systemLarge : (geometry.size.width >= 280 ? .systemMedium : .systemSmall), tint: FRIColors.cream, secondaryColor: FRIColors.cream.opacity(0.85)) {
+                                     family: geometry.size.height >= 290 ? .systemLarge : (geometry.size.width >= 280 ? .systemMedium : .systemSmall), tint: FRIColors.accent, secondaryColor: FRIColors.muted) {
                         if let next = snapshot.tasks.first, let item = calendar.state.tasks.first(where: { $0.id == next.id }) {
                             Button { calendar.setDoneWithoutOpening(item) } label: {
                                 Image(systemName: "checkmark.circle.fill").friFont(.title2)
                             }.buttonStyle(.plain).accessibilityLabel("Complete \(next.title)")
                         }
                     }
-                    .foregroundStyle(FRIColors.cream).tint(FRIColors.cream)
+                    .foregroundStyle(FRIColors.ink).tint(FRIColors.accent)
                     .padding(14).frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(FRIColors.marsala, in: RoundedRectangle(cornerRadius: 18))
+                    .background(FRIColors.control, in: RoundedRectangle(cornerRadius: 18))
                     .accessibilityIdentifier("fri.desktopWidget.content")
                 }
             }
             .padding(.horizontal, 12).padding(.bottom, 12)
         }
-        .background(FRIColors.cream, in: RoundedRectangle(cornerRadius: 22))
+        .background(FRIColors.surface, in: RoundedRectangle(cornerRadius: 22))
         .overlay(RoundedRectangle(cornerRadius: 22).strokeBorder(FRIColors.line))
         .overlay(alignment: .bottomTrailing) {
             FRIPanelResizeRegion().frame(width: 24, height: 24)

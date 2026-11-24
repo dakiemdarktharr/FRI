@@ -203,9 +203,9 @@ struct FRISpotifyPlayerView: View {
             }
             .padding(16)
         }
-        .background(FRIColors.sidebar)
-        .foregroundStyle(FRIColors.cream)
-        .tint(FRIColors.cream)
+        .background(FRIColors.cloud)
+        .foregroundStyle(FRIColors.ink)
+        .tint(FRIColors.accent)
         .preferredColorScheme(.dark)
         #if os(macOS)
         .frame(minWidth: 328, minHeight: 408)

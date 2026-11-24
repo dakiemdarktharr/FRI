@@ -60,7 +60,7 @@ public struct FRISurface: ViewModifier {
     public let text: Color
     public let border: Color?
 
-    public init(glass: Bool, radius: CGFloat = 22, fill: Color = FRIColors.cream, text: Color = FRIColors.ink, border: Color? = nil) {
+    public init(glass: Bool, radius: CGFloat = 22, fill: Color = FRIColors.surface, text: Color = FRIColors.ink, border: Color? = nil) {
         self.glass = glass
         self.radius = radius
         self.fill = fill

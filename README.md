@@ -37,7 +37,7 @@ Open `apple/FRI.xcodeproj` in Xcode. `FRIMac` is the standalone SwiftUI/AppKit M
 
 `FRIMacWidgetKit` and `FRIiOS` embed the system WidgetKit extensions and use App Group/Keychain sharing; those configurations require the owning developer team. The standalone Mac configuration never silently falls back from a failed shared store. Transfer calendars between the standalone and App Group configurations using a JSON backup. These native apps are separate from the Electron download described above.
 
-The current native work follows the Windows/Linux 0.5 cream/marsala interface; the 0.7 Cloud feed and staged Sources contract still need to be ported there. It is **in development, not a verified distribution release**. See the [production acceptance ledger](docs/apple/verification/PRODUCTION-READINESS.md) and [earlier WidgetKit build evidence](docs/apple/verification/WIDGETS-2026-11-23.md).
+The native 0.7.0 development build opens in the Cloud feed and includes week, month and year views. Add files, text or links under **Sources**, review missing details and use **Refresh** to apply prepared plans. The shared Windows planner reserves fixed appointments first and keeps unresolved conflicts for review. See the [production acceptance ledger](docs/apple/verification/PRODUCTION-READINESS.md) and [earlier WidgetKit build evidence](docs/apple/verification/WIDGETS-2026-11-23.md).
 
 
 ## Develop and verify

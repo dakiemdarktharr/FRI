@@ -13,6 +13,7 @@ struct FRIServicesView: View {
     @State private var spotifyMessage: String?
     @FocusState private var spotifyFocused: Bool
     @State private var mapQuery = ""
+    @FocusState private var mapFocused: Bool
     @State private var stepsText = "0"
     @FocusState private var stepsFocused: Bool
     @State private var mapItem: MKMapItem?
@@ -91,6 +92,9 @@ struct FRIServicesView: View {
                     serviceField("City or place") {
                         TextField("City or place", text: $mapQuery)
                             .accessibilityIdentifier("fri.services.maps.query")
+                            .focused($mapFocused)
+                            .submitLabel(.search)
+                            .onSubmit { refreshMap() }
                     }
                     Button("Show on map") { refreshMap() }.disabled(loadingMap || mapQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     if loadingMap {
@@ -100,10 +104,12 @@ struct FRIServicesView: View {
                     if let mapMessage { Text(mapMessage).foregroundStyle(.secondary) }
                     if let mapItem {
                         Map(position: $mapPosition) { Marker(item: mapItem) }.frame(height: 210)
+                            .accessibilityIdentifier("fri.services.maps.preview")
                     }
                     if mapItem != nil || savedMapName != nil {
-                        if mapItem == nil, let saved = savedMapName {
+                        if let saved = savedMapName {
                             Text("Saved place: \(saved)").foregroundStyle(.secondary)
+                                .accessibilityIdentifier("fri.services.maps.saved")
                         }
                         Button("Disconnect maps", role: .destructive) {
                             cancelMap()
@@ -185,6 +191,10 @@ struct FRIServicesView: View {
             weatherMessage = nil
         }
         .onChange(of: stepsText) { _, _ in activityMessage = nil }
+        .onChange(of: mapQuery) { _, _ in
+            cancelMap()
+            mapMessage = nil
+        }
         .onChange(of: activityMessage) { _, message in
             if let message { AccessibilityNotification.Announcement(message).post() }
         }
@@ -310,23 +320,26 @@ struct FRIServicesView: View {
     }
 
     private func refreshMap() {
+        mapFocused = false
         cancelMap()
         let requestID = mapRequest
+        let submittedQuery = mapQuery
         let name = mapQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
         loadingMap = true
         mapMessage = nil
         mapTask = Task {
             defer { if mapRequest == requestID { loadingMap = false; mapSearch = nil } }
             do {
                 try Task.checkCancellation()
-                guard mapRequest == requestID else { return }
+                guard mapRequest == requestID, mapQuery == submittedQuery else { return }
                 let request = MKLocalSearch.Request()
                 request.naturalLanguageQuery = name
                 let search = MKLocalSearch(request: request)
                 mapSearch = search
                 let response = try await search.start()
                 try Task.checkCancellation()
-                guard mapRequest == requestID else { return }
+                guard mapRequest == requestID, mapQuery == submittedQuery else { return }
                 guard let first = response.mapItems.first else { throw URLError(.resourceUnavailable) }
                 if calendar.change({ state in
                     state.settings["mapsLocation"] = .string(name)
@@ -336,7 +349,9 @@ struct FRIServicesView: View {
                     mapPosition = .region(response.boundingRegion)
                 } else { mapMessage = calendar.message }
             } catch where !Task.isCancelled {
-                if mapRequest == requestID { mapMessage = "Apple Maps could not find this place. Try another name or try again later." }
+                if mapRequest == requestID, mapQuery == submittedQuery {
+                    mapMessage = "Apple Maps could not find this place. Try another name or try again later."
+                }
             }
             catch {}
         }

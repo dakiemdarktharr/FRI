@@ -1253,6 +1253,69 @@ final class FRIWorkflowTests: XCTestCase {
         XCTAssertFalse(refresh.exists)
     }
 
+    func testMapsSearchDraftPersistenceAndDisconnect() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["FRI_MAPS_NETWORK_TEST"] == "1",
+                          "Opt-in live Apple Maps interaction on a QA Simulator")
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        app.launch()
+        func openServices() {
+            XCTAssertTrue(app.buttons["fri.new"].waitForExistence(timeout: 15))
+            app.buttons["fri.navigation.menu"].tap(); app.buttons["Services"].tap()
+        }
+        openServices()
+        let field = app.textFields["fri.services.maps.query"]
+        let search = app.buttons["Show on map"]
+        let saved = app.staticTexts["fri.services.maps.saved"]
+        func enter(_ value: String) {
+            reveal(field, in: app, form: "fri.services.form", upward: false)
+            field.tap()
+            let old = field.value as? String ?? ""
+            if old != "City or place" { field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
+            field.typeText(value)
+        }
+        func requireSaved(_ value: String) {
+            reveal(saved, in: app, form: "fri.services.form")
+            let expected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Saved place: \(value)"), object: saved)
+            XCTAssertEqual(XCTWaiter.wait(for: [expected], timeout: 30), .completed)
+            reveal(saved, in: app, form: "fri.services.form")
+            XCTAssertTrue(saved.isHittable)
+        }
+        reveal(search, in: app, form: "fri.services.form")
+        XCTAssertFalse(search.isEnabled)
+        enter("New York\n")
+        requireSaved("New York")
+        let map = app.descendants(matching: .any).matching(identifier: "fri.services.maps.preview").firstMatch
+        reveal(map, in: app, form: "fri.services.form", upward: false)
+        XCTAssertTrue(map.exists && map.isHittable)
+        let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        screenshot.name = "Maps-saved-place"; screenshot.lifetime = .keepAlways; add(screenshot)
+        enter("Unsubmitted place")
+        XCTAssertEqual(saved.label, "Saved place: New York", "Editing a draft must retain the previously saved place")
+        app.buttons["Close"].firstMatch.tap(); openServices()
+        reveal(field, in: app, form: "fri.services.form")
+        XCTAssertEqual(field.value as? String, "New York")
+        enter("Tokyo\n"); requireSaved("Tokyo")
+        app.buttons["Close"].firstMatch.tap(); app.terminate(); app.launch(); openServices()
+        reveal(field, in: app, form: "fri.services.form")
+        XCTAssertEqual(field.value as? String, "Tokyo")
+        requireSaved("Tokyo")
+        let disconnect = app.buttons["Disconnect maps"]
+        reveal(disconnect, in: app, form: "fri.services.form"); disconnect.tap()
+        XCTAssertFalse(saved.exists)
+        reveal(field, in: app, form: "fri.services.form", upward: false)
+        XCTAssertEqual(field.value as? String, "City or place")
+        XCTAssertFalse(search.isEnabled)
+        app.buttons["Close"].firstMatch.tap(); app.terminate(); app.launch(); openServices()
+        reveal(field, in: app, form: "fri.services.form")
+        XCTAssertEqual(field.value as? String, "City or place")
+        XCTAssertFalse(saved.exists)
+        XCTAssertFalse(disconnect.exists)
+    }
+
     func testLargerTextReachesEditorAndRestoresLook() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -1315,7 +1378,7 @@ final class FRIWorkflowTests: XCTestCase {
         let scroll = app.descendants(matching: .any)[form].firstMatch
         for _ in 0..<6 {
             var visible = scroll.frame.intersection(app.frame).insetBy(dx: 0, dy: form == "fri.calendar.content" ? 4 : 12)
-            if form == "fri.import.form" {
+            if form == "fri.import.form" || form == "fri.services.form" {
                 let feedback = app.descendants(matching: .any)["fri.import.feedback"].firstMatch
                 if feedback.exists {
                     visible.size.height = max(0, min(visible.maxY, feedback.frame.minY - 8) - visible.minY)
@@ -1344,7 +1407,7 @@ final class FRIWorkflowTests: XCTestCase {
                 let from = origin.withOffset(CGVector(dx: scroll.frame.width / 2, dy: (upward ? bottom : top) - scroll.frame.minY))
                 let to = origin.withOffset(CGVector(dx: scroll.frame.width / 2, dy: (upward ? top : bottom) - scroll.frame.minY))
                 from.press(forDuration: 0.05, thenDragTo: to)
-            } else if form == "fri.calendar.content" || (form == "fri.import.form" && element.exists) {
+            } else if form == "fri.calendar.content" || form == "fri.services.form" || (form == "fri.import.form" && element.exists) {
                 // Calendar tiles can be partly visible at the edge. Short drags avoid
                 // flinging past an entire row; reverse when the target is above us.
                 let target = element.exists ? element.frame : .null
@@ -1353,8 +1416,10 @@ final class FRIWorkflowTests: XCTestCase {
                 let startY = towardsBottom ? visible.maxY - 24 : visible.minY + 24
                 let overflow = target.isNull ? visible.height : (towardsBottom ? target.maxY - visible.maxY : visible.minY - target.minY)
                 let delta = min(visible.height * 0.3, max(20, overflow + 4)) * (towardsBottom ? -1 : 1)
-                let from = origin.withOffset(CGVector(dx: scroll.frame.width / 2, dy: startY - scroll.frame.minY))
-                let to = origin.withOffset(CGVector(dx: scroll.frame.width / 2, dy: startY + delta - scroll.frame.minY))
+                // Use the Services form margin so dragging does not pan the embedded map.
+                let dragX = form == "fri.services.form" ? 12.0 : scroll.frame.width / 2
+                let from = origin.withOffset(CGVector(dx: dragX, dy: startY - scroll.frame.minY))
+                let to = origin.withOffset(CGVector(dx: dragX, dy: startY + delta - scroll.frame.minY))
                 from.press(forDuration: 0.1, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.2)
             } else if upward { scroll.swipeUp() } else { scroll.swipeDown() }
             #else

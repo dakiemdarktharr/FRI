@@ -39,9 +39,33 @@ jobs:
       - run: npm test --prefix desktop
       - run: node --test desktop/network.test.cjs
       - run: npm audit --omit=dev --prefix desktop --audit-level=moderate
-      - run: npm run dist --prefix desktop
+      - name: Build Windows installer
+        if: runner.os == 'Windows'
+        run: npm run dist --prefix desktop
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Build locally signed Mac development artifacts
+        if: runner.os == 'macOS' && (github.event_name != 'workflow_dispatch' || inputs.release_tag == '')
+        run: npm run dist:mac:development --prefix desktop
+      - name: Build signed and notarized Mac release
+        if: runner.os == 'macOS' && github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
+        run: npm run dist --prefix desktop
+        env:
+          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      - name: Test the packaged Mac app on the runner architecture
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          mode=mac-development
+          if [[ -f dist/mac-release/mac-verification.json ]]; then mode=mac-release; fi
+          app_dir=mac
+          if [[ "$(uname -m)" = arm64 ]]; then app_dir=mac-arm64; fi
+          export FRI_TEST_EXE="$PWD/dist/$mode/$app_dir/FRI.app/Contents/MacOS/FRI"
+          node --test --test-concurrency=1 --test-name-pattern='native window|draw widget' desktop/desktop.test.cjs desktop/widget.test.cjs
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: FRI-${{ runner.os }}
@@ -52,6 +76,15 @@ jobs:
             dist/*.zip
             dist/*.blockmap
             dist/latest*.yml
+            dist/mac-development/*.dmg
+            dist/mac-development/*.zip
+            dist/mac-development/mac-verification.json
+            dist/mac-release/*.dmg
+            dist/mac-release/*.zip
+            dist/mac-release/*.blockmap
+            dist/mac-release/latest*.yml
+            dist/mac-release/*SUMS*.txt
+            dist/mac-release/mac-verification.json
       - name: Upload installers to the requested release
         if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
         shell: bash
@@ -62,7 +95,14 @@ jobs:
           [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
           test "${RELEASE_TAG#v}" = "$(node -p "require('./desktop/package.json').version")"
           shopt -s nullglob
-          files=(dist/*.exe dist/*.dmg dist/*.zip dist/*.blockmap dist/latest*.yml)
+          if [[ "$RUNNER_OS" = macOS ]]; then
+            node desktop/scripts/check-mac-receipt.cjs dist/mac-release
+            node desktop/scripts/verify-mac.cjs dist/mac-release/*.dmg dist/mac-release/*.zip
+            files=(dist/mac-release/*.dmg dist/mac-release/*.zip dist/mac-release/*.blockmap dist/mac-release/latest*.yml dist/mac-release/SHA256SUMS-mac.txt dist/mac-release/mac-verification.json)
+          else
+            files=(dist/*.exe dist/*.blockmap dist/latest*.yml)
+          fi
+          test "${#files[@]}" -gt 0
           gh release upload "$RELEASE_TAG" "${files[@]}" --clobber
   container:
     runs-on: ubuntu-24.04

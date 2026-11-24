@@ -127,7 +127,7 @@ struct FRIWorkspaceView: View {
                 case .importPlans: FRIImportView(calendar: calendar)
                 case .widget: FRIWidgetHelpView(calendar: calendar)
                 case .appearance: FRIAppearanceView(calendar: calendar)
-                case .services: FRIServicesView(calendar: calendar)
+                case .services: FRIServicesView(calendar: calendar, service: calendar.serviceToShow)
                 case .planner: FRIPlannerView(calendar: calendar)
                 case .availability: FRIAvailabilityView { action in
                     calendar.panel = nil
@@ -245,7 +245,7 @@ struct FRIWorkspaceView: View {
                     .padding(12).frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityIdentifier("fri.sidebar.google")
                     .background(FRIColors.sidebar, in: RoundedRectangle(cornerRadius: 13))
-                    Button("A little focus music", systemImage: "music.note") { calendar.panel = .services }
+                    Button("A little focus music", systemImage: "music.note") { calendar.showService(.spotify) }
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(12).frame(maxWidth: .infinity, alignment: .leading)
                         .accessibilityIdentifier("fri.sidebar.music")
@@ -254,7 +254,7 @@ struct FRIWorkspaceView: View {
             }
             .accessibilityIdentifier("fri.sidebar.content")
             HStack {
-                Button { calendar.panel = .services } label: {
+                Button { calendar.showService() } label: {
                     Label("Services", systemImage: "square.grid.2x2")
                         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                         .contentShape(Rectangle())
@@ -325,7 +325,7 @@ struct FRIWorkspaceView: View {
                 Menu {
                     navigation
                     Button("Settings", systemImage: "gearshape") { calendar.panel = .appearance }
-                    Button("Services", systemImage: "square.grid.2x2") { calendar.panel = .services }
+                    Button("Services", systemImage: "square.grid.2x2") { calendar.showService() }
                 } label: {
                     Image("FRIMark").resizable().frame(width: 33, height: 33)
                         .frame(width: 44, height: 44)
@@ -543,10 +543,30 @@ struct FRIWorkspaceView: View {
     }
 
     private var upNext: some View {
+        VStack(spacing: 14) {
+            ForEach(Array(calendar.state.widgets.enumerated()), id: \.offset) { _, value in
+                if value.string == "upnext" {
+                    upNextCard
+                } else if let key = value.string, let service = FRIService(rawValue: key) {
+                    FRIServiceCardsView(calendar: calendar, service: service)
+                }
+            }
+            Button("Add a widget", systemImage: "plus") { calendar.panel = .widget }
+                .buttonStyle(.plain).padding(14).frame(maxWidth: .infinity)
+                .background(FRIColors.sidebar, in: RoundedRectangle(cornerRadius: 14))
+            Button { calendar.panel = .dayAssistant } label: {
+                VStack(spacing: 8) {
+                    Image("DayBackdrop").resizable().scaledToFit().frame(maxWidth: 150, maxHeight: 150)
+                    Text("Meet Day").friFont(.caption)
+                }.frame(maxWidth: .infinity)
+            }.buttonStyle(.plain).accessibilityLabel("Talk to Day")
+        }
+    }
+
+    private var upNextCard: some View {
         let nextID = WidgetSnapshot(state: calendar.state, day: selected, now: .now).tasks.first?.id
         let next = dayTasks.first { $0.id == nextID }
-        return VStack(spacing: 14) {
-            if calendar.state.widgets.contains(.string("upnext")) {
+        return
             VStack(alignment: .leading, spacing: 22) {
                 HStack { Text("UP NEXT").friFont(.caption2, weight: .semibold).tracking(2); Spacer(); Image(systemName: "clock") }
                 if let next {
@@ -591,18 +611,6 @@ struct FRIWorkspaceView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .modifier(FRISurface(glass: glass, radius: 26))
                 .accessibilityElement(children: .contain).accessibilityIdentifier("fri.upNext.card")
-            }
-            FRIServiceCardsView(calendar: calendar)
-            Button("Add a widget", systemImage: "plus") { calendar.panel = .widget }
-                .buttonStyle(.plain).padding(14).frame(maxWidth: .infinity)
-                .background(FRIColors.sidebar, in: RoundedRectangle(cornerRadius: 14))
-            Button { calendar.panel = .dayAssistant } label: {
-                VStack(spacing: 8) {
-                    Image("DayBackdrop").resizable().scaledToFit().frame(maxWidth: 150, maxHeight: 150)
-                    Text("Meet Day").friFont(.caption)
-                }.frame(maxWidth: .infinity)
-            }.buttonStyle(.plain).accessibilityLabel("Talk to Day")
-        }
     }
 
     private var upNextRemaining: some View {

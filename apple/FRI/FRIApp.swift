@@ -93,6 +93,7 @@ final class FRICalendarSession {
     var canUndo: Bool { undoState != nil }
     var message: String?
     var panel: Panel?
+    var serviceToShow: FRIService?
     var fileAction: FileAction?
     var view: CalendarView = .day
     var cursor: Date = .now
@@ -253,6 +254,12 @@ final class FRICalendarSession {
         revealCalendar?()
         #endif
         panel = destination
+    }
+
+    func showService(_ service: FRIService? = nil) {
+        guard ready else { return }
+        serviceToShow = service
+        show(.services)
     }
 
     func requestFile(_ action: FileAction) {

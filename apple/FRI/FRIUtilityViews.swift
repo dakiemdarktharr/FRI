@@ -214,6 +214,7 @@ struct FRIWidgetHelpView: View {
                                 if enabled { state.widgets.append(.string(key)) }
                             }
                         }))
+                        .accessibilityIdentifier("fri.widget.card.\(key)")
                     }
                     Divider()
                     #if os(macOS)
@@ -276,6 +277,7 @@ struct FRIWidgetHelpView: View {
                 }
                 .padding(20)
             }
+            .accessibilityIdentifier("fri.widget.gallery")
         }
     }
 }

@@ -6,6 +6,107 @@ import UIKit
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
     #if os(iOS)
+    func testServiceCardFitsLandscapeViewport() throws {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        app.launchEnvironment["FRI_WIDGET_PREVIEW"] = "1"
+        app.launch()
+        let toggle = app.switches["fri.widget.card.maps"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 15))
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        app.buttons["Close"].firstMatch.tap()
+        XCUIDevice.shared.orientation = .landscapeLeft
+        let card = app.descendants(matching: .any)["fri.serviceCard.maps"].firstMatch
+        reveal(card, in: app, form: "fri.calendar.content")
+        let viewport = app.descendants(matching: .any)["fri.calendar.content"].firstMatch.frame.intersection(app.frame)
+        XCTAssertTrue(viewport.contains(card.frame), "The full normal-text card must fit in the landscape viewport")
+        XCTAssertTrue(app.buttons["fri.serviceCard.maps.open"].isHittable)
+        XCTAssertTrue(app.buttons["fri.serviceCard.maps.remove"].isHittable)
+        let capture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        capture.name = "Service-card-full-landscape"; capture.lifetime = .keepAlways; add(capture)
+    }
+
+    func testServiceCardsOrderRoutingRemovalAndPersistence() throws {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        app.launchEnvironment["FRI_WIDGET_PREVIEW"] = "1"
+        app.launch()
+        XCTAssertTrue(app.switches["fri.widget.card.upnext"].waitForExistence(timeout: 15))
+        func toggle(_ key: String) {
+            let control = app.switches["fri.widget.card.\(key)"]
+            reveal(control, in: app, form: "fri.widget.gallery")
+            control.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        }
+        toggle("upnext")
+        for key in ["maps", "health", "spotify", "weather", "upnext"] { toggle(key) }
+        app.buttons["Close"].firstMatch.tap()
+        app.launchEnvironment.removeValue(forKey: "FRI_WIDGET_PREVIEW")
+        let expected = ["fri.serviceCard.maps", "fri.serviceCard.health", "fri.serviceCard.spotify", "fri.serviceCard.weather", "fri.upNext.card"]
+        func cardOrder() -> [String] {
+            app.descendants(matching: .any).matching(NSPredicate(format: "identifier IN %@", expected))
+                .allElementsBoundByIndex.map(\.identifier)
+        }
+        XCTAssertEqual(cardOrder(), expected)
+        let fields = ["maps": "fri.services.maps.query", "health": "fri.services.activity.steps",
+                      "spotify": "fri.services.spotify.url", "weather": "fri.services.weather.city"]
+        for key in ["maps", "health", "spotify", "weather"] {
+            let action = app.buttons["fri.serviceCard.\(key).open"]
+            reveal(action, in: app, form: "fri.calendar.content")
+            XCTAssertGreaterThanOrEqual(action.frame.height, 44)
+            let remove = app.buttons["fri.serviceCard.\(key).remove"]
+            XCTAssertGreaterThanOrEqual(remove.frame.width, 44)
+            XCTAssertGreaterThanOrEqual(remove.frame.height, 44)
+            if key == "health" {
+                let capture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+                capture.name = "Service-activity-card"; capture.lifetime = .keepAlways; add(capture)
+            }
+            action.tap()
+            let field = app.textFields[fields[key]!]
+            XCTAssertTrue(field.waitForExistence(timeout: 5))
+            for other in fields.keys where other != key { XCTAssertFalse(app.textFields[fields[other]!].exists) }
+            if key == "health" {
+                field.tap(); field.typeText(XCUIKeyboardKey.delete.rawValue + "4321\n")
+                app.buttons["Save steps"].tap()
+            }
+            app.buttons["Close"].firstMatch.tap()
+        }
+        let activitySummary = app.staticTexts["fri.serviceCard.health.summary"]
+        reveal(activitySummary, in: app, form: "fri.calendar.content", upward: false)
+        XCTAssertEqual(activitySummary.label.filter(\.isNumber), "4321")
+        let remove = app.buttons["fri.serviceCard.health.remove"]
+        reveal(remove, in: app, form: "fri.calendar.content", upward: false); remove.tap()
+        XCTAssertFalse(app.buttons["fri.serviceCard.health.open"].exists)
+        app.terminate(); app.launch()
+        XCTAssertTrue(app.buttons["fri.actions"].waitForExistence(timeout: 15))
+        XCTAssertFalse(app.buttons["fri.serviceCard.health.open"].exists)
+        app.buttons["fri.actions"].tap(); app.buttons["Add FRI widget"].tap()
+        let healthToggle = app.switches["fri.widget.card.health"]
+        XCTAssertTrue(healthToggle.waitForExistence(timeout: 5))
+        XCTAssertEqual(healthToggle.value as? String, "0")
+        toggle("health"); app.buttons["Close"].firstMatch.tap()
+        XCTAssertEqual(cardOrder(), [expected[0], expected[2], expected[3], expected[4], expected[1]])
+        reveal(activitySummary, in: app, form: "fri.calendar.content")
+        XCTAssertEqual(activitySummary.label.filter(\.isNumber), "4321", "Removing the card must preserve saved activity")
+        app.buttons["fri.navigation.menu"].tap(); app.buttons["Services"].tap()
+        XCTAssertTrue(app.textFields["fri.services.weather.city"].waitForExistence(timeout: 5))
+        let steps = app.textFields["fri.services.activity.steps"]
+        reveal(steps, in: app, form: "fri.services.form")
+        XCTAssertEqual(steps.value as? String, "4321", "General Services must still expose all integrations")
+        app.buttons["Close"].firstMatch.tap()
+        XCUIDevice.shared.orientation = .landscapeLeft
+        let maps = app.buttons["fri.serviceCard.maps.open"]
+        reveal(maps, in: app, form: "fri.calendar.content", upward: false)
+        XCTAssertTrue(maps.isHittable && app.frame.contains(maps.frame))
+        let landscape = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        landscape.name = "Service-cards-landscape"; landscape.lifetime = .keepAlways; add(landscape)
+    }
+
     func testAppleCalendarImportWithRealEventKitStore() throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["FRI_EVENTKIT_TESTS"] == "1",
                           "Requires the Simulator-only CalendarFixture helper installed on a dedicated QA Simulator")
@@ -1376,9 +1477,9 @@ final class FRIWorkflowTests: XCTestCase {
 
     private func reveal(_ element: XCUIElement, in app: XCUIApplication, form: String, upward: Bool = true) {
         let scroll = app.descendants(matching: .any)[form].firstMatch
-        for _ in 0..<6 {
+        for _ in 0..<(form == "fri.calendar.content" ? 12 : 6) {
             var visible = scroll.frame.intersection(app.frame).insetBy(dx: 0, dy: form == "fri.calendar.content" ? 4 : 12)
-            if form == "fri.import.form" || form == "fri.services.form" {
+            if form == "fri.import.form" || form == "fri.services.form" || form == "fri.widget.gallery" {
                 let feedback = app.descendants(matching: .any)["fri.import.feedback"].firstMatch
                 if feedback.exists {
                     visible.size.height = max(0, min(visible.maxY, feedback.frame.minY - 8) - visible.minY)
@@ -1407,7 +1508,7 @@ final class FRIWorkflowTests: XCTestCase {
                 let from = origin.withOffset(CGVector(dx: scroll.frame.width / 2, dy: (upward ? bottom : top) - scroll.frame.minY))
                 let to = origin.withOffset(CGVector(dx: scroll.frame.width / 2, dy: (upward ? top : bottom) - scroll.frame.minY))
                 from.press(forDuration: 0.05, thenDragTo: to)
-            } else if form == "fri.calendar.content" || form == "fri.services.form" || (form == "fri.import.form" && element.exists) {
+            } else if form == "fri.calendar.content" || form == "fri.services.form" || form == "fri.widget.gallery" || (form == "fri.import.form" && element.exists) {
                 // Calendar tiles can be partly visible at the edge. Short drags avoid
                 // flinging past an entire row; reverse when the target is above us.
                 let target = element.exists ? element.frame : .null

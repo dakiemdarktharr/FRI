@@ -5,6 +5,7 @@ import SwiftUI
 
 struct FRIServicesView: View {
     let calendar: FRICalendarSession
+    let service: FRIService?
     @Environment(\.dynamicTypeSize) private var readingSize
     @State private var city = ""
     @FocusState private var cityFocused: Bool
@@ -34,130 +35,138 @@ struct FRIServicesView: View {
     private var savedWeather: CachedWeather? { CachedWeather(settings: calendar.state.settings) }
 
     var body: some View {
-        FRISheetView(title: "Services") {
+        FRISheetView(title: service?.panelTitle ?? "Services") {
             Form {
-                Section("Weather") {
-                    Text("Open-Meteo receives the city you enter and your IP address.")
-                        .friFont(.caption).foregroundStyle(.secondary)
-                    Text("Saved locations refresh every 30 minutes while FRI is running. On iOS, refresh resumes when you open the app.")
-                        .friFont(.caption).foregroundStyle(.secondary)
-                    serviceField("City") {
-                        TextField("City", text: $city).accessibilityIdentifier("fri.services.weather.city")
-                            .focused($cityFocused)
-                            .submitLabel(.search)
-                            .onSubmit { searchWeather() }
-                    }
-                    Button("Find city") { searchWeather() }.disabled(loadingWeather || city.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    if loadingWeather {
-                        ProgressView("Loading weather…")
-                        Button("Cancel forecast request") { cancelWeather() }
-                    }
-                    ForEach(weatherChoices) { location in
-                        Button { refreshWeather(location) } label: {
-                            Label(location.label, systemImage: "mappin.and.ellipse")
-                                .fixedSize(horizontal: false, vertical: true)
+                if service == nil || service == .weather {
+                    Section("Weather") {
+                        Text("Open-Meteo receives the city you enter and your IP address.")
+                            .friFont(.caption).foregroundStyle(.secondary)
+                        Text("Saved locations refresh every 30 minutes while FRI is running. On iOS, refresh resumes when you open the app.")
+                            .friFont(.caption).foregroundStyle(.secondary)
+                        serviceField("City") {
+                            TextField("City", text: $city).accessibilityIdentifier("fri.services.weather.city")
+                                .focused($cityFocused)
+                                .submitLabel(.search)
+                                .onSubmit { searchWeather() }
                         }
-                        .disabled(loadingWeather)
-                        .accessibilityIdentifier("fri.services.weather.location.\(location.id)")
-                    }
-                    if let weatherMessage { Text(weatherMessage).foregroundStyle(.secondary) }
-                    Text("Weather data: Open-Meteo · CC BY 4.0").friFont(.caption).foregroundStyle(.secondary)
-                    if let cached = savedWeather {
-                        Text(cached.summary)
-                        if let location = cached.location, location.label != cached.city {
-                            Text(location.label).friFont(.caption).foregroundStyle(.secondary)
+                        Button("Find city") { searchWeather() }.disabled(loadingWeather || city.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        if loadingWeather {
+                            ProgressView("Loading weather…")
+                            Button("Cancel forecast request") { cancelWeather() }
                         }
-                        if let conditions = cached.conditions { Text(conditions) }
-                        if let range = cached.dailyRange { Text(range) }
-                        if let location = cached.location {
-                            Button("Refresh saved forecast") { refreshWeather(location) }.disabled(loadingWeather)
+                        ForEach(weatherChoices) { location in
+                            Button { refreshWeather(location) } label: {
+                                Label(location.label, systemImage: "mappin.and.ellipse")
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .disabled(loadingWeather)
+                            .accessibilityIdentifier("fri.services.weather.location.\(location.id)")
                         }
-                        if let fetchedAt = cached.fetchedAt {
-                            Text("Saved forecast · \(fetchedAt.formatted(date: .abbreviated, time: .shortened))")
-                                .friFont(.caption).foregroundStyle(.secondary)
-                        } else {
-                            Text("Saved forecast · update time unknown. Refresh to get current weather.")
-                                .friFont(.caption).foregroundStyle(.secondary)
-                        }
-                        Button("Disconnect weather", role: .destructive) {
-                            cancelWeather()
-                            if calendar.change({ $0.disconnectWeather() }) { city = ""; weatherChoices = []; weatherMessage = nil }
-                            else { weatherMessage = calendar.message }
-                        }
-                    }
-                }
-                Section("Maps") {
-                    Text("MapKit sends the place you enter to Apple Maps.")
-                        .friFont(.caption).foregroundStyle(.secondary)
-                    serviceField("City or place") {
-                        TextField("City or place", text: $mapQuery)
-                            .accessibilityIdentifier("fri.services.maps.query")
-                            .focused($mapFocused)
-                            .submitLabel(.search)
-                            .onSubmit { refreshMap() }
-                    }
-                    Button("Show on map") { refreshMap() }.disabled(loadingMap || mapQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    if loadingMap {
-                        ProgressView("Finding place…")
-                        Button("Cancel map search") { cancelMap() }
-                    }
-                    if let mapMessage { Text(mapMessage).foregroundStyle(.secondary) }
-                    if let mapItem {
-                        Map(position: $mapPosition) { Marker(item: mapItem) }.frame(height: 210)
-                            .accessibilityIdentifier("fri.services.maps.preview")
-                    }
-                    if mapItem != nil || savedMapName != nil {
-                        if let saved = savedMapName {
-                            Text("Saved place: \(saved)").foregroundStyle(.secondary)
-                                .accessibilityIdentifier("fri.services.maps.saved")
-                        }
-                        Button("Disconnect maps", role: .destructive) {
-                            cancelMap()
-                            if calendar.change({ $0.disconnectMaps() }) {
-                                self.mapItem = nil
-                                mapQuery = ""
-                                mapMessage = nil
-                            } else { mapMessage = calendar.message }
+                        if let weatherMessage { Text(weatherMessage).foregroundStyle(.secondary) }
+                        Text("Weather data: Open-Meteo · CC BY 4.0").friFont(.caption).foregroundStyle(.secondary)
+                        if let cached = savedWeather {
+                            Text(cached.summary)
+                            if let location = cached.location, location.label != cached.city {
+                                Text(location.label).friFont(.caption).foregroundStyle(.secondary)
+                            }
+                            if let conditions = cached.conditions { Text(conditions) }
+                            if let range = cached.dailyRange { Text(range) }
+                            if let location = cached.location {
+                                Button("Refresh saved forecast") { refreshWeather(location) }.disabled(loadingWeather)
+                            }
+                            if let fetchedAt = cached.fetchedAt {
+                                Text("Saved forecast · \(fetchedAt.formatted(date: .abbreviated, time: .shortened))")
+                                    .friFont(.caption).foregroundStyle(.secondary)
+                            } else {
+                                Text("Saved forecast · update time unknown. Refresh to get current weather.")
+                                    .friFont(.caption).foregroundStyle(.secondary)
+                            }
+                            Button("Disconnect weather", role: .destructive) {
+                                cancelWeather()
+                                if calendar.change({ $0.disconnectWeather() }) { city = ""; weatherChoices = []; weatherMessage = nil }
+                                else { weatherMessage = calendar.message }
+                            }
                         }
                     }
                 }
-                Section("Spotify") {
-                    Text("Spotify receives your IP address and playback activity when you open the player. FRI sends no calendar details. Full playback depends on your Spotify account.")
-                        .friFont(.caption).foregroundStyle(.secondary)
-                    serviceField("Spotify link") {
-                        TextField("Spotify link", text: $spotify)
-                            .focused($spotifyFocused)
-                            .accessibilityIdentifier("fri.services.spotify.url")
-                            .onSubmit { openSpotify() }
-                    }
-                    Button("Open player") { openSpotify() }
-                        .accessibilityIdentifier("fri.services.spotify.open")
-                    if let spotifyMessage { Text(spotifyMessage).foregroundStyle(.secondary) }
-                    if calendar.state.settings["spotifyUrl"] != nil {
-                        Button("Disconnect Spotify", role: .destructive) { disconnectSpotify() }
+                if service == nil || service == .maps {
+                    Section("Maps") {
+                        Text("MapKit sends the place you enter to Apple Maps.")
+                            .friFont(.caption).foregroundStyle(.secondary)
+                        serviceField("City or place") {
+                            TextField("City or place", text: $mapQuery)
+                                .accessibilityIdentifier("fri.services.maps.query")
+                                .focused($mapFocused)
+                                .submitLabel(.search)
+                                .onSubmit { refreshMap() }
+                        }
+                        Button("Show on map") { refreshMap() }.disabled(loadingMap || mapQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        if loadingMap {
+                            ProgressView("Finding place…")
+                            Button("Cancel map search") { cancelMap() }
+                        }
+                        if let mapMessage { Text(mapMessage).foregroundStyle(.secondary) }
+                        if let mapItem {
+                            Map(position: $mapPosition) { Marker(item: mapItem) }.frame(height: 210)
+                                .accessibilityIdentifier("fri.services.maps.preview")
+                        }
+                        if mapItem != nil || savedMapName != nil {
+                            if let saved = savedMapName {
+                                Text("Saved place: \(saved)").foregroundStyle(.secondary)
+                                    .accessibilityIdentifier("fri.services.maps.saved")
+                            }
+                            Button("Disconnect maps", role: .destructive) {
+                                cancelMap()
+                                if calendar.change({ $0.disconnectMaps() }) {
+                                    self.mapItem = nil
+                                    mapQuery = ""
+                                    mapMessage = nil
+                                } else { mapMessage = calendar.message }
+                            }
+                        }
                     }
                 }
-                Section("Manual activity") {
-                    Text("Steps are entered by you; FRI does not read Health data.").friFont(.caption).foregroundStyle(.secondary)
-                    serviceField("Steps today") {
-                        TextField("Steps today", text: $stepsText)
-                            .accessibilityIdentifier("fri.services.activity.steps")
-                            .focused($stepsFocused)
-                            .submitLabel(.done)
-                            .onSubmit { stepsFocused = false }
+                if service == nil || service == .spotify {
+                    Section("Spotify") {
+                        Text("Spotify receives your IP address and playback activity when you open the player. FRI sends no calendar details. Full playback depends on your Spotify account.")
+                            .friFont(.caption).foregroundStyle(.secondary)
+                        serviceField("Spotify link") {
+                            TextField("Spotify link", text: $spotify)
+                                .focused($spotifyFocused)
+                                .accessibilityIdentifier("fri.services.spotify.url")
+                                .onSubmit { openSpotify() }
+                        }
+                        Button("Open player") { openSpotify() }
+                            .accessibilityIdentifier("fri.services.spotify.open")
+                        if let spotifyMessage { Text(spotifyMessage).foregroundStyle(.secondary) }
+                        if calendar.state.settings["spotifyUrl"] != nil {
+                            Button("Disconnect Spotify", role: .destructive) { disconnectSpotify() }
+                        }
                     }
-                    if let activityMessage {
-                        Text(activityMessage).foregroundStyle(.secondary)
-                            .accessibilityIdentifier("fri.services.activity.message")
-                    }
-                    Button("Save steps") { saveSteps() }
-                    if calendar.state.settings["activity"] != nil {
-                        Button("Clear activity", role: .destructive) {
-                            stepsFocused = false
-                            if calendar.change({ $0.settings.removeValue(forKey: "activity") }) {
-                                stepsText = "0"
-                                activityMessage = nil
-                            } else { activityMessage = calendar.message }
+                }
+                if service == nil || service == .health {
+                    Section("Manual activity") {
+                        Text("Steps are entered by you; FRI does not read Health data.").friFont(.caption).foregroundStyle(.secondary)
+                        serviceField("Steps today") {
+                            TextField("Steps today", text: $stepsText)
+                                .accessibilityIdentifier("fri.services.activity.steps")
+                                .focused($stepsFocused)
+                                .submitLabel(.done)
+                                .onSubmit { stepsFocused = false }
+                        }
+                        if let activityMessage {
+                            Text(activityMessage).foregroundStyle(.secondary)
+                                .accessibilityIdentifier("fri.services.activity.message")
+                        }
+                        Button("Save steps") { saveSteps() }
+                        if calendar.state.settings["activity"] != nil {
+                            Button("Clear activity", role: .destructive) {
+                                stepsFocused = false
+                                if calendar.change({ $0.settings.removeValue(forKey: "activity") }) {
+                                    stepsText = "0"
+                                    activityMessage = nil
+                                } else { activityMessage = calendar.message }
+                            }
                         }
                     }
                 }

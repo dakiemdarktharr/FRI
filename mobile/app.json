@@ -2,13 +2,14 @@
   "expo": {
     "name": "Fri",
     "slug": "fri",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "scheme": "fri",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "android": {
       "package": "com.fri.calendar.android",
+      "versionCode": 2,
       "allowBackup": false,
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",
@@ -21,7 +22,7 @@
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#FAF7F2"
+        "backgroundColor": "#F4F7FA"
       }
     },
     "plugins": [

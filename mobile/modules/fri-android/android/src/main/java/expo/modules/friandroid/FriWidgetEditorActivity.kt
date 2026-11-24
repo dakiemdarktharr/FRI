@@ -37,7 +37,7 @@ class FriWidgetEditorActivity:ComponentActivity(){
       draft=runCatching{WidgetSettings.parse(saved?.getString("settings")?:data.first?.settings?:data.second?.settings?:WidgetSettings().json())}.getOrDefault(WidgetSettings(filter="selected",privacy="busy",showLocation=false))
       draftName=saved?.getString("name")?:data.second?.name?:"My widget"
       val events=withContext(Dispatchers.IO){repo.dao.events()}
-      setContent{MaterialTheme(colorScheme=lightColorScheme(primary=Color(0xFF955251),surface=Color(0xFFFAF7F2),onSurface=Color(0xFF302929))){Editor(data.third,data.first?.state=="confirmed",events)}}
+      setContent{MaterialTheme(colorScheme=lightColorScheme(primary=Color(0xFF087F8C),surface=Color(0xFFF4F7FA),onSurface=Color(0xFF172B3A))){Editor(data.third,data.first?.state=="confirmed",events)}}
     }
   }
   override fun onSaveInstanceState(out:Bundle){out.putString("session",session);out.putString("settings",draft.json());out.putString("name",draftName);super.onSaveInstanceState(out)}
@@ -64,7 +64,7 @@ class FriWidgetEditorActivity:ComponentActivity(){
       val preview=if(template=="next_event")CalendarLogic.next(filtered,now)else CalendarLogic.agenda(filtered,LocalDate.now(zone),zone).firstOrNull{!it.done&&(!it.allDay||settings.showAllDay)}
       val dark=settings.theme=="dark"||(settings.theme=="system"&&androidx.compose.foundation.isSystemInDarkTheme())
       Text("Preview · size is set by your launcher",style=MaterialTheme.typography.labelMedium)
-      Surface(color=if(dark)Color(0xFF302929)else Color(0xFFE9E1DA),contentColor=if(dark)Color(0xFFFAF7F2)else Color(0xFF302929),shape=MaterialTheme.shapes.large){Column(Modifier.fillMaxWidth().padding(20.dp)){
+      Surface(color=if(dark)Color(0xFF172B3A)else Color(0xFFE0F2F2),contentColor=if(dark)Color(0xFFF4F7FA)else Color(0xFF172B3A),shape=MaterialTheme.shapes.large){Column(Modifier.fillMaxWidth().padding(20.dp)){
         Text(if(preview==null)"Nothing planned yet."else if(settings.privacy=="busy")"Busy"else preview.title,style=MaterialTheme.typography.titleLarge,maxLines=2)
         if(preview!=null){Text(if(preview.allDay)"All day"else formatTime(this@FriWidgetEditorActivity,preview.startUtc,zone,settings.hourFormat));if(settings.showLocation&&settings.privacy=="full"&&preview.location.isNotBlank())Text(preview.location,maxLines=1)}
         Text(if(settings.filter=="all")"All calendars"else "${settings.calendarIds.size} calendars selected")

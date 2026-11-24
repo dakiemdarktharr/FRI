@@ -10,7 +10,7 @@ import java.util.UUID
 
 class FriRepository(private val context:Context) {
   val db=FriDatabase.get(context);val dao=db.dao()
-  suspend fun initialize(){val n=System.currentTimeMillis();dao.seed(FriCalendar("personal","Personal","#955251",n,n),FriCalendar("work","Work","#302929",n,n))}
+  suspend fun initialize(){val n=System.currentTimeMillis();dao.seed(FriCalendar("personal","Personal","#087F8C",n,n),FriCalendar("work","Work","#172B3A",n,n))}
   suspend fun saveEvent(o:JSONObject):FriEvent {
     initialize();val id=o.optString("id").ifBlank{UUID.randomUUID().toString()};val old=dao.event(id);val title=o.optString("title").trim();require(title.isNotBlank()&&title.length<=300){"Add a title of up to 300 characters."}
     val calendar=o.optString("calendarId","personal");require(dao.calendars().any{it.id==calendar}){"Choose an available calendar."}

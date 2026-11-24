@@ -5,7 +5,7 @@
 if(friWidget.platform==='win32')document.documentElement.classList.add('windows');
 const $=s=>document.querySelector(s);let state,current,working=false,error='',notice='';
 function render(payload){
- state=payload.state;notice=payload.notice??notice;const now=new Date(),key=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
+ state=payload.state;document.documentElement.dataset.theme=state?.settings?.theme==='dark'?'dark':'light';notice=payload.notice??notice;const now=new Date(),key=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
  const tasks=(state?.tasks||[]).filter(t=>t.date===key).sort((a,b)=>a.time.localeCompare(b.time)),pending=tasks.filter(t=>!t.done),minute=now.getHours()*60+now.getMinutes();
  current=pending.find(t=>{const[h,m]=t.time.split(':').map(Number),start=h*60+m;return start<=minute&&start+t.duration>minute})||pending[0];
  $('#task').textContent=current?.title||(tasks.length?'Your day is clear.':'A fresh day.');$('#time').textContent=current?.time||'';$('#done').disabled=!current||working;

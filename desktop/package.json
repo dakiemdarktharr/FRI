@@ -1,7 +1,7 @@
 {
   "name": "fri-desktop",
   "productName": "FRI",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "A local calendar with a native glass workspace.",
   "author": "FRI contributors",
   "license": "UNLICENSED",
@@ -10,7 +10,7 @@
   "scripts": {
     "prepare:ui": "node prepare.cjs",
     "start": "npm run prepare:ui && electron .",
-    "test": "node --test --test-concurrency=1 desktop.test.cjs core.test.cjs planning.test.cjs widget.test.cjs brand.test.cjs ai-import.test.cjs network.test.cjs source-browser.test.cjs day.test.cjs day.integration.test.cjs updates.test.cjs",
+    "test": "node --test --test-concurrency=1 desktop.test.cjs core.test.cjs planning.test.cjs widget.test.cjs brand.test.cjs ai-import.test.cjs network.test.cjs source-browser.test.cjs day.test.cjs day.integration.test.cjs updates.test.cjs document-text.test.cjs",
     "pack": "npm run prepare:ui && electron-builder --dir",
     "dist": "npm run prepare:ui && electron-builder --publish never"
   },
@@ -18,7 +18,9 @@
     "@hicccc77/electron-liquid-glass": "0.3.0",
     "electron-updater": "6.8.11",
     "koffi": "3.3.8",
-    "leaflet": "1.9.4"
+    "leaflet": "1.9.4",
+    "mammoth": "1.13.0",
+    "pdfjs-dist": "6.5.438"
   },
   "devDependencies": {
     "electron": "45.4.1",
@@ -43,7 +45,15 @@
       "ocr.ps1",
       "maps.html",
       "maps-renderer.js",
-      "widget.css"
+      "widget.css",
+      "!node_modules/pdfjs-dist/**/*.map",
+      "!node_modules/pdfjs-dist/build/**/*",
+      "!node_modules/pdfjs-dist/web/**/*",
+      "!node_modules/pdfjs-dist/legacy/web/**/*",
+      "!node_modules/pdfjs-dist/types/**/*",
+      "!node_modules/pdfjs-dist/legacy/build/*.min.mjs",
+      "!node_modules/pdfjs-dist/legacy/build/pdf.sandbox*",
+      "!node_modules/pdfjs-dist/legacy/build/pdf.renderer*"
     ],
     "asar": true,
     "artifactName": "FRI-${version}-${os}-${arch}.${ext}",

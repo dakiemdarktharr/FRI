@@ -56,9 +56,9 @@ function nativeMenu(){
   const item=(label,command,accelerator)=>({label,accelerator,click:()=>send(command)});
   const template=[
     ...(isMac?[{label:'FRI',submenu:[item('About FRI','about'),{type:'separator'},item('Settings…','settings','Cmd+,'),{type:'separator'},{role:'hide'},{role:'hideOthers'},{role:'unhide'},{type:'separator'},{role:'quit'}]}]:[]),
-    {label:'File',submenu:[item('Import plans from files or text','intake'),item('Find time for a task','focus'),item('Find time together','together'),{type:'separator'},item('Create FRI widget on desktop','desktop-widget'),{type:'separator'},item('New deadline','deadline'),item('New schedule','schedule','CommandOrControl+N'),{type:'separator'},item('Export calendar backup…','export'),item('Restore calendar backup…','import'),{type:'separator'},{role:'close'}]},
+    {label:'File',submenu:[item('Add a source','intake'),item('Refresh prepared sources','refresh'),item('Find time for a task','focus'),item('Find time together','together'),{type:'separator'},item('Create FRI widget on desktop','desktop-widget'),{type:'separator'},item('New deadline','deadline'),item('New schedule','schedule','CommandOrControl+N'),{type:'separator'},item('Export calendar backup…','export'),item('Restore calendar backup…','import'),{type:'separator'},{role:'close'}]},
     {label:'Edit',submenu:[{role:'undo'},{role:'redo'},{type:'separator'},{role:'cut'},{role:'copy'},{role:'paste'},{role:'selectAll'},{type:'separator'},item('Search appointments','search','CommandOrControl+F'),item('Edit appointments','manage')]},
-    {label:'View',submenu:[item('Toggle sidebar','sidebar','CommandOrControl+B'),item('My day','day'),item('Month','month'),item('Year','year'),{type:'separator'},{role:'togglefullscreen'}]},
+    {label:'View',submenu:[item('Toggle sidebar','sidebar','CommandOrControl+B'),item('My feed','day'),item('Week','week'),item('Month','month'),item('Year','year'),{type:'separator'},{role:'togglefullscreen'}]},
     {label:'Help',submenu:[item('Keyboard shortcuts','shortcuts'),{label:'Check for updates…',click:()=>send('updates')},item('About FRI','about')]}
   ];
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
@@ -79,7 +79,7 @@ function createWindow(){
   win.webContents.on('will-navigate',(event,url)=>{if(url!==startURL)event.preventDefault();});
   win.webContents.on('will-attach-webview',event=>event.preventDefault());
   for(const event of ['maximize','unmaximize','focus','blur'])win.on(event,emitState);
-  win.once('ready-to-show',()=>{win.show();emitState()});
+  win.once('ready-to-show',()=>{if(!(process.env.FRI_TEST_MODE==='1'&&process.env.FRI_TEST_HIDDEN==='1'))win.show();emitState()});
   win.on('close',e=>{if(!quitting&&widgets?.count()){e.preventDefault();win.hide()}});
   win.on('closed',()=>{win=null});
   win.loadURL(startURL);

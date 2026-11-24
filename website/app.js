@@ -33,7 +33,7 @@
   }
   function addNoise(i,initial=false){
     const c=cards[i%cards.length],el=document.createElement('div');
-    el.className='noise-card '+(i%5===0?'light-card':i%4===0?'wine-card':'');
+    el.className='noise-card design-'+['xp','chat','mail','mobile','calendar','voice'][i%6]+' '+(i%5===0?'light-card':i%4===0?'wine-card':'');
     el.innerHTML=cardHTML(c);
     const cols=Math.max(2,Math.ceil(innerWidth/240)),rows=Math.ceil(innerHeight/150)+1;
     let x,y;
@@ -120,14 +120,14 @@
     return '<div class="task-tile '+classes+(done?' completed':'')+'"><div class="task-meta"><span>Personal</span><span>'+duration+'</span></div><div class="task-time">'+time+'<small>'+period+'</small></div><div class="task-title">'+title+'</div><div class="task-place">'+place+'</div><span class="task-check '+(done?'done':'')+'">'+(done?'✓':'')+'</span></div>';
   }
   function appSkeleton(){
-    return '<div class="app-chrome"><span class="traffic"><i></i><i></i><i></i></span><span>File</span><span>Edit</span><span>View</span><span>Help</span><span class="chrome-label">FRI</span></div><div class="app-body"><aside class="app-sidebar"><div class="app-brand">fri.<i class="search-glyph"></i></div><div class="app-today"><span>‹</span>Today<span>›</span></div><div class="app-new">＋ New</div><div class="app-nav current">▦ &nbsp; My day</div><div class="app-nav">▤ &nbsp; Calendar</div><div class="app-profile"><span class="app-avatar">A</span>Alex Morgan<span style="margin-left:auto">⚙</span></div></aside><div class="app-content"><div class="app-date"><div><h3>Sunday</h3><p>November 22, 2026</p></div><div class="app-date-ring"><svg viewBox="0 0 50 50"><circle class="ring-track" cx="25" cy="25" r="22"/><circle class="ring-fill" cx="25" cy="25" r="22"/></svg><span>✓</span></div></div><div class="app-mosaic"><div class="task-column">'+task('A slow start','8:00','AM','30m','At home','',true)+task('Make something meaningful','9:00','AM','2h','The studio','dark-tile tall')+'</div><div class="task-column coffee-column">'+task('A little room to read','4:00','PM','1h','Your favourite corner','tall')+'</div><div class="task-column"><div class="task-upnext"><span>UP NEXT</span><div class="upnext-line"></div><h4>9:00 <small>AM</small></h4><b>Make something<br>meaningful</b><p>The studio</p></div><div class="app-dot"><i></i><span>Day</span></div></div></div><div class="demo-overlay"><div class="demo-form"></div></div><div class="demo-cursor">'+cursor+'</div></div></div>';
+    return '<div class="app-chrome"><span class="traffic"><i></i><i></i><i></i></span><span>File</span><span>Edit</span><span>View</span><span>Help</span><span class="demo-refresh">↻ Refresh</span><span class="chrome-label">FRI</span></div><div class="app-body"><aside class="app-sidebar"><div class="app-brand">fri.<i class="search-glyph"></i></div><div class="app-today"><span>‹</span>Today<span>›</span></div><div class="app-new">＋ New</div><div class="app-nav current">My feed</div><div class="app-nav">Calendar</div><div class="demo-sources"><span>SOURCES</span><div>＋ Add a source</div><small class="demo-source-state">Collect first. Refresh when ready.</small></div><div class="app-profile"><span class="app-avatar">A</span>Alex Morgan</div></aside><div class="app-content"><div class="app-date"><div><h3>Tuesday</h3><p>November 24, 2026</p></div><div class="app-date-ring"><svg viewBox="0 0 50 50"><circle class="ring-track" cx="25" cy="25" r="22"/><circle class="ring-fill" cx="25" cy="25" r="22"/></svg><span>✓</span></div></div><div class="demo-view"><span>Feed ⌄</span><span>Today</span></div><div class="app-mosaic"><div class="task-column">'+task('A slow start','8:00','AM','30m','At home','',true)+task('Make something meaningful','9:00','AM','2h','The studio','dark-tile')+'</div><div class="task-column coffee-column">'+task('A little room to read','4:00','PM','1h','Your favourite corner')+'</div><div class="task-column demo-rail"><div class="task-upnext"><span>UP NEXT</span><div class="upnext-line"></div><h4>9:00 <small>AM</small></h4><b>Make something<br>meaningful</b><p>The studio</p></div><div class="app-dot"><i class="demo-day-orb"></i><span>Day</span></div></div></div><div class="demo-overlay"><div class="demo-form"></div></div><div class="demo-cursor">'+cursor+'</div></div></div>';
   }
   const apps=[$('#live-app')];
   apps.forEach(a=>{a.innerHTML=appSkeleton();a.setAttribute('aria-hidden','true')});
   let elapsed=reduced.matches?9000:0,paused=reduced.matches,lastFrame=performance.now(),startTime=lastFrame,lastKey='',lastChapter=-1;
   function formHTML(mode,typed,chosen){
-    if(mode==='add')return '<div class="form-kicker">NEW SCHEDULE</div><h4>What’s the plan?</h4><div class="demo-field">'+typed+'<i class="typing-caret"></i></div><div class="form-row"><span class="form-chip">Today</span><span class="form-chip">＋ Add details</span></div><div class="demo-submit">Done</div>';
-    return '<div class="form-kicker">ONE LAST DETAIL</div><h4>When’s coffee?</h4><div class="form-row"><span class="form-chip '+(chosen?'selected':'')+'">11:30 AM</span><span class="form-chip">45 minutes</span></div><div class="demo-submit">Add to my day</div>';
+    if(mode==='add')return '<div class="form-kicker">ADD A SOURCE</div><h4>Bring your plans.</h4><div class="demo-field">calendar.ics<i class="typing-caret"></i></div><div class="form-row"><span class="form-chip">Link</span><span class="form-chip">File or image</span></div><div class="demo-submit">Read sources</div>';
+    return '<div class="form-kicker">DAY · ONE DETAIL</div><h4>When does it start?</h4><div class="form-row"><span class="form-chip '+(chosen?'selected':'')+'">11:30 AM</span><span class="form-chip">45 minutes</span></div><div class="demo-submit">Continue</div>';
   }
   function renderDemo(){
     const t=elapsed%16000;
@@ -147,15 +147,16 @@
       arrow.style.left=mode==='add'?(t>3100?'58%':'47%'):mode==='clarify'?(t>7400?'58%':'49%'):'29%';
       arrow.style.top=mode==='add'?(t>3100?'65%':'48%'):mode==='clarify'?(t>7400?'61%':'49%'):'87%';
       arrow.classList.toggle('click',(t>3100&&t<3550)||(t>7400&&t<7850)||(t>12000&&t<12450));
+      a.querySelector('.demo-source-state').textContent=mode==='add'?'Reading calendar.ics…':mode==='clarify'?'One detail needed':t<9500?'Ready for Refresh':'Calendar updated';a.querySelector('.demo-refresh').classList.toggle('refreshing',mode==='calendar'&&t<9500);
       const column=a.querySelector('.coffee-column');
-      if(mode==='calendar'&&!column.querySelector('.new-task'))column.insertAdjacentHTML('afterbegin',task('Coffee with Jamie','11:30','AM','45m','The little coffee shop','new-task'));
+      if(mode==='calendar'&&t>=9500&&!column.querySelector('.new-task'))column.insertAdjacentHTML('afterbegin',task('Coffee with Jamie','11:30','AM','45m','The little coffee shop','new-task'));
       if(mode!=='calendar')column.querySelector('.new-task')?.remove();
       const work=a.querySelector('.dark-tile');work.classList.toggle('completed',done);
       work.querySelector('.task-check').classList.toggle('done',done);work.querySelector('.task-check').textContent=done?'✓':'';
       a.querySelector('.ring-fill').style.strokeDashoffset=done?'55':'100';
       const toast=a.querySelector('.demo-toast');
-      if(mode==='calendar'&&!toast){const e=document.createElement('div');e.className='demo-toast';e.textContent=done?'A little more room. ✓':'Coffee with Jamie · Added ✓';a.querySelector('.app-content').append(e)}
-      if(toast)toast.textContent=done?'A little more room. ✓':'Coffee with Jamie · Added ✓';
+      if(mode==='calendar'&&!toast){const e=document.createElement('div');e.className='demo-toast';e.textContent=done?'A little more room. ✓':'Refresh complete · 1 plan added';a.querySelector('.app-content').append(e)}
+      if(toast)toast.textContent=done?'A little more room. ✓':'Refresh complete · 1 plan added';
       if(mode!=='calendar')toast?.remove();
     });
   }

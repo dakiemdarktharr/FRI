@@ -38,12 +38,13 @@ test('native window, isolated IPC, real commands and persistent calendar',async(
     await p.locator('[data-action=search]').click();await p.locator('#search-input').fill('Native deadline');await p.locator('[data-action=search-result]').click();await p.locator('[data-action=close-modal]').first().click();
     await p.locator('[data-action=sidebar]').first().click();assert.equal(await p.locator('.sidebar-collapsed').count(),1);
     await p.locator('[data-action=sidebar]').first().click();
-    await p.locator('[data-window=maximize]').click();await windowState(app,'isMaximized',true);
+    if(process.env.FRI_TEST_HIDDEN!=='1'){await p.locator('[data-window=maximize]').click();await windowState(app,'isMaximized',true);
     await p.locator('[data-window=maximize]').click();await windowState(app,'isMaximized',false);
     await p.locator('[data-window=minimize]').click();await windowState(app,'isMinimized',true);
     await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].restore());
     await windowState(app,'isMinimized',false);
-    await p.screenshot({path:path.join(results,'native-content.png')});
+    }
+    await require('../tests/native-capture.cjs')(app,p,path.join(results,'native-content.png'));
     assert.deepEqual(errors,[]);
     await app.close();app=await electron.launch(options);p=await app.firstWindow();await p.waitForFunction(()=>window.FRI_PREVIEW);
     assert.equal(await p.evaluate(()=>FRI_PREVIEW.getState().tasks.some(t=>t.title==='Native deadline persistence')),true);
@@ -51,7 +52,7 @@ test('native window, isolated IPC, real commands and persistent calendar',async(
   }finally{await app.close().catch(()=>{});}
 });
 
-test('monochrome UI, new plan types, menus, keyboard and safe restore',async()=>{
+test('Cloud UI, new plan types, menus, keyboard and safe restore',async()=>{
   const browser=await chromium.launch();
   try{
     const p=await browser.newPage({viewport:{width:1500,height:1000},reducedMotion:'reduce'});

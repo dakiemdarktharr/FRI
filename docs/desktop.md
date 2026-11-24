@@ -1,3 +1,7 @@
+# Desktop ground truth — v0.7.0
+
+Cloud/Ink/Teal, continuous day feed, opaque controls over native glass, source inbox and explicit Refresh supersede earlier UI defaults. See [current ground truth](cloud-feed-redesign.md), [import flow](smart-import.md) and [0.7.0 verification](release-verification-0.7.0.md). Older records below retain their version scope.
+
 # Desktop ground truth — v0.6.0
 
 0.6.1 adds reviewed image/link imports, encrypted source sessions and deadline-aware work planning. See [smart import](smart-import.md) and [0.6.1 verification](release-verification-0.6.1.md).

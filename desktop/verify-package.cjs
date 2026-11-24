@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const asar=require('@electron/asar');
 const archive=path.resolve(process.argv[2]||path.join(__dirname,'../dist/win-unpacked/resources/app.asar'));
 const files=asar.listPackage(archive).map(p=>p.replaceAll('\\','/'));
-for(const name of ['main.cjs','preload.cjs','day-core.cjs','day-provider.cjs','day-service.cjs','updates.cjs','ai-import.cjs','public-source.cjs','source-browser.cjs','ui/index.html'])assert.ok(files.includes('/'+name),'Missing packaged module '+name);
+for(const name of ['main.cjs','preload.cjs','day-core.cjs','day-provider.cjs','day-service.cjs','updates.cjs','ai-import.cjs','document-text.cjs','public-source.cjs','source-browser.cjs','ui/index.html'])assert.ok(files.includes('/'+name),'Missing packaged module '+name);
 assert.deepEqual(files.filter(p=>/(^|\/)(\.env[^/]*|day\.env)$/.test(p)),[],'Credentials must not be packaged');
 assert.deepEqual(files.filter(p=>!p.includes('/node_modules/')&&p.endsWith('.test.cjs')),[],'Project tests must not be packaged');
 assert.deepEqual(files.filter(p=>/(^|\/)(ai-config\.json|source-sessions\.json|[^/]+\.encrypted)$/.test(p)),[],'Import credentials must not be packaged');

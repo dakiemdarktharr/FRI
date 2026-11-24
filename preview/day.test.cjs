@@ -21,7 +21,7 @@ async function fresh(t,width=1200){
 test('automatically detects conflict and deadline; applies only flexible task without a prompt',async t=>{
  const p=await fresh(t);const errors=[];p.on('pageerror',e=>errors.push(e.message));
  assert.equal(await p.locator('[data-day-count]').textContent(),'2');
- await p.locator('[data-action=day]').first().click();assert.equal(await p.locator('[data-day-card]').count(),2);
+ await p.evaluate(()=>FRI_COMMAND('insights'));assert.equal(await p.locator('[data-day-card]').count(),2);
  assert.equal(await p.locator('[name=message]').count(),0);
  await p.locator('[data-day-apply]').click();
  await p.waitForFunction(()=>FRI_PREVIEW.getState().tasks.find(t=>t.id==='focus').time==='09:00');
@@ -34,7 +34,7 @@ test('automatically detects conflict and deadline; applies only flexible task wi
  assert.equal(persisted.settings.dayDismissed.length,1);
  await p.reload();await p.waitForFunction(()=>window.FRI_PREVIEW);
  assert.equal(await p.evaluate(()=>FRI_PREVIEW.getState().tasks.find(t=>t.id==='focus').time),'09:00');
- await p.locator('[data-action=day]').first().click();
+ await p.evaluate(()=>FRI_COMMAND('insights'));
  assert.equal(await p.locator('[data-day-card]').count(),0);
  await p.locator('.day-options summary').click();await p.locator('[data-day-reset]').click();assert.equal(await p.locator('[data-day-card]').count(),1);
  assert.deepEqual(errors,[]);
@@ -48,7 +48,7 @@ test('editing an imported event keeps provenance and disallows flexible flag',as
 });
 test('mobile Day panel escapes calendar content and stays within viewport',async t=>{
  const p=await fresh(t,390);
- await p.locator('[data-action=day]').first().click();
+ await p.evaluate(()=>FRI_COMMAND('insights'));
  assert.equal(await p.locator('[data-day-card]').count(),2);
  assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth),390);
  await p.screenshot({path:path.resolve(__dirname,'.build/day-mobile.png'),fullPage:true});
@@ -56,7 +56,7 @@ test('mobile Day panel escapes calendar content and stays within viewport',async
 test('calendar titles render as text rather than executable HTML in Day',async t=>{
  const p=await fresh(t);
  await p.evaluate(()=>{const state=FRI_PREVIEW.getState();state.tasks[0].title='<img src=x onerror="window.dayInjected=true">';localStorage.setItem('fri-liquid-preview-v1',JSON.stringify(state))});
- await p.reload();await p.waitForFunction(()=>window.FRI_PREVIEW);await p.locator('[data-action=day]').first().click();
+ await p.reload();await p.waitForFunction(()=>window.FRI_PREVIEW);await p.evaluate(()=>FRI_COMMAND('insights'));
  assert.equal(await p.locator('#day-panel img').count(),0);assert.equal(await p.evaluate(()=>window.dayInjected),undefined);
  assert.match(await p.locator('#day-panel').textContent(),/<img src=x/);
 });

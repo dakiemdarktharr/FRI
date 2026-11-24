@@ -8,7 +8,7 @@ window.setupDay = function({getState, save, settled, replaceState, openModal, to
  function badge(){
   const count=visible().length;
   document.querySelectorAll('[data-day-count]').forEach(el=>{el.textContent=String(count);el.hidden=!count});
-  document.querySelectorAll('[data-action="day"]').forEach(el=>el.setAttribute('aria-label',`Day · ${count} gợi ý`));
+  document.querySelectorAll('[data-action="insights"]').forEach(el=>el.setAttribute('aria-label',`Day · ${count} gợi ý`));
  }
  function paint(){
   const el=panel();if(!el)return;

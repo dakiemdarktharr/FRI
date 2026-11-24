@@ -2,7 +2,11 @@
 
 Updated 23 November 2026. Current user instruction authorizes GitHub commits, public web deployment on Vercel, desktop packaging and guidebook publication. Premium is **Coming soon**, with no billing. Spotify/Google/account/signing credentials are not available; implement and verify the parts that need no keys first. Never claim keyed integrations are live before configuring and testing them.
 
-## Current milestone — v0.6.1 smart import
+## Current milestone — v0.7.0 Cloud feed and staged sources
+
+Cloud/Ink/Teal with dark mode, continuous day feed, wave Day, Sources sidebar and explicit Refresh. Website demo/intro and desktop/Android widgets use the new visual language. PDF/DOCX are read locally; structured parsing/OCR/cache reduce model calls. See [acceptance and evidence](release-verification-0.7.0.md).
+
+## Previous milestone — v0.6.1 smart import
 
 Windows 0.6.1 adds optional OpenAI image/page extraction, isolated source sign-in, encrypted remembered cookies, missing-field cards, local deadline planning, past filtering and richer ICS handling. [Behavior and limits](smart-import.md). macOS 0.6.1 artifacts passed the Intel CI suite and package checks; they remain unsigned development builds; Apple/Android import parity is not yet implemented.
 
@@ -12,7 +16,7 @@ Desktop 0.5.0 and the revised website are released. Eight answer-led product sec
 
 Android now has an offline Expo/Room calendar and two native Glance widgets. Optimized ARM64/x86_64 APKs build locally; actual API 35 launcher checks cover creation, cancellation, reconfiguration, independent filters, Done, moving/resizing/removal and reboot persistence. Android integrations and broad physical-device coverage remain pending. APKs are not publicly released.
 
-See [0.5 receipt](release-verification-0.5.0.md) and [Android receipt](../mobile/docs/verification.md). The public desktop video still shows 0.4.0: re-recording the 0.5 layout awaits dismissal of a Windows Security prompt.
+See [0.5 receipt](release-verification-0.5.0.md) and [Android receipt](../mobile/docs/verification.md). The 0.7 website replaces the earlier widget recording with actual native widget UI captured on a neutral virtual desktop.
 
 ## Website acceptance
 

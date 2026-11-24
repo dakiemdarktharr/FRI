@@ -1,4 +1,4 @@
-# Fri for Android · local alpha
+# Fri for Android · 0.2.0 local alpha
 
 Native home-screen widgets backed by the same Room database as the Expo app. No login, server, analytics, calendar permission or cloud account is required. This is the Android starting point; it is not a claim of complete Windows feature parity.
 
@@ -60,7 +60,7 @@ For an emulator, install `emulator` and `system-images;android-35;google_apis;x8
 ```powershell
 emulator -avd Fri_API_35 -memory 2048 -gpu auto -no-snapshot-save
 adb devices
-adb install -r ../dist/android/FRI-0.1.0-android-x86_64.apk
+adb install -r ../dist/android/FRI-0.2.0-android-x86_64.apk
 ```
 
 For automated capture, `-no-window -no-audio` starts the same Android launcher without a Windows emulator window. Guest RAM is 2 GB; total emulator memory is higher. CPU virtualization must be available. Keep SDK/AVD data on a drive with adequate free space; initial userdata creation can require about 12 GB. Close Android Studio after setup, and avoid simultaneous native builds. API 35 guest testing does not lower the app's API 36 target. Android 17/API 37 AVDs need more RAM and are not the low-memory default.

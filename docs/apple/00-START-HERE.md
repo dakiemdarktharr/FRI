@@ -2,7 +2,8 @@
 
 Research date: 2026-11-23; integration checkpoint: 2026-11-24. The native Xcode project and local verification are now included on `main`. See the [production readiness ledger](verification/PRODUCTION-READINESS.md) and [earlier receipt](verification/RELEASE.md). The native implementation was developed against Windows/Linux 0.5; merging it does not establish parity with the newer desktop features.
 
-Windows 0.6.1 is the current reference for further parity work; inspect its release verification and import addendum before starting. Preserve the shipped calendar behavior and ivory/charcoal/marsala design with an actual glass workspace and opaque controls. This handoff does not authorize new Day development. Marketing uses white/marsala; Premium is **50,000 VND/month, coming soon**, without a payment backend.
+Windows 0.7.0 is the current reference for further parity work; inspect its release verification and import addendum before starting. Preserve the shipped calendar behavior and Cloud/Ink/Teal light and dark design with an actual glass workspace and opaque controls. This handoff does not authorize new Day development. Marketing shares Cloud/Ink/Teal; Premium is **50,000 VND/month, coming soon**, without a payment backend.
+
 
 Read in order:
 
@@ -19,7 +20,7 @@ Also read ../fri_design_guidebook.pdf, ../privacy.md, ../../desktop/store.cjs, .
 
 ## Original implementation prompt (historical)
 
-> Inspect AGENTS.md, this handoff, source and the latest Windows release receipts. Create codex/apple-native. Implement macOS and iOS apps plus native WidgetKit extensions using the target structure below. Port and test every parity row, including incomplete-information intake, conflicts, imports and concurrent completion. Preserve the duration-based mosaic, equal gaps, date tabs and widget priority. Never substitute an Electron window for a WidgetKit extension or call an unsigned DMG an Apple release. Do not develop Day, collect appointment data, invent credentials or enable billing. Document unsupported platform behaviors and supply the closest OS-supported interaction. Update this ledger and Obsidian if available after each milestone. Produce build/test logs, signed artifact checksums and real-device evidence. Continue through all work possible with available credentials; report remaining blockers precisely.
+> Inspect AGENTS.md, this handoff, source and the latest Windows release receipts. Create codex/apple-native. Implement macOS and iOS apps plus native WidgetKit extensions using the target structure below. Port and test every parity row, including incomplete-information intake, conflicts, imports and concurrent completion. Preserve the compact continuous day feed, week/month/year selector, opaque cards, date tabs and widget priority. Never substitute an Electron window for a WidgetKit extension or call an unsigned DMG an Apple release. Do not develop Day, collect appointment data, invent credentials or enable billing. Document unsupported platform behaviors and supply the closest OS-supported interaction. Update this ledger and Obsidian if available after each milestone. Produce build/test logs, signed artifact checksums and real-device evidence. Continue through all work possible with available credentials; report remaining blockers precisely.
 
 ## Two distinct deliverables
 
@@ -31,3 +32,7 @@ The original Windows handoff did not include an Xcode project or Apple runtime v
 ## 0.6.1 import parity update
 
 Read [smart import](../smart-import.md) before building the next Apple client. Port the normalized records, missing-field cards, fixed-time conflict rules, deadline preparation planning, past filtering, ICS recurrence and synthetic tests. Native source access needs WKWebView/WKWebsiteDataStore with explicit user sign-in; keep cookies and API credentials in appropriate Keychain/App Group boundaries. Do not copy Windows ciphertext into a Mac/iOS keychain. On macOS Electron, verify source-browser menu access and repeated authenticated reads; Windows verification alone does not establish Apple support. No SwiftUI/WidgetKit/Android implementation of this new import flow is claimed.
+
+## 0.7 source contract
+
+Read [accepted design](../cloud-feed-redesign.md) and [intake contract](../smart-import.md) before porting. Add sources → local extraction first → essential-question cards → persistent prepared inbox. Only Refresh applies valid records; conflicts stay separate, fixed plans never move, repeated sources deduplicate, and past records are skipped. Port these semantics and tests, not the superseded immediate-import or mosaic UI. Preserve original-language event titles while keeping UI copy in English.

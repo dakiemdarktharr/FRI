@@ -1,6 +1,6 @@
 # FRI privacy boundaries
 
-FRI 0.6.1 stores appointments, drafts, settings and widget layout on the device. There is no FRI calendar server, analytics SDK, advertising SDK, account database or billing collection in this release. Premium is advertised at 50,000 VND/month and remains unavailable for purchase.
+FRI 0.7.0 stores appointments, drafts, settings and widget layout on the device. There is no FRI calendar server, analytics SDK, advertising SDK, account database or billing collection in this release. Premium is advertised at 50,000 VND/month and remains unavailable for purchase.
 
 The desktop writes an atomic encrypted calendar file in Electron userData. Encryption uses Electron safeStorage's asynchronous OS key provider (Windows DPAPI / macOS Keychain). A failed unlock never resets the saved calendar. Existing v0.2 localStorage is migrated only after an encrypted write succeeds, then its active key is removed. This does not promise forensic erasure of older disk sectors or browser database remnants.
 
@@ -44,3 +44,7 @@ The map renderer has its own restricted preload and session, no calendar bridge,
 Read with AI is a visible per-import choice and requires a locally configured OpenAI key. The native process stores it encrypted, removes it from the editable config, and never returns it to renderer JavaScript. Model responses use `store: false`; this does not override the API provider’s account-specific retention rules. Extracted records/drafts and short evidence snippets become part of the encrypted local calendar. Raw images and captured pages are not persisted by the production import flow. Browser HTTP cache/history and provider cookies can exist locally until Disconnect.
 
 A source partition is separate for each requested origin, with no preload/Node/FRI bridge and denied device permissions/downloads. Cookies are saved atomically with OS-backed encryption. Sessions are not guaranteed permanent: server expiry, revocation, MFA or embedded-browser restrictions still apply. Disconnect works without contacting the provider and deletes the saved vault and browser storage. The OS profile encryption metadata must accompany ciphertext in a full-profile backup. See [import guide](smart-import.md).
+
+## Prepared sources (0.7)
+
+The inbox, source labels/links, essential answers and bounded extraction-result cache are part of the encrypted local state. PDF/DOCX text is decoded in a worker on the device. Files and folder selections are read only when chosen; no folder watcher is installed. Reading a source does not change appointments. Refresh performs deterministic local validation and planning; it does not call OpenAI. Browser-only preview storage is localStorage and is not OS encrypted.

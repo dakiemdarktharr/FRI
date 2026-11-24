@@ -1,3 +1,11 @@
+# Android verification · 0.2.0 local alpha
+
+2026-11-24. Cloud/Ink/Teal light/dark feed, updated native widget/editor surfaces and accessible status-bar/accent contrast. Built optimized ARM64 and x86_64 APKs with the existing local debug signing key. Installed over 0.1.0 without clearing Room data; existing appointments/preferences survived. Lint/typecheck and two Room instrumentation tests passed. API 35 Pixel Launcher ran hidden on Windows: pin from native editor, move, resize 3×2 → 5×4, Done and Remove were verified through native input and UI Automator. Progress appeared at larger size; text remained 16 sp. Screenshots/receipts are in ignored test-results/cloud. APK sizes/checksums are in [desktop release receipt](../../docs/release-verification-0.7.0.md).
+
+This does not establish ARM64 device, alternate-launcher or Android source-intake/provider parity. Earlier lifecycle evidence below remains scoped to 0.1.0.
+
+## Historical 0.1.0 receipt
+
 # Android verification · 0.1.0 local alpha
 
 Date: 2026-11-23, Asia/Saigon. Windows host; one Pixel 4 / Android 15 API 35 x86_64 emulator, 2 GB guest RAM, WHPX. The launcher was the actual Pixel launcher, driven through Android input/UI Automator and inspected with screenshots. No web preview was used as widget evidence.

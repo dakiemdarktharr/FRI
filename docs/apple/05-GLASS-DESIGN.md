@@ -1,6 +1,6 @@
 # Glass, responsiveness and performance
 
-Preserve monochrome palette, FRI mark, rounded corners, SF/system font, duration-sized mosaic/equal gaps and day-first navigation. Keep local sidebar images, motion, glass and large-text settings. Narrow layouts collapse sidebar and use readable columns; every hover action has touch/keyboard access.
+Preserve Cloud/Ink/Teal light and dark palette, FRI mark, rounded corners, SF/system font, compact day feed/equal gaps and day-first navigation. Keep local sidebar images, motion, glass and large-text settings. Narrow layouts collapse sidebar and use readable columns; every hover action has touch/keyboard access.
 
 On supported Mac, verify actual behind-window backdrop. Browser CSS only refracts page content. iOS does not expose arbitrary other-app windows behind your app; do not promise cross-app transparency there.
 

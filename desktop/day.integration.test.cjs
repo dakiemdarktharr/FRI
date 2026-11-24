@@ -19,9 +19,9 @@ test('Day receives native state changes, applies through IPC, and persists acros
    next.settings.dayOpenAIEnabled=false;next.settings.dayDismissed=[];await friDesktop.saveState(state,next);
   });
   await p.waitForFunction(()=>document.querySelector('[data-day-count]').textContent==='2');
-  await p.locator('[data-action=day]').first().click();await p.locator('[data-day-apply]').waitFor();
+  await p.evaluate(()=>FRI_COMMAND('insights'));await p.locator('[data-day-apply]').waitFor();
   assert.equal(await p.locator('[name=message]').count(),0);
-  await p.screenshot({path:path.join(results,'day-native.png')});
+  await require('../tests/native-capture.cjs')(app,p,path.join(results,'day-native.png'));
   await p.locator('[data-day-apply]').click();
   await p.waitForFunction(()=>FRI_PREVIEW.getState().tasks.find(t=>t.id==='focus-native').time==='10:00');
   assert.equal(await p.evaluate(async()=>{const {state}=await friDesktop.loadState();return state.tasks.find(t=>t.id==='fixed-native').time}),'09:00');

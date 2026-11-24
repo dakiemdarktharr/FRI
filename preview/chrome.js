@@ -7,9 +7,9 @@
   let trigger=null;
   const menus={
     new:[['One-time deadline','deadline','A single due date and time'],['Schedule','schedule','An appointment with a duration']],
-    file:[['Import plans from files or text','intake'],['Find time for a task','focus'],['Find time together · Local preview','together'],null,['Create FRI widget on desktop','desktop-widget'],null,['New deadline','deadline'],['New schedule','schedule'],null,['Export calendar backup…','export'],['Restore calendar backup…','import'],null,['Settings','settings','Ctrl/⌘ ,'],['Close window','close']],
+    file:[['Add a source','intake'],['Refresh prepared sources','refresh'],['Find time for a task','focus'],['Calendar insights','insights'],['Find time together · Local preview','together'],null,['Create FRI widget on desktop','desktop-widget'],null,['New deadline','deadline'],['New schedule','schedule'],null,['Export calendar backup…','export'],['Restore calendar backup…','import'],null,['Settings','settings','Ctrl/⌘ ,'],['Close window','close']],
     edit:[['Undo last deletion','undo'],['Search appointments','search','Ctrl/⌘ F'],['Edit or delete appointments','manage']],
-    view:[['My day','day'],['Month','month'],['Year','year'],null,['Toggle sidebar','sidebar','Ctrl/⌘ B'],['Toggle full screen','fullscreen']],
+    view:[['My feed','day'],['Week','week'],['Month','month'],['Year','year'],null,['Toggle sidebar','sidebar','Ctrl/⌘ B'],['Toggle full screen','fullscreen']],
     help:[['Keyboard shortcuts','shortcuts'],['Check for updates…','updates'],['About FRI','about']]
   };
   const updateButton=$('#fri-update'), updateAnnouncement=$('#fri-update-status');

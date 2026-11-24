@@ -75,6 +75,8 @@ docker compose down
 
 ## Release boundaries
 
+For the macOS “damaged” download failure and the required signed release pipeline, see [macOS download repair](docs/macos-download-repair.md). On macOS, `npm run dist --prefix desktop` now requires Developer ID signing and notarization. Use `npm run dist:mac:development --prefix desktop` only for local development artifacts.
+
 v0.7.0 is a Windows-first release. Core calendar, ICS import and local planning work without API keys; optional source extraction uses the user’s OpenAI key. Calendar data is encrypted locally with OS-provided keys. No calendar-content server or telemetry exists. Windows installers replace old application files and retain user data; update installation happens after download succeeds. Builds are unsigned until signing certificates are supplied. Mac CI artifacts are development builds requiring signing, notarization and physical-device review before a supported Mac release.
 
 Premium entitlement, account signup, OAuth/Spotify Web Playback SDK, Google Places/Routes APIs, automatic shared-calendar linking, multimodal Day and an iOS app are not shipped. Day has local suggestions plus separately opted-in OpenAI ranking; import consent does not enable Day. ICS import expands bounded recurrences and splits overnight events. Nested travel/context planning remains in the earlier research workspace in index.html and is not exposed in this desktop UI.

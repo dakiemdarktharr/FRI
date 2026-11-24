@@ -10,9 +10,11 @@
   "scripts": {
     "prepare:ui": "node prepare.cjs",
     "start": "npm run prepare:ui && electron .",
-    "test": "node --test --test-concurrency=1 desktop.test.cjs core.test.cjs planning.test.cjs widget.test.cjs brand.test.cjs ai-import.test.cjs network.test.cjs source-browser.test.cjs day.test.cjs day.integration.test.cjs updates.test.cjs document-text.test.cjs",
+    "test": "node --test --test-concurrency=1 desktop.test.cjs core.test.cjs planning.test.cjs widget.test.cjs brand.test.cjs ai-import.test.cjs network.test.cjs source-browser.test.cjs day.test.cjs day.integration.test.cjs updates.test.cjs document-text.test.cjs scripts/mac-release.test.cjs",
     "pack": "npm run prepare:ui && electron-builder --dir",
-    "dist": "npm run prepare:ui && electron-builder --publish never"
+    "dist": "node scripts/dist.cjs",
+    "dist:mac:development": "node scripts/build-mac.cjs --development",
+    "verify:mac": "node scripts/verify-mac.cjs"
   },
   "dependencies": {
     "@hicccc77/electron-liquid-glass": "0.3.0",

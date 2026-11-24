@@ -17,8 +17,8 @@
 - [x] User direction confirmed.
 - [x] Intake inbox and refresh semantics implemented; deterministic planner + browser regressions pass.
 - [x] Desktop feed, calendar views, Day visual reviewed at 1440 and 390 pixels; native packaging still pending.
-- [ ] Website/demo/intro/mobile responsive pass.
-- [ ] Android/widget update and native checks.
+- [x] Website/demo/intro/mobile responsive pass.
+- [x] Android/widget update and native checks.
 - [ ] Windows installer, GitHub and production deployment verified.
 
 Figma connector returned reauthentication required. Use repo source and screenshots as reviewable design artifacts until the connection is restored.
@@ -29,7 +29,7 @@ Prepared sources are persisted separately from appointments. Refresh reserves al
 
 Local readers now cover ICS, JSON, CSV, dated text, HTML metadata, text-layer PDF and DOCX. Scanned PDFs need image export; protected PDFs need an unlocked copy. Complex images use local OCR followed by optional OpenAI only when necessary. Connection secrets remain in the existing encrypted native vault.
 
-Android palette/feed and native widget palette updated; x86_64 release build running. Figma unavailable due to connector authentication. Main-screen automation has not been used.
+Android 0.2.0 ARM64/x86_64 release builds completed; launcher create/move/resize/Done/removal verified. Figma unavailable due to connector authentication. Main-screen automation has not been used.
 
 ### Verification checkpoint · 2026-11-24
 
@@ -40,3 +40,7 @@ Android palette/feed and native widget palette updated; x86_64 release build run
 - Saved UEH source currently returns `sign-in`; no claim of a still-valid remote session. The browser recognizes reconnection and preserves the encrypted vault. Did not open a login window on the user's screen.
 - Local PDF and DOCX worker extraction passed; image-only PDFs explicitly ask for image export. Source bytes are not kept in the extraction cache.
 - Android installed over the previous alpha without clearing Room data. Dark-mode contrast and native widget editor colors corrected; final native build and launcher acceptance ongoing.
+
+### Publication checkpoint
+
+Windows 0.7.0 installed successfully over 0.6.1; encrypted user calendar bytes remained unchanged and the seeded upgrade probe retained its deadline and large-text preference. Native Apple work from main was merged without replacing it; Apple currently follows the earlier 0.5 UI, and the updated handoff specifies the 0.7 feed/source contract. PR #3 carries this redesign. CI and public release/deployment verification are in progress.

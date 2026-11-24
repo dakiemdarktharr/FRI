@@ -1095,7 +1095,7 @@ window.setupSmartIntake=function(api){
    update('Day · Reading a complex source',completed/total);const result=await service('ai-extract',{text:clean.slice(0,60000),image});if(!valid())return;modelCalls++;batch.rows.push(...result.events.map(F.normalize));batch.warnings.push(...result.warnings);
   }
   async function collect(input,name,image){
-   const bytes=new TextEncoder().encode((image||input)+'|'+name),digest=await crypto.subtle.digest('SHA-256',bytes),key=Array.from(new Uint8Array(digest),v=>v.toString(16).padStart(2,'0')).join(''),cache=getState().importCache||[];
+   const bytes=new TextEncoder().encode('v1|'+F.day(new Date())+'|'+(image||input)+'|'+name),digest=await crypto.subtle.digest('SHA-256',bytes),key=Array.from(new Uint8Array(digest),v=>v.toString(16).padStart(2,'0')).join(''),cache=getState().importCache||[];
    const hit=cache.find(c=>c.key===key);if(hit){batch.rows.push(...hit.rows.map(F.normalize));batch.warnings.push(...hit.warnings);localSources++;return}
    const before=batch.rows.length,warn=batch.warnings.length;await extractSource(input,name,image);if(valid()&&batch.rows.length>before){const entry={key,rows:batch.rows.slice(before).map(F.normalize),warnings:batch.warnings.slice(warn)};if(JSON.stringify(entry).length<200000)getState().importCache=[entry,...cache].slice(0,12)}
   }

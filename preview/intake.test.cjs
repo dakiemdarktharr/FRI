@@ -21,6 +21,7 @@ test('repeated complex content uses local cache and cancellation discards late r
  await p.waitForFunction(()=>typeof finishRead==='function');await p.locator('#cancel-source').click();
  await p.evaluate(()=>finishRead());await p.waitForTimeout(50);
  assert.equal((await state(p)).importQueue.length,2);await start(p);assert.equal(await p.locator('#source-intake [type=submit]').isEnabled(),true);
+ await p.clock.setFixedTime(new Date('2030-01-02T00:00:00'));await text(p,'A complex weekly course timetable without dates');await p.locator('[name=answer]').waitFor();assert.equal(await p.evaluate(()=>calls.filter(a=>a==='ai-extract').length),2);
 });
 test('ICS links bypass crawling and model calls; archive rereads preserve separate URLs',{timeout:40000},async t=>{
  const p=await fixture(t,true);

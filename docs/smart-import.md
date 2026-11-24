@@ -6,7 +6,7 @@ Refresh resolves all fixed appointments across all prepared batches first, then 
 
 Local readers: ICS, JSON arrays or `{events: [...]}`, CSV columns `title,date,time,duration,kind`, ISO-dated text, HTML event metadata, text-layer PDF and DOCX. PDF/DOCX decoding runs in a bounded worker with no document scripts or linked-resource access. Scanned/protected PDFs need image export/an unlocked copy. Windows local OCR runs before optional model extraction. Unsupported or unreadable files produce source notes; they are not treated as successful appointments.
 
-A bounded cache holds up to 12 extraction results (not original file/image bytes) inside encrypted desktop state. Re-reading identical complex content avoids another model call. Required dates/effort are still validated, and past filtering is re-run. Sources retain provenance in the sidebar; links can be read again without retyping them. This is explicit refresh, not continuous background synchronization.
+A bounded cache holds up to 12 extraction results (not original file/image bytes) inside encrypted desktop state. Re-reading identical complex content on the same day avoids another model call. The cache key includes the local date so relative dates and rolling calendar ranges are not reused on a later day. Required dates/effort are still validated, and past filtering is re-run. Sources retain provenance in the sidebar; links can be read again without retyping them. This is explicit refresh, not continuous background synchronization.
 
 ## What FRI extracts
 

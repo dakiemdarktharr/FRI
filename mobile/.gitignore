@@ -45,3 +45,8 @@ modules/**/android/build/
 modules/**/android/.gradle/
 modules/**/android/.cxx/
 .claude/
+src/generated/meeting-agent.js
+modules/fri-android/android/src/main/assets/meeting/*.gz
+modules/fri-android/android/src/main/assets/meeting/*.traineddata
+
+/modules/fri-android/android/src/main/res/font/inter_*.ttf

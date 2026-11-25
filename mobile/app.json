@@ -2,14 +2,14 @@
   "expo": {
     "name": "Fri",
     "slug": "fri",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "scheme": "fri",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "android": {
       "package": "com.fri.calendar.android",
-      "versionCode": 2,
+      "versionCode": 3,
       "allowBackup": false,
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",
@@ -41,7 +41,33 @@
           }
         }
       ],
-      "./plugins/with-fri.cjs"
+      "./plugins/with-fri.cjs",
+      [
+        "expo-font",
+        {
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "Inter",
+                "fontDefinitions": [
+                  {
+                    "path": "../brand/fonts/Inter-Regular.ttf",
+                    "weight": 400
+                  },
+                  {
+                    "path": "../brand/fonts/Inter-SemiBold.ttf",
+                    "weight": 600
+                  },
+                  {
+                    "path": "../brand/fonts/Inter-Bold.ttf",
+                    "weight": 700
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

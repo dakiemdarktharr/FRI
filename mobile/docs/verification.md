@@ -1,3 +1,11 @@
+# Android verification · 0.3.0 local alpha
+
+2026-11-25. Explicit text/image Share, offline Vietnamese OCR and reviewed calendar saves. Inter typography and simplified controls follow Fri's Cloud / Ink / Teal design. Four instrumentation tests, nine Kotlin unit tests, four parser/handoff tests and lint/typecheck passed. A real Google Photos share sheet supplied image access; repeated shares were verified after fixing duplicate token reads during route mounting. Text review/save and duplicate rejection ran on API 35 x86_64. ARM64 was built, not executed.
+
+See [build 4 receipt](../../docs/build4-windows-android-verification.md) for scope, commands and artifacts. Existing alpha data was preserved through install-over-old. APKs retain the local debug signing key; this is not a store release.
+
+## Historical 0.2.0 receipt
+
 # Android verification · 0.2.0 local alpha
 
 2026-11-24. Cloud/Ink/Teal light/dark feed, updated native widget/editor surfaces and accessible status-bar/accent contrast. Built optimized ARM64 and x86_64 APKs with the existing local debug signing key. Installed over 0.1.0 without clearing Room data; existing appointments/preferences survived. Lint/typecheck and two Room instrumentation tests passed. API 35 Pixel Launcher ran hidden on Windows: pin from native editor, move, resize 3×2 → 5×4, Done and Remove were verified through native input and UI Automator. Progress appeared at larger size; text remained 16 sp. Screenshots/receipts are in ignored test-results/cloud. APK sizes/checksums are in [desktop release receipt](../../docs/release-verification-0.7.0.md).

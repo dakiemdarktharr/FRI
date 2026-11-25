@@ -100,12 +100,16 @@
     if(!dialog.open)dialog.showModal();
     $('.dialog-close').focus();
   }
-  $('#mac-download').addEventListener('click',e=>{
-    if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;
-    e.preventDefault();
-    dialogContent.replaceChildren($('#mac-download-options').content.cloneNode(true));
-    showDialog('macOS');
-  });
+  function macOptions(){dialogContent.replaceChildren($('#mac-download-options').content.cloneNode(true));showDialog('macOS')}
+  $('#platform-picker').onclick=()=>{
+    dialogContent.replaceChildren($('#all-download-options').content.cloneNode(true));
+    $('#mac-download').onclick=macOptions;showDialog('Download Fri');
+  };
+  const platform=navigator.userAgentData?.platform||navigator.platform;
+  const primary=$('#primary-download');
+  if(/Mac/i.test(platform)){primary.textContent='Download for macOS';primary.href='https://github.com/dakiemdarktharr/FRI/releases/tag/v0.7.0';primary.onclick=e=>{if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;e.preventDefault();macOptions()}}
+  else if(/Linux/i.test(platform)&&!/Android/i.test(navigator.userAgent)){primary.textContent='Download for Linux';primary.href='https://github.com/dakiemdarktharr/FRI/releases/download/v0.7.0/FRI-liquid-glass.html'}
+  else if(/Android|iPhone|iPad/i.test(navigator.userAgent)){primary.textContent='Get Fri for desktop';primary.href='#downloads';primary.onclick=e=>{e.preventDefault();$('#platform-picker').click()}}
   $('.dialog-close').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('click',e=>{const r=dialog.getBoundingClientRect();if(e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))dialog.close()});
 
@@ -115,14 +119,14 @@
     return '<div class="task-tile '+classes+(done?' completed':'')+'"><div class="task-meta"><span>Personal</span><span>'+duration+'</span></div><div class="task-time">'+time+'<small>'+period+'</small></div><div class="task-title">'+title+'</div><div class="task-place">'+place+'</div><span class="task-check '+(done?'done':'')+'">'+(done?'✓':'')+'</span></div>';
   }
   function appSkeleton(){
-    return '<div class="app-chrome"><span class="traffic"><i></i><i></i><i></i></span><span>File</span><span>Edit</span><span>View</span><span>Help</span><span class="demo-refresh">↻ Refresh</span><span class="chrome-label">FRI</span></div><div class="app-body"><aside class="app-sidebar"><div class="app-brand">fri.<i class="search-glyph"></i></div><div class="app-today"><span>‹</span>Today<span>›</span></div><div class="app-new">＋ New</div><div class="app-nav current">My feed</div><div class="app-nav">Calendar</div><div class="demo-sources"><span>SOURCES</span><div>＋ Add a source</div><small class="demo-source-state">Collect first. Refresh when ready.</small></div><div class="app-profile"><span class="app-avatar">A</span>Alex Morgan</div></aside><div class="app-content"><div class="app-date"><div><h3>Tuesday</h3><p>November 24, 2026</p></div><div class="app-date-ring"><svg viewBox="0 0 50 50"><circle class="ring-track" cx="25" cy="25" r="22"/><circle class="ring-fill" cx="25" cy="25" r="22"/></svg><span>✓</span></div></div><div class="demo-view"><span>Feed ⌄</span><span>Today</span></div><div class="app-mosaic"><div class="task-column">'+task('A slow start','8:00','AM','30m','At home','',true)+task('Make something meaningful','9:00','AM','2h','The studio','dark-tile')+'</div><div class="task-column coffee-column">'+task('A little room to read','4:00','PM','1h','Your favourite corner')+'</div><div class="task-column demo-rail"><div class="task-upnext"><span>UP NEXT</span><div class="upnext-line"></div><h4>9:00 <small>AM</small></h4><b>Make something<br>meaningful</b><p>The studio</p></div><div class="app-dot"><i class="demo-day-orb"></i><span>Day</span></div></div></div><div class="demo-overlay"><div class="demo-form"></div></div><div class="demo-cursor">'+cursor+'</div></div></div>';
+    return '<div class="app-chrome"><span class="traffic"><i></i><i></i><i></i></span><span>File</span><span>Edit</span><span>View</span><span>Help</span><span class="demo-refresh">↻ Refresh</span><span class="chrome-label">FRI</span></div><div class="app-body"><aside class="app-sidebar"><div class="app-brand">fri.<i class="search-glyph"></i></div><div class="app-today"><span>‹</span>Today<span>›</span></div><div class="app-new">＋ New</div><div class="app-nav current">My feed</div><div class="app-nav">Calendar</div><div class="demo-sources"><span>SOURCES</span><div>＋ Add a source</div><span class="demo-source-state"></span></div><div class="app-profile"><span class="app-avatar">A</span>Alex Morgan</div></aside><div class="app-content"><div class="app-date"><div><h3>Tuesday</h3><p>November 24, 2026</p></div><div class="app-date-ring"><svg viewBox="0 0 50 50"><circle class="ring-track" cx="25" cy="25" r="22"/><circle class="ring-fill" cx="25" cy="25" r="22"/></svg><span>✓</span></div></div><div class="demo-view"><span>Feed ⌄</span><span>Today</span></div><div class="app-mosaic"><div class="task-column">'+task('A slow start','8:00','AM','30m','At home','',true)+task('Make something meaningful','9:00','AM','2h','The studio','dark-tile')+'</div><div class="task-column coffee-column">'+task('A little room to read','4:00','PM','1h','Your favourite corner')+'</div><div class="task-column demo-rail"><div class="task-upnext"><span>UP NEXT</span><div class="upnext-line"></div><h4>9:00 <small>AM</small></h4><b>Make something<br>meaningful</b><p>The studio</p></div><div class="app-dot"><i class="demo-day-orb"></i><span>Day</span></div></div></div><div class="demo-overlay"><div class="demo-form"></div></div><div class="demo-cursor">'+cursor+'</div></div></div>';
   }
   const apps=[$('#live-app')];
   apps.forEach(a=>{a.innerHTML=appSkeleton();a.setAttribute('aria-hidden','true')});
   let elapsed=reduced.matches?9000:0,paused=reduced.matches,lastFrame=performance.now(),startTime=lastFrame,lastKey='',lastChapter=-1;
   function formHTML(mode,typed,chosen){
-    if(mode==='add')return '<div class="form-kicker">ADD A SOURCE</div><h4>Bring your plans.</h4><div class="demo-field">calendar.ics<i class="typing-caret"></i></div><div class="form-row"><span class="form-chip">Link</span><span class="form-chip">File or image</span></div><div class="demo-submit">Read sources</div>';
-    return '<div class="form-kicker">DAY · ONE DETAIL</div><h4>When does it start?</h4><div class="form-row"><span class="form-chip '+(chosen?'selected':'')+'">11:30 AM</span><span class="form-chip">45 minutes</span></div><div class="demo-submit">Continue</div>';
+    if(mode==='add')return '<h4>Bring your plans.</h4><div class="demo-field">calendar.ics<i class="typing-caret"></i></div><div class="form-row"><span class="form-chip">Link</span><span class="form-chip">File or image</span></div><div class="demo-submit">Read sources</div>';
+    return '<h4>When does it start?</h4><div class="form-row"><span class="form-chip '+(chosen?'selected':'')+'">11:30 AM</span><span class="form-chip">45 minutes</span></div><div class="demo-submit">Continue</div>';
   }
   function renderDemo(){
     const t=elapsed%16000;

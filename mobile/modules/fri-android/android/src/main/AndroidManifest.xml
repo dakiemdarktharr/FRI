@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
  <application>
+  <activity android:name=".FriShareActivity" android:exported="true" android:label="Fri · Review a plan" android:excludeFromRecents="true">
+   <intent-filter><action android:name="android.intent.action.SEND"/><category android:name="android.intent.category.DEFAULT"/><data android:mimeType="text/plain"/></intent-filter>
+   <intent-filter><action android:name="android.intent.action.SEND"/><category android:name="android.intent.category.DEFAULT"/><data android:mimeType="image/*"/></intent-filter>
+  </activity>
   <activity android:name=".FriWidgetEditorActivity" android:exported="true" android:label="Configure Fri widget">
    <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
   </activity>

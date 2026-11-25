@@ -93,7 +93,7 @@ test('sandboxed assistant accepts a chosen source, reviews once, and revokes a c
         showCalendar() {}, review(item) {fixture.reviews.push(item);}
       });
       app.on('before-quit',()=>agent.shutdown());
-      agent.open();
+      agent.open(process.env.FRI_TEST_HIDDEN !== '1');
     });
   `;
   fs.writeFileSync(path.join(folder,'main.cjs'),bootstrap);
@@ -102,6 +102,13 @@ test('sandboxed assistant accepts a chosen source, reviews once, and revokes a c
   try {
     const page=await app.firstWindow();
     await page.waitForFunction(()=>window.initializeMeetingAgent && document.querySelector('#sources option'));
+    const screenshots=path.join(__dirname,'../test-results/build4');fs.mkdirSync(screenshots,{recursive:true});
+    for(const theme of ['light','dark']){
+      await app.evaluate(({BrowserWindow},theme)=>BrowserWindow.getAllWindows()[0].webContents.send('meeting:theme',theme),theme);
+      await page.waitForFunction(theme=>document.documentElement.dataset.theme===theme,theme);
+      const png=await app.evaluate(async({BrowserWindow})=>(await BrowserWindow.getAllWindows()[0].webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG().toString('base64'));
+      fs.writeFileSync(path.join(screenshots,'windows-assistant-'+theme+'.png'),Buffer.from(png,'base64'));
+    }
     assert.equal(await page.locator('#sources option').count(),1);
     assert.equal(await page.evaluate(()=>meeting.start('screen:1:0').then(()=>false,()=>true)),true);
     const fixtures=path.join(__dirname,'../apple/Packages/FRICore/Tests/FRICoreTests/MeetingFixtures');

@@ -2,10 +2,14 @@
 
 A local-first calendar with a native glass workspace and desktop widgets. **Premium: 50,000 VND/month, coming soon. No payments or account signup are enabled.**
 
-- **Website:** https://fri-acne-a6cd.vercel.app — XP-style opening, halftone surf, continuous app demo and Pricing.
+- **Website:** https://getfri.vercel.app — XP-style opening, halftone surf, continuous app demo and Pricing.
 - **Installers:** [GitHub Releases](https://github.com/dakiemdarktharr/FRI/releases).
 - **Review files:** [website HTML](FRI-website.html) and [app HTML](FRI-liquid-glass.html), both self-contained.
 - **Design handoff:** [fri_design_guidebook.pdf](docs/fri_design_guidebook.pdf) and [Apple platform handoff](docs/apple-handoff.md).
+
+## Build 4 refresh
+
+Windows build 4 includes the local calendar assistant from the newest shared rules. Android 0.3.0 accepts explicit text/image shares, reads them offline and requires review before saving. [Android share flow](mobile/docs/meeting-share.md) · [Build verification](docs/build4-windows-android-verification.md). All current web/Electron/Android app screens use bundled [Inter typography](brand/README.md), with simplified actions and decorative subtext removed. Native system controls and Glance widgets keep platform fonts.
 
 ## Use FRI
 

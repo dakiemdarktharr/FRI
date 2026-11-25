@@ -9,6 +9,7 @@ plugins { id 'com.android.library'; id 'expo-module-gradle-plugin' }
 apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 apply plugin: 'com.google.devtools.ksp'
 group = 'expo.modules.friandroid'
+repositories { maven { url 'https://jitpack.io'; content { includeGroup 'cz.adaptech.tesseract4android' } } }
 version = '0.1.0'
 android {
   namespace 'expo.modules.friandroid'
@@ -19,6 +20,7 @@ android {
 }
 ksp { arg('room.schemaLocation', "$projectDir/schemas") }
 dependencies {
+  implementation 'cz.adaptech.tesseract4android:tesseract4android:4.9.0'
   coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
   implementation 'androidx.room:room-runtime:2.8.5'
   implementation 'androidx.room:room-ktx:2.8.5'

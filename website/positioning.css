@@ -22,3 +22,8 @@ body.motion-paused .campaign-story .scene *{animation-play-state:paused!importan
 @media(max-width:700px){.hero-category{font-size:14px}.hero-facts{padding:10px 12px}.hero-facts .hero-platforms{font-size:11px;line-height:1.5}.campaign-story .week-plan{padding-top:9px;padding-bottom:9px}}
 
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* Minimal brand refinement: facts belong inside the illustration. */
+.scene-facts{font-size:13px;line-height:1.65;color:#586d7c;text-align:center}.hero-copy{padding-top:130px}.plan-label{margin-bottom:24px}.plan-cost-note{font-size:14px;margin:18px 0}.campaign-story .scene-facts{margin:0}.download-panel{gap:12px}
+
+.platform-picker{width:44px;height:44px;border:1px solid #ffffff88;border-radius:50%;color:white;background:#172b3a55;font-size:22px;cursor:pointer}#dialog-content{display:grid;gap:12px}#dialog-content .pill{width:100%;justify-content:center}.download-panel{align-items:center}

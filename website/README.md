@@ -1,6 +1,6 @@
 # FRI website
 
-Production: https://fri-acne-a6cd.vercel.app
+Production: https://getfri.vercel.app
 
 Open ../FRI-website.html directly, or run `node website/build.mjs` to rebuild it. The standalone file embeds the video, poster, pole logo, styles and scripts. The Vercel build serves public/index.html, public/pricing/index.html and the separately cached MP4.
 

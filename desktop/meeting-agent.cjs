@@ -31,7 +31,7 @@ function login(value) {
   return fs.existsSync(entry);
 }
 
-function createMeetingAgent({showCalendar, review}) {
+function createMeetingAgent({showCalendar, review, getTheme=()=> 'system'}) {
   const {MeetingFrames} = require('./ui/meeting-agent.js');
   const capture = session.fromPartition('fri-window-capture');
   const portal = process.platform === 'linux' && (process.env.XDG_SESSION_TYPE === 'wayland' || !!process.env.WAYLAND_DISPLAY);
@@ -117,7 +117,7 @@ function createMeetingAgent({showCalendar, review}) {
   handle('state', async()=>{
     const list=saved.length && !portal ? await sources() : [];
     const resume=list.filter(s=>saved.some(g=>g.id===s.id && g.label===fingerprint(s.name))).map(s=>s.id);
-    return {login:login(),portal,resume};
+    return {login:login(),portal,resume,theme:getTheme()};
   });
   handle('login', value=>{
     if (typeof value!=='boolean') throw Error('Invalid preference');
@@ -163,9 +163,9 @@ function createMeetingAgent({showCalendar, review}) {
     return recognitionQueue;
   });
   function open(visible=true) {
-    if (panel) {if(visible){panel.show();panel.focus();} return;}
+    if (panel) {panel.webContents.send('meeting:theme',getTheme());if(visible){panel.show();panel.focus();} return;}
     if (!tray) {tray=new Tray(path.join(__dirname,'resources/icon.png')); tray.on('click',()=>open(true)); menu();}
-    panel=new BrowserWindow({width:520,height:400,show:visible,title:'FRI · Thư ký lịch',webPreferences:{
+    panel=new BrowserWindow({width:560,height:640,minWidth:400,minHeight:560,show:visible,title:'FRI · Thư ký lịch',webPreferences:{
       session:capture,preload:path.join(__dirname,'meeting-preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false
     }});
     panel.removeMenu();

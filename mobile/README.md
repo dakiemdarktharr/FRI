@@ -1,4 +1,4 @@
-# Fri for Android · 0.2.0 local alpha
+# Fri for Android · 0.3.0 local alpha
 
 Native home-screen widgets backed by the same Room database as the Expo app. No login, server, analytics, calendar permission or cloud account is required. This is the Android starting point; it is not a claim of complete Windows feature parity.
 
@@ -23,7 +23,7 @@ $env:FRI_NATIVE_BUILD_ROOT='D:/FRI-work/cxx'
 
 $env:NODE_ENV='production'
 
-npx expo prebuild --platform android --no-install --no-clean
+npm run prebuild -- --no-install
 
 ./android/gradlew.bat -p android :app:assembleRelease :fri-android:testDebugUnitTest -PreactNativeArchitectures=arm64-v8a --no-daemon --max-workers=2
 

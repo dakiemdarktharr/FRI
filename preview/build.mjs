@@ -2,6 +2,8 @@ import { build } from 'esbuild';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import {typography} from '../brand/typography.mjs';
+const typeCss=await typography();
 const here = path.dirname(fileURLToPath(import.meta.url));
 await mkdir(path.join(here,'.build'),{recursive:true});
 const bundle = await build({entryPoints:[path.join(here,'gradient.jsx')],bundle:true,minify:true,write:false,format:'iife',target:'es2022',define:{'process.env.NODE_ENV':'"production"'},legalComments:'inline'});
@@ -17,7 +19,7 @@ const dayCore=await readFile(path.join(here,'../desktop/day-core.cjs'),'utf8'),d
 const chrome=await readFile(path.join(here,'chrome.js'),'utf8');
 let html = await readFile(path.join(here,'shell.html'),'utf8');
 const css=(await readFile(path.join(here,'style.css'),'utf8'))+'\n'+(await readFile(path.join(here,'brand.css'),'utf8'))+'\n'+(await readFile(path.join(here,'day.css'),'utf8'))+'\n'+(await readFile(path.join(here,'updates.css'),'utf8')),app=await readFile(path.join(here,'app.js'),'utf8');
-html=html.replace('/*__CSS__*/',()=>css)
+html=html.replace('/*__CSS__*/',()=>css+'\n'+typeCss)
   .replace('/*__APP__*/',()=>domain+'\n'+planning+'\n'+importPlan+'\n'+inbox+'\n'+feed+'\n'+calendarBundle.outputFiles[0].text+'\n'+smartIntake+'\n'+intake+'\n'+native+'\n'+dayCore+'\n'+day+'\n'+app)
   .replace('/*__CHROME__*/',()=>chrome)
   .replace('/*__GRADIENT__*/',()=>bundle.outputFiles[0].text.replace(/<\/script/gi,'<\\/script'))

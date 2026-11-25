@@ -94,7 +94,7 @@ if(!app.requestSingleInstanceLock()){app.quit();}else{
     const csp=JSON.parse(fs.readFileSync(path.join(uiPath,'csp.json'),'utf8'));
     protocol.handle('app',request=>{
       const widgetFiles={'app://fri/widget.html':'widget.html','app://fri/widget-select.html':'widget-select.html'};
-      if(widgetFiles[request.url]){const html=fs.readFileSync(path.join(__dirname,widgetFiles[request.url]),'utf8').replace(/\r\n?/g,'\n').replace('<link rel="stylesheet" href="widget.css">',()=>'<style>'+fs.readFileSync(path.join(__dirname,'widget.css'),'utf8')+'</style>');const hash=require('node:crypto').createHash('sha256').update(html.match(/<script>([\s\S]*?)<\/script>/)[1]).digest('base64');return new Response(html,{headers:{'content-type':'text/html; charset=utf-8','Content-Security-Policy':"default-src 'none'; script-src 'sha256-"+hash+"'; style-src 'unsafe-inline'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"}})}
+      if(widgetFiles[request.url]){const html=fs.readFileSync(path.join(__dirname,widgetFiles[request.url]),'utf8').replace(/\r\n?/g,'\n').replace('<link rel="stylesheet" href="widget.css">',()=>'<style>'+`@font-face{font-family:Inter;src:url(data:font/woff2;base64,${fs.readFileSync(path.join(__dirname,'ui/InterVariable.woff2')).toString('base64')}) format('woff2');font-weight:100 900;font-display:swap}`+fs.readFileSync(path.join(__dirname,'widget.css'),'utf8')+`body,button{font-family:Inter,sans-serif}`+'</style>');const hash=require('node:crypto').createHash('sha256').update(html.match(/<script>([\s\S]*?)<\/script>/)[1]).digest('base64');return new Response(html,{headers:{'content-type':'text/html; charset=utf-8','Content-Security-Policy':"default-src 'none'; script-src 'sha256-"+hash+"'; style-src 'unsafe-inline'; font-src data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"}})}
       if(request.url!==startURL)return new Response('Not found',{status:404});
       return new Response(fs.readFileSync(path.join(uiPath,'index.html')),{headers:{'content-type':'text/html; charset=utf-8','Content-Security-Policy':csp,'X-Content-Type-Options':'nosniff'}});
     });
@@ -120,7 +120,7 @@ if(!app.requestSingleInstanceLock()){app.quit();}else{
     widgets=createWidgets({store,getMain:()=>win,onChange:changed,onService:action=>{const settings=store.read().state.settings;return services.call(action,action==='spotify'?settings.spotifyUrl:settings.mapsRegion)}});
     function showCalendar(){if(!win)createWindow();else {win.show();win.focus();}}
     if(!isMac){
-      meetingAgent=require('./meeting-agent.cjs').createMeetingAgent({showCalendar,review:suggestion=>{
+      meetingAgent=require('./meeting-agent.cjs').createMeetingAgent({showCalendar,getTheme:()=>store.read().state?.settings?.theme||'system',review:suggestion=>{
         showCalendar();
         const target=win.webContents;
         const sendReview=()=>{if(!target.isDestroyed())target.send('fri:meeting-review',suggestion);};

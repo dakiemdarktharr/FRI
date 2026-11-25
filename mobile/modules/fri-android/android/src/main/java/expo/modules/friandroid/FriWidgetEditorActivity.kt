@@ -37,7 +37,8 @@ class FriWidgetEditorActivity:ComponentActivity(){
       draft=runCatching{WidgetSettings.parse(saved?.getString("settings")?:data.first?.settings?:data.second?.settings?:WidgetSettings().json())}.getOrDefault(WidgetSettings(filter="selected",privacy="busy",showLocation=false))
       draftName=saved?.getString("name")?:data.second?.name?:"My widget"
       val events=withContext(Dispatchers.IO){repo.dao.events()}
-      setContent{MaterialTheme(colorScheme=lightColorScheme(primary=Color(0xFF087F8C),surface=Color(0xFFF4F7FA),onSurface=Color(0xFF172B3A))){Editor(data.third,data.first?.state=="confirmed",events)}}
+      val theme=withContext(Dispatchers.IO){repo.dao.preferences().firstOrNull{it.key=="theme"}?.value}
+      setContent{val dark=theme=="dark"||(theme!="light"&&androidx.compose.foundation.isSystemInDarkTheme());MaterialTheme(typography=FriTypography,colorScheme=if(dark)darkColorScheme(primary=Color(0xFF64D4D0),surface=Color(0xFF111D27),onSurface=Color(0xFFEAF2F6))else lightColorScheme(primary=Color(0xFF087F8C),surface=Color(0xFFF4F7FA),onSurface=Color(0xFF172B3A))){Editor(data.third,data.first?.state=="confirmed",events)}}
     }
   }
   override fun onSaveInstanceState(out:Bundle){out.putString("session",session);out.putString("settings",draft.json());out.putString("name",draftName);super.onSaveInstanceState(out)}
@@ -48,7 +49,7 @@ class FriWidgetEditorActivity:ComponentActivity(){
     fun operation(block:suspend()->String){if(busy)return;busy=true;lifecycleScope.launch{try{message=block()}catch(e:Exception){message=e.message?:"Could not save. Try again."}finally{busy=false}}}
     BackHandler(enabled=!busy){cancel()}
     Surface(Modifier.fillMaxSize()){Column(Modifier.safeDrawingPadding().padding(24.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(14.dp)){
-      Text(if(editing)"Edit widget"else "Make it yours",style=MaterialTheme.typography.headlineMedium)
+      Text(if(editing)"Edit widget"else "New widget",style=MaterialTheme.typography.headlineMedium)
       Text(if(template=="today_agenda")"Today's agenda"else "Up next",style=MaterialTheme.typography.titleMedium)
       if(id<0)OutlinedTextField(name,{name=it;draftName=it},label={Text("Preset name")},singleLine=true,modifier=Modifier.fillMaxWidth())
       Text("Calendars",style=MaterialTheme.typography.titleMedium)

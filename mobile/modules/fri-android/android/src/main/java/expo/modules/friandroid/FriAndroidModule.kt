@@ -20,8 +20,10 @@ class FriAndroidModule : Module() {
         val result=withContext(Dispatchers.IO){
           repo.initialize()
           when(operation){
+            "takeMeetingShare"->MeetingShareInbox.take(p.getString("token"))
             "snapshot"->repo.snapshot(p.optString("day",LocalDate.now().toString()))
             "saveEvent"->repo.saveEvent(p).json()
+            "saveMeetingEvent"->repo.saveEvent(p,true).json()
             "deleteEvent"->{repo.deleteEvent(p.getString("id"));JSONObject()}
             "complete"->{repo.complete(p.getString("id"));JSONObject()}
             "deletePreset"->{repo.dao.deletePreset(p.getString("id"));JSONObject()}
@@ -30,7 +32,7 @@ class FriAndroidModule : Module() {
             else->error("Unknown operation.")
           }
         }
-        if(operation !in listOf("snapshot","editor"))sendEvent("onChange",mapOf("operation" to operation))
+        if(operation !in listOf("snapshot","editor","takeMeetingShare"))sendEvent("onChange",mapOf("operation" to operation))
         JSONObject().put("ok",true).put("data",result).toString()
       }catch(e:Exception){JSONObject().put("ok",false).put("error",e.message?:"Something went wrong.").toString()}
     }

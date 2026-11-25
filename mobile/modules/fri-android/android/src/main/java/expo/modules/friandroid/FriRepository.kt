@@ -11,7 +11,7 @@ import java.util.UUID
 class FriRepository(private val context:Context) {
   val db=FriDatabase.get(context);val dao=db.dao()
   suspend fun initialize(){val n=System.currentTimeMillis();dao.seed(FriCalendar("personal","Personal","#087F8C",n,n),FriCalendar("work","Work","#172B3A",n,n))}
-  suspend fun saveEvent(o:JSONObject):FriEvent {
+  suspend fun saveEvent(o:JSONObject,reviewedMeeting:Boolean=false):FriEvent {
     initialize();val id=o.optString("id").ifBlank{UUID.randomUUID().toString()};val old=dao.event(id);val title=o.optString("title").trim();require(title.isNotBlank()&&title.length<=300){"Add a title of up to 300 characters."}
     val calendar=o.optString("calendarId","personal");require(dao.calendars().any{it.id==calendar}){"Choose an available calendar."}
     val zone=o.optString("zone",ZoneId.systemDefault().id);ZoneId.of(zone)
@@ -19,7 +19,10 @@ class FriRepository(private val context:Context) {
     if(allDay){sd=LocalDate.parse(o.getString("startDate")).toString();ed=LocalDate.parse(o.getString("endDate")).toString();require(ed>sd){"The end date must be after the start date."}}
     else {start=if(o.has("startLocal"))CalendarLogic.localInstant(o.getString("startLocal"),zone)else o.getLong("startUtc");end=if(o.has("endLocal"))CalendarLogic.localInstant(o.getString("endLocal"),zone)else o.getLong("endUtc");require(end>start){"The end must be after the start."}}
     val now=System.currentTimeMillis();val event=FriEvent(id,calendar,title,allDay,start,end,zone,sd,ed,o.optString("location").take(1000),o.optString("notes").take(10000),old?.done?:o.optBoolean("done",false),old?.createdAt?:now,now)
-    dao.save(event);WidgetRefreshCoordinator.request(context);return event
+    db.withTransaction{
+      if(reviewedMeeting){require(!o.has("id")){"A shared plan cannot overwrite an existing event."};MeetingValidation.validate(event,dao.events(),now)}
+      dao.save(event)
+    };WidgetRefreshCoordinator.request(context);return event
   }
   suspend fun deleteEvent(id:String){dao.deleteEvent(id);WidgetRefreshCoordinator.request(context)}
   suspend fun complete(id:String){dao.completeEvent(id,System.currentTimeMillis());WidgetRefreshCoordinator.request(context)}

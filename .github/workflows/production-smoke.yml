@@ -17,7 +17,7 @@ jobs:
         browser: [chromium, webkit]
     env:
       FRI_BROWSER: ${{ matrix.browser }}
-      FRI_WEB_URL: https://fri-acne-a6cd.vercel.app/
+      FRI_WEB_URL: https://getfri.vercel.app/
       FRI_SKIP_FRAMES: '1'
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803

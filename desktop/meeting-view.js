@@ -7,6 +7,8 @@ function updateButtons() {
   const id=ui('sources').value;
   ui('start').disabled=starting || !id || [...sessions.values()].some(s=>s.id===id);
   ui('stop').disabled=!sessions.size;
+  ui('stop').hidden=!sessions.size;
+  ui('start').hidden=[...sessions.values()].some(s=>s.id===id);
 }
 function release(s) {
   if (!s) return;
@@ -95,8 +97,11 @@ ui('login').onchange=async()=>{
   catch{ui('login').checked=false;ui('status').textContent='Chưa thể thay đổi mục đăng nhập.';}
 };
 api.onStop(stopped);
+const applyTheme=theme=>{document.documentElement.dataset.theme=['light','dark'].includes(theme)?theme:'system';};
+api.onTheme(applyTheme);
 window.initializeMeetingAgent=async()=>{
   const state=await api.state();
+  applyTheme(state.theme);
   ui('login').checked=state.login;
   if(state.portal){
     ui('status').textContent='Bấm Tìm cửa sổ rồi chọn cửa sổ Zalo hoặc Messenger riêng trong hộp thoại Linux. Quyền chia sẻ áp dụng cho phiên này.';

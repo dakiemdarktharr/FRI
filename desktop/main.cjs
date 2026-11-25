@@ -21,7 +21,7 @@ const isMac = process.platform === 'darwin';
 const supportsAcrylic = process.platform === 'win32' && Number(os.release().split('.')[2]) >= 22621;
 const material = nativeGlass ? 'liquid-glass' : isMac ? 'vibrancy' : supportsAcrylic ? 'acrylic' : 'solid';
 let store, widgets, services, quitting=false;
-let glassController;
+let glassController, meetingAgent;
 let win, updates;
 
 function trusted(event) {
@@ -80,7 +80,7 @@ function createWindow(){
   win.webContents.on('will-attach-webview',event=>event.preventDefault());
   for(const event of ['maximize','unmaximize','focus','blur'])win.on(event,emitState);
   win.once('ready-to-show',()=>{if(!(process.env.FRI_TEST_MODE==='1'&&process.env.FRI_TEST_HIDDEN==='1'))win.show();emitState()});
-  win.on('close',e=>{if(!quitting&&widgets?.count()){e.preventDefault();win.hide()}});
+  win.on('close',e=>{if(!quitting&&(widgets?.count()||meetingAgent?.active())){e.preventDefault();win.hide()}});
   win.on('closed',()=>{win=null});
   win.loadURL(startURL);
 }
@@ -118,9 +118,19 @@ if(!app.requestSingleInstanceLock()){app.quit();}else{
     ipcMain.handle('fri:widget',e=>{trusted(e);return widgets.select()});
     ipcMain.handle('fri:service',async(e,action,input)=>{trusted(e);return services.call(action,input)});
     widgets=createWidgets({store,getMain:()=>win,onChange:changed,onService:action=>{const settings=store.read().state.settings;return services.call(action,action==='spotify'?settings.spotifyUrl:settings.mapsRegion)}});
-    nativeMenu();createWindow();widgets.restore();updates.start();
+    function showCalendar(){if(!win)createWindow();else {win.show();win.focus();}}
+    if(!isMac){
+      meetingAgent=require('./meeting-agent.cjs').createMeetingAgent({showCalendar,review:suggestion=>{
+        showCalendar();
+        const target=win.webContents;
+        const sendReview=()=>{if(!target.isDestroyed())target.send('fri:meeting-review',suggestion);};
+        if(target.isLoadingMainFrame())target.once('did-finish-load',sendReview);else sendReview();
+      }});
+      ipcMain.handle('fri:meeting-open',e=>{trusted(e);meetingAgent.open();});
+    }
+    nativeMenu();createWindow();widgets.restore();updates.start();meetingAgent?.resume();
     app.on('activate',()=>{if(!win)createWindow()});
   });
   app.on('window-all-closed',()=>{if(!isMac)app.quit()});
-  app.on('before-quit',e=>{if(quitting)return;e.preventDefault();quitting=true;widgets?.cleanup();services?.stop();updates?.stop();glassController?.destroy();nativeGlass?.shutdown();Promise.resolve(store?.settled()).finally(()=>app.quit())});
+  app.on('before-quit',e=>{if(quitting)return;e.preventDefault();quitting=true;meetingAgent?.shutdown();widgets?.cleanup();services?.stop();updates?.stop();glassController?.destroy();nativeGlass?.shutdown();Promise.resolve(store?.settled()).finally(()=>app.quit())});
 }

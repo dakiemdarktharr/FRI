@@ -55,6 +55,7 @@ targets:
     platform: macOS
     settings:
       base:
+        CURRENT_PROJECT_VERSION: "4"
         PRODUCT_BUNDLE_IDENTIFIER: $(FRI_BUNDLE_PREFIX).mac
         CODE_SIGN_ENTITLEMENTS: $(FRI_MAC_ENTITLEMENTS)
         FRI_STORAGE_MODE: $(FRI_MAC_STORAGE_MODE)
@@ -95,6 +96,18 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: $(FRI_BUNDLE_PREFIX).ios.widgets
         CODE_SIGN_ENTITLEMENTS: Config/Shared.entitlements
         TARGETED_DEVICE_FAMILY: "1,2"
+  FRIMacAgentTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [MacTests]
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: $(FRI_BUNDLE_PREFIX).mac.agenttests
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/FRIMac.app/Contents/MacOS/FRIMac
+        BUNDLE_LOADER: $(TEST_HOST)
+    dependencies:
+      - target: FRIMac
   FRIMacUITests:
     type: bundle.ui-testing
     platform: macOS
@@ -121,7 +134,7 @@ schemes:
       targets:
         FRIMac: all
     test:
-      targets: [FRIMacUITests]
+      targets: [FRIMacUITests, FRIMacAgentTests]
   FRIMacWidgetKit:
     build:
       targets:

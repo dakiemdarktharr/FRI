@@ -51,6 +51,17 @@
                ReferencedContainer = "container:FRI.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "B4C92E652858A1BA7A07DB4B"
+               BuildableName = "FRIMacAgentTests.xctest"
+               BlueprintName = "FRIMacAgentTests"
+               ReferencedContainer = "container:FRI.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>

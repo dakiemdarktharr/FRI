@@ -6,6 +6,12 @@ The desktop writes an atomic encrypted calendar file in Electron userData. Encry
 
 The main renderer has no Node access, runs in a sandbox with context isolation, hashed scripts and denied HTTP/HTTPS requests. Narrow IPC methods validate their sender and data. Widgets use a separate restricted bridge. Calendar titles and notes are never sent with weather, maps or Spotify requests.
 
+## Meeting suggestions in selected chat windows
+
+The calendar assistant starts after the user selects a Zalo or Messenger window. It requests window video only. macOS uses ScreenCaptureKit and Vision while that window is frontmost. Windows and Linux use a separate local capture session and bundled Vietnamese Tesseract data. Recognition examines changing pixels in the conversation area. On macOS, the selected Zalo window also has a separate recognition region at the bottom for the unsent composer. An invitation there can show a dismissible suggestion while the user types. No keyboard listener is used. Unrelated or sensitive text visible in that area can therefore be processed in memory. The assistant keeps raw chat text and images out of its logs, calendar database and network requests.
+
+The first observation of sent messages establishes a baseline. A new visible confirmation can produce a proposed title, date, time and place. The user reviews a suggestion before it becomes a calendar entry. Device preferences remember source identifiers and title hashes where the operating system allows reuse. The user can stop capture in FRI or revoke system permission. Wayland capture remains bound to the selected portal stream for that session.
+
 ## Explicit external actions
 
 | Action | What leaves the device | Destination |
@@ -21,7 +27,7 @@ The main renderer has no Node access, runs in a sandbox with context isolation, 
 | Export backup / free time | A local file, shared only if the user sends it | User-selected filesystem location |
 | Enable Day OpenAI ranking (opt-in) | Bounded suggestion summaries with relevant appointment titles, dates/times, card IDs and urgency; no notes, locations, raw sources or images | OpenAI Responses API, GPT-6 Luna at max reasoning, `store: false`; requests occur automatically after relevant changes while enabled |
 
-Windows OCR runs through the installed Windows OCR engine. A temporary image is created in the user's app-data directory and removed after processing; the source image is not uploaded by local OCR. Enabling Read with AI uploads the chosen source to OpenAI instead. Only reviewed text is added to appointments. Image recognition depends on installed OCR languages. Reading the day aloud uses an on-device English voice only. Cloud voice recognition is not enabled. For Day, conflict/deadline detection is local; OpenAI ranking is off by default and requires explicit provider-specific consent in Day. Turning it off prevents future requests and ignores late results, but cannot retract content already sent. `store: false` is not a claim of zero provider retention; provider account policies still apply.
+Windows image import runs through the installed Windows OCR engine. A temporary image is created in the user's app-data directory and removed after processing; the source image is not uploaded by local OCR. Enabling Read with AI uploads the chosen source to OpenAI instead. Only reviewed text is added to appointments. Image recognition depends on installed OCR languages. Reading the day aloud uses an on-device English voice only. Cloud voice recognition is not enabled. For Day, conflict/deadline detection is local; OpenAI ranking is off by default and requires explicit provider-specific consent in Day. Turning it off prevents future requests and ignores late results, but cannot retract content already sent. `store: false` is not a claim of zero provider retention; provider account policies still apply.
 
 The separate Day API key is read only by the desktop main process from an ignored local environment file or process environment, and is excluded from release bundles. It is not returned through IPC. The local key file is plaintext, separate from the encrypted calendar store. Day sends no notifications through new OS channels, never writes to source calendars, and applies a move only after a click and a fresh transaction check. See [Day configuration and limits](day-ai.md).
 

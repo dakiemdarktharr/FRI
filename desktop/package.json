@@ -10,7 +10,7 @@
   "scripts": {
     "prepare:ui": "node prepare.cjs",
     "start": "npm run prepare:ui && electron .",
-    "test": "node --test --test-concurrency=1 desktop.test.cjs core.test.cjs planning.test.cjs widget.test.cjs brand.test.cjs ai-import.test.cjs network.test.cjs source-browser.test.cjs day.test.cjs day.integration.test.cjs updates.test.cjs document-text.test.cjs scripts/mac-release.test.cjs",
+    "test": "node --test --test-concurrency=1 meeting-agent.test.cjs desktop.test.cjs core.test.cjs planning.test.cjs widget.test.cjs brand.test.cjs ai-import.test.cjs network.test.cjs source-browser.test.cjs day.test.cjs day.integration.test.cjs updates.test.cjs document-text.test.cjs scripts/mac-release.test.cjs",
     "pack": "npm run prepare:ui && electron-builder --dir",
     "dist": "node scripts/dist.cjs",
     "dist:mac:development": "node scripts/build-mac.cjs --development",
@@ -18,11 +18,13 @@
   },
   "dependencies": {
     "@hicccc77/electron-liquid-glass": "0.3.0",
+    "@tesseract.js-data/vie": "1.0.0",
     "electron-updater": "6.8.11",
     "koffi": "3.3.8",
     "leaflet": "1.9.4",
     "mammoth": "1.13.0",
-    "pdfjs-dist": "6.5.438"
+    "pdfjs-dist": "6.5.438",
+    "tesseract.js": "7.0.0"
   },
   "devDependencies": {
     "electron": "45.4.1",
@@ -55,7 +57,11 @@
       "!node_modules/pdfjs-dist/types/**/*",
       "!node_modules/pdfjs-dist/legacy/build/*.min.mjs",
       "!node_modules/pdfjs-dist/legacy/build/pdf.sandbox*",
-      "!node_modules/pdfjs-dist/legacy/build/pdf.renderer*"
+      "!node_modules/pdfjs-dist/legacy/build/pdf.renderer*",
+      "meeting-agent.html",
+      "meeting-view.js",
+      "!node_modules/@tesseract.js-data/vie/4.0.0/**/*",
+      "!node_modules/tesseract.js-core/*.wasm.js"
     ],
     "asar": true,
     "artifactName": "FRI-${version}-${os}-${arch}.${ext}",
@@ -112,7 +118,9 @@
     },
     "asarUnpack": [
       "ocr.ps1",
-      "node_modules/@hicccc77/electron-liquid-glass/**/*"
+      "node_modules/@hicccc77/electron-liquid-glass/**/*",
+      "node_modules/{tesseract.js,tesseract.js-core,wasm-feature-detect,regenerator-runtime,bmp-js,zlibjs,is-url}/**/*",
+      "node_modules/@tesseract.js-data/vie/4.0.0_best_int/*"
     ],
     "compression": "maximum",
     "electronLanguages": [

@@ -5,6 +5,30 @@ import UIKit
 
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
+    #if os(macOS)
+    func testMeetingExampleOpensDraftOnExplicitReview() {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        app.launch()
+        let menu = app.menuBars.menuItems["File"]
+        XCTAssertTrue(menu.waitForExistence(timeout: 10))
+        menu.click()
+        app.menuItems["Thư ký lịch…"].click()
+        let demo = app.buttons["fri.meeting.example"]
+        XCTAssertTrue(demo.waitForExistence(timeout: 10))
+        demo.click()
+        let skip = app.buttons["Bỏ qua"]
+        XCTAssertTrue(skip.waitForExistence(timeout: 5))
+        skip.click()
+        demo.click()
+        app.buttons["Xem và lưu"].click()
+        XCTAssertTrue(app.buttons["fri.editor.submit"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.textFields.matching(NSPredicate(format: "value == %@", "Họp")).firstMatch.exists)
+    }
+    #endif
+
     #if os(iOS)
     func testServiceCardFitsLandscapeViewport() throws {
         continueAfterFailure = false

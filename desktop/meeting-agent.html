@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="vi"><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; media-src blob:; connect-src 'none'">
+<title>FRI · Thư ký lịch</title>
+<style>
+body{font:16px system-ui,sans-serif;color:CanvasText;background:Canvas;color-scheme:light dark;margin:26px;max-width:520px}h1{font-size:24px}p{line-height:1.45}button,select{font:inherit;padding:7px 12px;margin:4px 4px 4px 0}select{max-width:100%}#status{font-weight:600}label{display:block;margin-top:16px}
+</style>
+<h1>Thư ký lịch</h1>
+<p>Chọn một cửa sổ riêng cho Zalo hoặc Messenger mà bạn có quyền sử dụng. FRI đọc vùng chat ngay trên máy. Khi thấy lời chốt, FRI hỏi trước khi thêm lịch.</p>
+<p id="status" role="status">Đang tắt</p>
+<label for="sources">Cửa sổ chat</label>
+<select id="sources"></select>
+<button id="refresh">Tìm cửa sổ</button>
+<button id="start" disabled>Bật nhận diện</button>
+<button id="stop" disabled>Tắt</button>
+<label><input id="login" type="checkbox"> Mở FRI khi đăng nhập</label>
+<script src="meeting-view.js"></script></html>

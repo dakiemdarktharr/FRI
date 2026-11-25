@@ -19,6 +19,14 @@ Weather fetches a real Open-Meteo forecast for a chosen city. Spotify opens an i
 
 The Windows x64 workspace uses a guarded Direct3D desktop-refraction layer from @hicccc77/electron-liquid-glass, with OS-material/solid fallbacks. This samples the actual desktop locally on the GPU; it is not Apple's compositor. macOS currently uses under-window vibrancy; the native Apple implementation is specified in the handoff. Fri uses **Cloud / Ink / Teal**, with light and dark themes. Only the main workspace is translucent; appointment cards, buttons and dialogs are opaque. Desktop widgets keep fixed type sizes and reveal additional content as they grow, with + in empty integration slots.
 
+### Thư ký lịch cho Zalo và Messenger
+
+Mở **File → Thư ký lịch…** rồi chọn cửa sổ chat muốn dùng. Trên Mac, bấm **Cho phép chọn cửa sổ chat…** khi mới thiết lập. Bạn có thể bấm **Thử với hội thoại mẫu** để xem gợi ý trước khi cấp quyền. Muốn dùng sau khi khởi động lại, bật **Mở FRI khi đăng nhập**.
+
+Trên macOS, khi bạn đang gõ “ê xíu 9h trạm k” trong cửa sổ Zalo đã chọn, FRI có thể hiện **Bạn có muốn lên lịch hẹn này?** ngay trước khi gửi. Bạn vẫn gõ tiếp được. Nếu ngày hoặc buổi chưa rõ, bạn chọn lại khi lưu.
+
+Ví dụ, một người hỏi “Thứ sáu 19:00 họp nhé?” và bạn trả lời “Ok, mình đi”. FRI đề xuất lịch họp khi nhận diện được phần hỏi và phần chốt trong vùng chat. Chọn **Xem và lưu** để sửa và xác nhận hoặc **Bỏ qua** để đóng. Trên Mac, đưa cửa sổ chat ra trước. Với trình duyệt, dùng cửa sổ riêng có tên Zalo hoặc Messenger và chọn lại khi cửa sổ thay đổi. Trên Linux dùng PipeWire, chọn cửa sổ trong hộp thoại của hệ thống mỗi phiên nếu được yêu cầu. Bạn có thể tắt nhận diện từ biểu tượng FRI trên thanh menu hoặc khay hệ thống.
+
 ## Day and calendar insights
 
 Day’s circular wave opens source intake. **File → Calendar insights** retains the existing local planner, which automatically checks Fri's existing calendar for conflicts and approaching deadlines. It proposes moving only flexible work; the user clicks to apply. There is no chat prompt requirement. Optional OpenAI **GPT-6 Luna, max reasoning** ranks the validated suggestions through the desktop main process.

@@ -35,6 +35,15 @@ test('native window, isolated IPC, real commands and persistent calendar',async(
     await p.getByRole('button',{name:'Done',exact:true}).click();await p.locator('#modal').waitFor({state:'hidden'});
     const deadline=await p.evaluate(()=>FRI_PREVIEW.getState().tasks.find(t=>t.title==='Native deadline persistence'));
     assert.equal(deadline.kind,'deadline');assert.equal(deadline.duration,0);
+    await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].webContents.send('fri:meeting-review',
+      {title:'Cà phê',date:'2026-11-27',time:'19:00',location:'Góc Phố'}));
+    await p.locator('#appointment-form[data-meeting="1"]').waitFor();
+    assert.equal(await p.locator('[name=location]').inputValue(),'Góc Phố');
+    assert.equal(await p.evaluate(()=>FRI_PREVIEW.getState().tasks.some(t=>t.title==='Cà phê')),false);
+    await p.locator('[name=duration]').selectOption('30');
+    await p.getByRole('button',{name:'Done',exact:true}).click();
+    await p.locator('#modal').waitFor({state:'hidden'});
+    assert.equal(await p.evaluate(()=>FRI_PREVIEW.getState().tasks.find(t=>t.title==='Cà phê').time),'19:00');
     await p.locator('[data-action=search]').click();await p.locator('#search-input').fill('Native deadline');await p.locator('[data-action=search-result]').click();await p.locator('[data-action=close-modal]').first().click();
     await p.locator('[data-action=sidebar]').first().click();assert.equal(await p.locator('.sidebar-collapsed').count(),1);
     await p.locator('[data-action=sidebar]').first().click();

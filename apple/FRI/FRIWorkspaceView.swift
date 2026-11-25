@@ -103,7 +103,16 @@ struct FRIWorkspaceView: View {
                 }
             }
         }
-        .onOpenURL { url in calendar.open(); calendar.openURL(url) }
+        .onOpenURL { url in
+            #if os(macOS)
+            if url.scheme == "fri", url.host == "meeting-agent" {
+                openWindow(id: "meeting-agent")
+                return
+            }
+            #endif
+            calendar.open()
+            calendar.openURL(url)
+        }
         .sheet(item: $calendar.panel, onDismiss: {
             if let item = searchedAppointment {
                 calendar.select(item.date)

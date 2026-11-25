@@ -12,6 +12,7 @@
     view:[['My feed','day'],['Week','week'],['Month','month'],['Year','year'],null,['Toggle sidebar','sidebar','Ctrl/⌘ B'],['Toggle full screen','fullscreen']],
     help:[['Keyboard shortcuts','shortcuts'],['Check for updates…','updates'],['About FRI','about']]
   };
+  if(bridge?.openMeetingAgent && platform!=='darwin') menus.file.unshift(['Thư ký lịch…','meeting-agent']);
   const updateButton=$('#fri-update'), updateAnnouncement=$('#fri-update-status');
   let updateState=null, updateBusy=false, lastUpdatePhase='';
   function updateToast(message){$('#toast').textContent=message;$('#toast').hidden=false;}
@@ -51,6 +52,7 @@
       else $('#toast').textContent='Window controls are available in the desktop app.', $('#toast').hidden=false;
       return;
     }
+    if(action==='meeting-agent' && bridge?.openMeetingAgent){await bridge.openMeetingAgent();return;}
     if(action==='updates'){
       if(bridge)await updateAction('check');
       else {$('#toast').textContent='Install the FRI desktop app to check for updates.';$('#toast').hidden=false;}

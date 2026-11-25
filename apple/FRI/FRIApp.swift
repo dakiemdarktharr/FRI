@@ -9,6 +9,11 @@ struct FRIApp: App {
     @State private var calendar = FRICalendarSession()
     @Environment(\.scenePhase) private var scenePhase
 
+    #if os(macOS)
+    @State private var meetingAgent = FRIMeetingAgent()
+    @Environment(\.openWindow) private var openWindow
+    #endif
+
     init() {
         UNUserNotificationCenter.current().delegate = FRIAppointmentsNotification.shared
     }
@@ -18,6 +23,7 @@ struct FRIApp: App {
             FRIWorkspaceView(calendar: calendar)
                 #if os(macOS)
                 .frame(minWidth: 540, minHeight: 520)
+                .onAppear { meetingAgent.attach(calendar) }
                 #endif
         }
         .onChange(of: scenePhase, initial: true) { _, phase in
@@ -37,6 +43,7 @@ struct FRIApp: App {
                 Button("New Deadline") { calendar.newDraft(deadline: true) }
                     .keyboardShortcut("n", modifiers: [.command, .shift])
                 Divider()
+                Button("Thư ký lịch…") { openWindow(id: "meeting-agent") }
                 Button("Refresh sources") { calendar.refreshSources() }
                 Button("Add a source…") { calendar.show(.importPlans) }
                 Button("Export Backup…") { calendar.requestFile(.exportBackup) }
@@ -54,6 +61,17 @@ struct FRIApp: App {
                 Button("Year") { calendar.revealCalendar?(); calendar.view = .year }.keyboardShortcut("3")
                 Button("Search") { calendar.show(.search) }.keyboardShortcut("f")
             }
+        }
+        #endif
+        #if os(macOS)
+        Window("Thư ký lịch", id: "meeting-agent") { FRIMeetingAgentSettings(agent: meetingAgent) }
+        MenuBarExtra("FRI · Thư ký lịch", systemImage: meetingAgent.enabled ? "calendar.badge.clock" : "calendar") {
+            Text(meetingAgent.status)
+            Button("Thư ký lịch…") { NSApp.activate(ignoringOtherApps: true); openWindow(id: "meeting-agent") }
+            Button("Mở lịch FRI") { NSApp.activate(ignoringOtherApps: true); openWindow(id: "calendar") }
+            if meetingAgent.enabled { Button("Tắt nhận diện") { meetingAgent.stop() } }
+            Divider()
+            Button("Thoát FRI") { NSApp.terminate(nil) }
         }
         #endif
     }

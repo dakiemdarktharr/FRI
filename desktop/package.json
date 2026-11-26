@@ -58,6 +58,8 @@
       "!node_modules/pdfjs-dist/legacy/build/*.min.mjs",
       "!node_modules/pdfjs-dist/legacy/build/pdf.sandbox*",
       "!node_modules/pdfjs-dist/legacy/build/pdf.renderer*",
+      "usage-guide.html",
+      "usage-guide.js",
       "meeting-agent.html",
       "meeting-view.js",
       "!node_modules/@tesseract.js-data/vie/4.0.0/**/*",

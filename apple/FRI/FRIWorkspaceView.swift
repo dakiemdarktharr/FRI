@@ -8,6 +8,9 @@ struct FRIWorkspaceView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
     @Environment(\.openWindow) private var openWindow
+    #if os(macOS)
+    @State private var showUsageGuide = false
+    #endif
     @State private var feedDays = 14
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var showSidebar = true
@@ -103,16 +106,15 @@ struct FRIWorkspaceView: View {
                 }
             }
         }
-        .onOpenURL { url in
-            #if os(macOS)
-            if url.scheme == "fri", url.host == "meeting-agent" {
-                openWindow(id: "meeting-agent")
-                return
-            }
-            #endif
-            calendar.open()
-            calendar.openURL(url)
+        #if os(macOS)
+        .sheet(isPresented: $showUsageGuide) {
+            FRIUsageGuide(reviewing: true) { showUsageGuide = false }
+                .frame(minWidth: 500, idealWidth: 600, minHeight: 470, idealHeight: 570)
+                .environment(\.dynamicTypeSize, effectiveType)
         }
+        #else
+        .onOpenURL { url in calendar.open(); calendar.openURL(url) }
+        #endif
         .sheet(item: $calendar.panel, onDismiss: {
             if let item = searchedAppointment {
                 calendar.select(item.date)
@@ -363,6 +365,11 @@ struct FRIWorkspaceView: View {
                 Label("Refresh", systemImage: "arrow.clockwise")
                     .frame(minHeight: 44)
             }.disabled(calendar.readingSource).accessibilityIdentifier("fri.sources.refresh")
+            #if os(macOS)
+            Button { showUsageGuide = true } label: {
+                toolbarIcon("Hướng dẫn sử dụng FRI", systemImage: "book")
+            }.accessibilityIdentifier("fri.guide.open").help("Hướng dẫn sử dụng FRI")
+            #endif
             Button { calendar.panel = .search } label: {
                 toolbarIcon("Search", systemImage: "magnifyingglass")
             }.accessibilityIdentifier("fri.search").help("Search appointments")

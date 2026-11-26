@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>Hướng dẫn FRI</title>
+  <style>
+    @font-face { font-family: Inter; src: url(ui/InterVariable.woff2); font-weight: 100 900 }
+    :root { color-scheme: light dark; font: 16px/1.55 Inter,system-ui,sans-serif; background: light-dark(#f4f7fa,#152530); color: light-dark(#172b3a,#edf3f6); --accent:light-dark(#087781,#87dfd8); --line:light-dark(#cdd9e0,#39505e) }
+    * { box-sizing:border-box } body { margin:0 } [hidden] { display:none!important }
+    header { display:flex; align-items:center; gap:1rem; padding:1rem 1.5rem; border-bottom:1px solid var(--line); -webkit-app-region:drag }
+    header span { margin-left:auto } h1 { font-size:clamp(1.75rem,5vw,2.5rem); line-height:1.15; margin:0 0 1.5rem }
+    h2 { font-size:1.05rem; margin:1.3rem 0 .15rem } p { margin:0 } main { max-width:42rem; margin:0 auto; padding:clamp(1.5rem,5vw,3rem) 1.5rem }
+    footer { display:flex; align-items:center; gap:1rem; border-top:1px solid var(--line); margin-top:1.6rem; padding-top:1.2rem }
+    button { font:inherit; font-weight:600; min-height:42px; padding:.45rem .9rem; border:1px solid var(--line); border-radius:.65rem; color:inherit; background:transparent; cursor:pointer; -webkit-app-region:no-drag }
+    button:focus-visible { outline:3px solid var(--accent); outline-offset:3px } #next { margin-left:auto; color:light-dark(white,#142628); background:var(--accent) } #exit { font-size:.875rem }
+  </style>
+</head>
+<body>
+  <header><strong>Hướng dẫn FRI</strong><span id="progress" aria-live="polite"></span><button id="exit" hidden>Đóng</button></header>
+  <main>
+    <section>
+      <h1 tabindex="-1">Tạo lịch trình đầu tiên</h1>
+      <h2>Mở lịch mới</h2><p>Trong lịch FRI, bấm New → Schedule hoặc chọn File → New schedule.</p>
+      <h2>Điền cuộc hẹn</h2><p>Thử đặt “Cà phê với An” vào ngày mai, lúc 09:00, trong 30 phút. Bạn có thể thêm tên quán vào Location.</p>
+      <h2>Lưu và kiểm tra</h2><p>Bấm Done. Nếu FRI hỏi thêm giờ hoặc thời lượng, điền thông tin và xác nhận. Mở ngày vừa chọn để xem hoặc sửa cuộc hẹn.</p>
+    </section>
+    <section hidden>
+      <h1 tabindex="-1">Kết nối ứng dụng chat</h1>
+      <h2>Mở cuộc trò chuyện</h2><p>Mở ứng dụng Zalo hoặc Messenger trên máy. Trong FRI, vào File → Thư ký lịch…</p>
+      <h2>Chọn cửa sổ</h2><p>Bấm Tìm cửa sổ, chọn cửa sổ chat và bấm Bật nhận diện. Nếu hệ điều hành hỏi quyền chia sẻ, chọn đúng cửa sổ muốn dùng.</p>
+      <h2>Xem gợi ý</h2><p>Khi có lời mời kèm ngày giờ và tin nhắn chốt hẹn, FRI có thể gợi ý ghi lịch. Mở gợi ý để kiểm tra và lưu cuộc hẹn. Chọn Tắt trong Thư ký lịch khi muốn dừng.</p>
+    </section>
+    <section hidden>
+      <h1 tabindex="-1">Kết nối trang web</h1>
+      <h2>Mở một cửa sổ riêng</h2><p>Mở chat.zalo.me hoặc messenger.com và chuyển tab chat thành một cửa sổ riêng. Để trang chat hiển thị trong cửa sổ đó.</p>
+      <h2>Cho FRI đọc cửa sổ đã chọn</h2><p>Vào File → Thư ký lịch… → Tìm cửa sổ, chọn cửa sổ trình duyệt đang mở chat rồi bấm Bật nhận diện. Nếu đã đóng và mở lại cửa sổ, hãy tìm và chọn lại khi cần.</p>
+      <h2>Dùng hằng ngày</h2><p>FRI xử lý nội dung trên máy. Bạn có thể bật Mở Fri khi đăng nhập trong Thư ký lịch. Để đọc lại hướng dẫn, bấm nút hình cuốn sách trên thanh công cụ của lịch.</p>
+    </section>
+    <footer><button id="back" hidden>Quay lại</button><button id="next">Tiếp tục</button></footer>
+    <p id="error" role="alert"></p>
+  </main>
+  <script src="usage-guide.js"></script>
+</body>
+</html>

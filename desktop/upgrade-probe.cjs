@@ -1,3 +1,4 @@
+const {readUsageGuide} = require('./scripts/read-usage-guide.cjs');
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {_electron}=require('../tests/node_modules/playwright');
 const [exe,profile,mode,version]=process.argv.slice(2);
@@ -5,7 +6,7 @@ const [exe,profile,mode,version]=process.argv.slice(2);
   const env={...process.env,FRI_TEST_MODE:'1',FRI_TEST_USER_DATA:profile};delete env.ELECTRON_RUN_AS_NODE;
   const app=await _electron.launch({executablePath:exe,args:[],env});
   try{
-    const p=await app.firstWindow();await p.waitForFunction(()=>window.FRI_PREVIEW);
+    const p=await app.firstWindow();await readUsageGuide(p);await p.waitForFunction(()=>window.FRI_PREVIEW);
     assert.equal(await p.evaluate(()=>window.friDesktop.version),version);
     if(mode==='seed'){
       await p.locator('[data-menu=new]').click();await p.locator('[data-command=deadline]').click();

@@ -15,6 +15,11 @@ app.setAppUserModelId('com.fri.calendar');
 const testData = process.env.FRI_TEST_USER_DATA;
 if (testData && process.env.FRI_TEST_MODE === '1') app.setPath('userData', path.resolve(testData));
 protocol.registerSchemesAsPrivileged([{scheme:'app', privileges:{standard:true, secure:true, supportFetchAPI:true}}]);
+const guideFile = path.join(__dirname, 'usage-guide.html');
+const guideURL = require('node:url').pathToFileURL(guideFile).href;
+const guideReceipt = path.join(app.getPath('userData'), 'usage-guide-read');
+let guideCompleted = false;
+let reviewWindow;
 const startURL = 'app://fri/index.html';
 const uiPath = path.join(__dirname, 'ui');
 const isMac = process.platform === 'darwin';
@@ -50,7 +55,7 @@ function setGlass(enabled) {
   if(isMac)win.setVibrancy(enabled?'under-window':null);
   win.setBackgroundColor(enabled&&material!=='solid'?'#00000000':'#151515');
 }
-function send(command){if(command==='desktop-widget'){widgets?.select();return}win?.webContents.send('fri:command',command);}
+function send(command){if(!guideCompleted || reviewWindow)return;if(command==='desktop-widget'){widgets?.select();return}win?.webContents.send('fri:command',command);}
 function changed(){const payload=store.read();win?.webContents.send('fri:state',payload);widgets?.broadcast();}
 function nativeMenu(){
   const item=(label,command,accelerator)=>({label,accelerator,click:()=>send(command)});
@@ -82,7 +87,7 @@ function createWindow(){
   win.once('ready-to-show',()=>{if(!(process.env.FRI_TEST_MODE==='1'&&process.env.FRI_TEST_HIDDEN==='1'))win.show();emitState()});
   win.on('close',e=>{if(!quitting&&(widgets?.count()||meetingAgent?.active())){e.preventDefault();win.hide()}});
   win.on('closed',()=>{win=null});
-  win.loadURL(startURL);
+  win.loadURL(guideCompleted ? startURL : guideURL);
 }
 
 if(!app.requestSingleInstanceLock()){app.quit();}else{
@@ -128,7 +133,32 @@ if(!app.requestSingleInstanceLock()){app.quit();}else{
       }});
       ipcMain.handle('fri:meeting-open',e=>{trusted(e);meetingAgent.open();});
     }
-    nativeMenu();createWindow();widgets.restore();updates.start();meetingAgent?.resume();
+    guideCompleted = fs.existsSync(guideReceipt);
+    ipcMain.handle('fri:guide-finish', event => {
+      if (event.sender !== win?.webContents || event.senderFrame !== win.webContents.mainFrame || event.senderFrame.url !== guideURL) {
+        throw new Error('Guide completion requires the first-run window');
+      }
+      fs.writeFileSync(guideReceipt, '');
+      guideCompleted = true;
+      return win.loadURL(startURL).then(() => { widgets.restore(); meetingAgent?.resume(); });
+    });
+    ipcMain.handle('fri:guide-open', event => {
+      trusted(event);
+      if (reviewWindow) { reviewWindow.focus(); return; }
+      reviewWindow = new BrowserWindow({
+        parent: win, modal: true, title: 'Hướng dẫn FRI', width: 660, height: 620,
+        minWidth: 420, minHeight: 340, autoHideMenuBar: true, show: false,
+        webPreferences: {preload: path.join(__dirname, 'preload.cjs'), sandbox: true, contextIsolation: true, nodeIntegration: false}
+      });
+      reviewWindow.removeMenu();
+      reviewWindow.webContents.setWindowOpenHandler(() => ({action: 'deny'}));
+      reviewWindow.webContents.on('will-navigate', event => event.preventDefault());
+      reviewWindow.once('ready-to-show', () => reviewWindow?.show());
+      reviewWindow.once('closed', () => { reviewWindow = undefined; });
+      return reviewWindow.loadFile(guideFile, {hash: 'review'});
+    });
+    nativeMenu();createWindow();updates.start();
+    if (guideCompleted) { widgets.restore(); meetingAgent?.resume(); }
     app.on('activate',()=>{if(!win)createWindow()});
   });
   app.on('window-all-closed',()=>{if(!isMac)app.quit()});

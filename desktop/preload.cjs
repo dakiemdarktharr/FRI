@@ -14,6 +14,8 @@ contextBridge.exposeInMainWorld('friDesktop', {
   openExternal: url => ipcRenderer.invoke('fri:external', url),
   loadState:()=>ipcRenderer.invoke('fri:load-state'),
   saveState:(base,next)=>ipcRenderer.invoke('fri:save-state',base,next),
+  openUsageGuide:()=>ipcRenderer.invoke('fri:guide-open'),
+  finishUsageGuide:()=>ipcRenderer.invoke('fri:guide-finish'),
   openMeetingAgent:()=>ipcRenderer.invoke('fri:meeting-open'),
   onMeetingReview:callback=>subscribe('fri:meeting-review',callback),
   createWidget:()=>ipcRenderer.invoke('fri:widget'),

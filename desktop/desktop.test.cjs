@@ -1,3 +1,4 @@
+const {readUsageGuide} = require('./scripts/read-usage-guide.cjs');
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -20,7 +21,7 @@ test('native window, isolated IPC, real commands and persistent calendar',async(
   let app=await electron.launch(options);
   try{
     let p=await app.firstWindow();const errors=[];p.on('pageerror',e=>errors.push(e.message));
-    await p.waitForFunction(()=>window.FRI_PREVIEW);
+    await readUsageGuide(p);await p.waitForFunction(()=>window.FRI_PREVIEW);
     assert.equal(await p.evaluate(()=>location.origin),'app://fri');
     assert.equal(await p.evaluate(()=>typeof require),'undefined');
     assert.equal(await p.evaluate(()=>typeof process),'undefined');
@@ -85,4 +86,42 @@ test('Cloud UI, new plan types, menus, keyboard and safe restore',async()=>{
     await p.screenshot({path:path.join(results,'mac-chrome-preview.png'),fullPage:true});
     for(const width of [390,320]){await p.setViewportSize({width,height:900});assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth),width);}
   }finally{await browser.close();}
+});
+
+test('first run requires all guide chapters and the book reopens without replacing the calendar', async () => {
+  const profile = fs.mkdtempSync(path.join(results, 'guide-'));
+  const env = {...process.env, FRI_TEST_MODE: '1', FRI_TEST_USER_DATA: profile};
+  delete env.ELECTRON_RUN_AS_NODE;
+  const options = {executablePath: process.env.FRI_TEST_EXE || require('electron'), args: process.env.FRI_TEST_EXE ? [] : [__dirname], env};
+  let app = await electron.launch(options);
+  try {
+    let page = await app.firstWindow();
+    await page.getByRole('heading', {name: 'Tạo lịch trình đầu tiên'}).waitFor();
+    assert.equal(await page.getByRole('button', {name: 'Đã đọc · Vào FRI'}).count(), 0);
+    assert.equal(await page.evaluate(() => typeof window.FRI_PREVIEW), 'undefined');
+    await page.getByRole('button', {name: 'Tiếp tục'}).click();
+    await page.getByRole('heading', {name: 'Kết nối ứng dụng chat'}).waitFor();
+    await app.close();
+    app = await electron.launch(options);
+    page = await app.firstWindow();
+    await page.getByRole('heading', {name: 'Tạo lịch trình đầu tiên'}).waitFor();
+    await readUsageGuide(page);
+    await app.close();
+    app = await electron.launch(options);
+    page = await app.firstWindow();
+    await page.waitForURL('app://fri/index.html');
+    const reviewOpened = app.waitForEvent('window');
+    await page.getByRole('button', {name: 'Hướng dẫn sử dụng FRI'}).click();
+    const review = await reviewOpened;
+    await review.getByRole('heading', {name: 'Tạo lịch trình đầu tiên'}).waitFor();
+    await review.getByRole('button', {name: 'Tiếp tục'}).click();
+    await review.getByRole('button', {name: 'Quay lại'}).click();
+    await review.getByRole('heading', {name: 'Tạo lịch trình đầu tiên'}).waitFor();
+    const closed = review.waitForEvent('close');
+    await review.getByRole('button', {name: 'Đóng', exact: true}).click();
+    await closed;
+    assert.equal(page.url(), 'app://fri/index.html');
+  } finally {
+    await app.close();
+  }
 });

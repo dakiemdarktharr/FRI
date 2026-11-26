@@ -1,3 +1,4 @@
+const {readUsageGuide} = require('./scripts/read-usage-guide.cjs');
 // Opt-in release verification against an isolated, already-installed old test build.
 // The caller owns installation/cleanup. No production profile is opened.
 const assert=require('node:assert/strict');
@@ -12,7 +13,7 @@ for(const target of [exe,profile])assert(path.resolve(target).startsWith(allowed
   const env={...process.env,FRI_TEST_MODE:'1',FRI_TEST_USER_DATA:profile};delete env.ELECTRON_RUN_AS_NODE;
   const app=await _electron.launch({executablePath:exe,args:[],env});
   try{
-    const p=await app.firstWindow();await p.locator('.task').first().waitFor();
+    const p=await app.firstWindow();await readUsageGuide(p);await p.locator('.task').first().waitFor();
     await app.evaluate(async({app,dialog})=>{
       const updater=process.mainModule.require(app.getAppPath()+'/node_modules/electron-updater').autoUpdater;
       global.friLiveUpdate={state:'checking'};

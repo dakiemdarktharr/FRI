@@ -10,6 +10,8 @@ struct FRIApp: App {
 
     #if os(macOS)
     @NSApplicationDelegateAdaptor(FRIMacLifecycle.self) private var lifecycle
+    @AppStorage(FRIUsageGuide.completionKey, store: FRIUsageGuide.defaults) private var guideCompleted = false
+    @State private var deferredURL: URL?
     private var meetingAgent: FRIMeetingAgent { lifecycle.meetingAgent }
     private var calendar: FRICalendarSession { lifecycle.calendar }
     @Environment(\.openWindow) private var openWindow
@@ -23,10 +25,24 @@ struct FRIApp: App {
 
     var body: some Scene {
         WindowGroup("FRI", id: "calendar") {
+            #if os(macOS)
+            Group {
+                if guideCompleted {
+                    FRIWorkspaceView(calendar: calendar)
+                } else {
+                    FRIUsageGuide(reviewing: false) { guideCompleted = true }
+                }
+            }
+            .frame(minWidth: 540, minHeight: 520)
+            .onOpenURL { url in
+                if guideCompleted { openLink(url) } else { deferredURL = url }
+            }
+            .onChange(of: guideCompleted) { _, completed in
+                if completed, let url = deferredURL { deferredURL = nil; openLink(url) }
+            }
+            #else
             FRIWorkspaceView(calendar: calendar)
-                #if os(macOS)
-                .frame(minWidth: 540, minHeight: 520)
-                #endif
+            #endif
         }
         .onChange(of: scenePhase, initial: true) { _, phase in
             #if os(iOS)
@@ -40,36 +56,43 @@ struct FRIApp: App {
         .defaultSize(width: 1050, height: 740)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("New Schedule") { calendar.newDraft(deadline: false) }
-                    .keyboardShortcut("n")
-                Button("New Deadline") { calendar.newDraft(deadline: true) }
-                    .keyboardShortcut("n", modifiers: [.command, .shift])
-                Divider()
-                Button("Thư ký lịch…") { openWindow(id: "meeting-agent") }
-                Button("Refresh sources") { calendar.refreshSources() }
-                Button("Add a source…") { calendar.show(.importPlans) }
-                Button("Export Backup…") { calendar.requestFile(.exportBackup) }
-                Button("Restore Backup…") { calendar.requestFile(.restoreBackup) }
-                Button("New Desktop Widget") { calendar.addDesktopWidget() }
-                Button("Show Desktop Widgets") { calendar.showDesktopWidgets() }
-                Button("Widget Gallery…") { calendar.show(.widget) }
+                Group {
+                    Button("New Schedule") { calendar.newDraft(deadline: false) }
+                        .keyboardShortcut("n")
+                    Button("New Deadline") { calendar.newDraft(deadline: true) }
+                        .keyboardShortcut("n", modifiers: [.command, .shift])
+                    Divider()
+                    Button("Thư ký lịch…") { openWindow(id: "meeting-agent") }
+                    Button("Refresh sources") { calendar.refreshSources() }
+                    Button("Add a source…") { calendar.show(.importPlans) }
+                    Button("Export Backup…") { calendar.requestFile(.exportBackup) }
+                    Button("Restore Backup…") { calendar.requestFile(.restoreBackup) }
+                    Button("New Desktop Widget") { calendar.addDesktopWidget() }
+                    Button("Show Desktop Widgets") { calendar.showDesktopWidgets() }
+                    Button("Widget Gallery…") { calendar.show(.widget) }
+                }.disabled(!guideCompleted)
             }
             CommandGroup(replacing: .undoRedo) {
-                Button("Undo") { calendar.undo() }.keyboardShortcut("z").disabled(!calendar.canUndo)
+                Button("Undo") { calendar.undo() }.keyboardShortcut("z").disabled(!guideCompleted || !calendar.canUndo)
             }
             CommandGroup(after: .sidebar) {
-                Button("Today") { calendar.revealCalendar?(); calendar.select(CalendarClock.day()) }.keyboardShortcut("1")
-                Button("Month") { calendar.revealCalendar?(); calendar.view = .month }.keyboardShortcut("2")
-                Button("Year") { calendar.revealCalendar?(); calendar.view = .year }.keyboardShortcut("3")
-                Button("Search") { calendar.show(.search) }.keyboardShortcut("f")
+                Group {
+                    Button("Today") { calendar.revealCalendar?(); calendar.select(CalendarClock.day()) }.keyboardShortcut("1")
+                    Button("Month") { calendar.revealCalendar?(); calendar.view = .month }.keyboardShortcut("2")
+                    Button("Year") { calendar.revealCalendar?(); calendar.view = .year }.keyboardShortcut("3")
+                    Button("Search") { calendar.show(.search) }.keyboardShortcut("f")
+                }.disabled(!guideCompleted)
             }
         }
         #endif
         #if os(macOS)
-        Window("Thư ký lịch", id: "meeting-agent") { FRIMeetingAgentSettings(agent: meetingAgent) }
+        Window("Thư ký lịch", id: "meeting-agent") {
+            if guideCompleted { FRIMeetingAgentSettings(agent: meetingAgent) }
+            else { FRIUsageGuide(reviewing: false) { guideCompleted = true } }
+        }
         MenuBarExtra("FRI · Thư ký lịch", systemImage: meetingAgent.enabled ? "calendar.badge.clock" : "calendar") {
             Text(meetingAgent.status)
-            Button("Thư ký lịch…") { NSApp.activate(ignoringOtherApps: true); openWindow(id: "meeting-agent") }
+            Button("Thư ký lịch…") { NSApp.activate(ignoringOtherApps: true); openWindow(id: guideCompleted ? "meeting-agent" : "calendar") }
             Button("Mở lịch FRI") { NSApp.activate(ignoringOtherApps: true); openWindow(id: "calendar") }
             if meetingAgent.hasSources {
                 Button(meetingAgent.enabled ? "Tạm dừng nhận diện" : "Tiếp tục nhận diện") {
@@ -81,6 +104,13 @@ struct FRIApp: App {
         }
         #endif
     }
+
+    #if os(macOS)
+    private func openLink(_ url: URL) {
+        if url.scheme == "fri", url.host == "meeting-agent" { openWindow(id: "meeting-agent") }
+        else { calendar.open(); calendar.openURL(url) }
+    }
+    #endif
 }
 
 #if os(macOS)

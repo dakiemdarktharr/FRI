@@ -1,3 +1,4 @@
+const {readUsageGuide} = require('./scripts/read-usage-guide.cjs');
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
@@ -8,7 +9,7 @@ test('Day receives native state changes, applies through IPC, and persists acros
  const env={...process.env,FRI_TEST_MODE:'1',FRI_TEST_USER_DATA:profile};delete env.ELECTRON_RUN_AS_NODE;
  const options={executablePath:process.env.FRI_TEST_EXE||require('electron'),args:process.env.FRI_TEST_EXE?[]:[__dirname],env};let app=await electron.launch(options);
  try{
-  const p=await app.firstWindow(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.waitForFunction(()=>window.FRI_PREVIEW);
+  const p=await app.firstWindow(),errors=[];p.on('pageerror',e=>errors.push(e.message));await readUsageGuide(p);await p.waitForFunction(()=>window.FRI_PREVIEW);
   await p.evaluate(async()=>{
    const {state}=await friDesktop.loadState(),next=structuredClone(state);
    const tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);

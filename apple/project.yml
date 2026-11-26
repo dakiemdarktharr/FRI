@@ -55,7 +55,7 @@ targets:
     platform: macOS
     settings:
       base:
-        CURRENT_PROJECT_VERSION: "6"
+        CURRENT_PROJECT_VERSION: "7"
         PRODUCT_BUNDLE_IDENTIFIER: $(FRI_BUNDLE_PREFIX).mac
         CODE_SIGN_ENTITLEMENTS: $(FRI_MAC_ENTITLEMENTS)
         FRI_STORAGE_MODE: $(FRI_MAC_STORAGE_MODE)

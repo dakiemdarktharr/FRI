@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const asar=require('@electron/asar');
 const archive=path.resolve(process.argv[2]||path.join(__dirname,'../dist/win-unpacked/resources/app.asar'));
 const files=asar.listPackage(archive).map(p=>p.replaceAll('\\','/'));
-for(const name of ['main.cjs','preload.cjs','day-core.cjs','day-provider.cjs','day-service.cjs','updates.cjs','ai-import.cjs','document-text.cjs','public-source.cjs','source-browser.cjs','ui/index.html'])assert.ok(files.includes('/'+name),'Missing packaged module '+name);
+for(const name of ['main.cjs','preload.cjs','day-core.cjs','day-provider.cjs','day-service.cjs','updates.cjs','ai-import.cjs','document-text.cjs','public-source.cjs','source-browser.cjs','ui/index.html','usage-guide.html','usage-guide.js'])assert.ok(files.includes('/'+name),'Missing packaged module '+name);
 for(const name of ['meeting-agent.cjs','meeting-agent.html','meeting-view.js','meeting-preload.cjs','meeting-ocr.cjs','ui/meeting-agent.js'])assert.ok(files.includes('/'+name),'Missing meeting module '+name);
 const bundledRules=asar.extractFile(archive,'ui/meeting-agent.js');
 assert.deepEqual(bundledRules,fs.readFileSync(path.join(__dirname,'../apple/Packages/FRICore/Sources/FRICore/Resources/meeting-agent.js')),'Meeting rules differ from shared source');

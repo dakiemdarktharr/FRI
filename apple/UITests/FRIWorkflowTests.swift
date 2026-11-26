@@ -5,10 +5,66 @@ import UIKit
 
 @MainActor
 final class FRIWorkflowTests: XCTestCase {
+    private func calendarApp() -> XCUIApplication {
+        let app = XCUIApplication()
+        #if os(macOS)
+        app.launchArguments += ["-fri.usageGuideCompleted", "YES"]
+        #endif
+        return app
+    }
+
+    #if os(macOS)
+    func testFirstRunGuideAndBookAfterRelaunch() {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        let profile = UUID().uuidString
+        app.launchEnvironment["FRI_GUIDE_TEST_PROFILE"] = profile
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = profile
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launch()
+
+        let next = app.buttons["fri.guide.next"]
+        let finish = app.buttons["fri.guide.finish"]
+        let book = app.buttons["fri.guide.open"]
+        XCTAssertTrue(next.waitForExistence(timeout: 12))
+        XCTAssertFalse(book.exists)
+        XCTAssertFalse(finish.exists)
+        app.typeKey("n", modifierFlags: .command)
+        XCTAssertFalse(app.buttons["fri.editor.submit"].exists)
+        next.click()
+        XCTAssertTrue(app.staticTexts["Kết nối ứng dụng chat"].exists)
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(next.waitForExistence(timeout: 12))
+        XCTAssertTrue(app.staticTexts["Tạo lịch trình đầu tiên"].exists)
+        next.click()
+        next.click()
+        XCTAssertTrue(app.staticTexts["Kết nối trang web"].exists)
+        app.buttons["fri.guide.back"].click()
+        XCTAssertFalse(finish.exists)
+        next.click()
+        finish.click()
+        XCTAssertTrue(book.waitForExistence(timeout: 12))
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(book.waitForExistence(timeout: 12))
+        XCTAssertFalse(next.exists)
+        book.click()
+        XCTAssertTrue(app.staticTexts["Tạo lịch trình đầu tiên"].waitForExistence(timeout: 5))
+        app.buttons["fri.guide.close"].click()
+        XCTAssertTrue(book.isHittable)
+        book.click()
+        next.click()
+        next.click()
+        finish.click()
+        XCTAssertTrue(book.isHittable)
+    }
+    #endif
+
     #if os(macOS)
     func testMeetingExampleOpensDraftOnExplicitReview() {
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launch()
@@ -39,7 +95,7 @@ final class FRIWorkflowTests: XCTestCase {
     func testServiceCardFitsLandscapeViewport() throws {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launchEnvironment["FRI_WIDGET_PREVIEW"] = "1"
@@ -62,7 +118,7 @@ final class FRIWorkflowTests: XCTestCase {
     func testServiceCardsOrderRoutingRemovalAndPersistence() throws {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launchEnvironment["FRI_WIDGET_PREVIEW"] = "1"
@@ -178,7 +234,7 @@ final class FRIWorkflowTests: XCTestCase {
             fixture.terminate()
         }
 
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = runID
         app.launch()
@@ -236,7 +292,7 @@ final class FRIWorkflowTests: XCTestCase {
     func testManualActivityRejectsInvalidInputAndPersists() throws {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launch()
@@ -297,7 +353,7 @@ final class FRIWorkflowTests: XCTestCase {
 
     func testSidebarGradientMotionAndPause() throws {
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         XCUIDevice.shared.orientation = .landscapeLeft
@@ -370,7 +426,7 @@ final class FRIWorkflowTests: XCTestCase {
 
     func testCompactDayHeadingAndActions() throws {
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         XCUIDevice.shared.orientation = .portrait
@@ -394,7 +450,7 @@ final class FRIWorkflowTests: XCTestCase {
 
     func testFeedCardDetailsAndCompletion() throws {
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         XCUIDevice.shared.orientation = .portrait
@@ -458,7 +514,7 @@ final class FRIWorkflowTests: XCTestCase {
 
     func testToolbarHitAreasAndNavigation() throws {
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         XCUIDevice.shared.orientation = .landscapeLeft
@@ -512,7 +568,7 @@ final class FRIWorkflowTests: XCTestCase {
         let cancellation = ProcessInfo.processInfo.environment["FRI_NOTIFICATION_CANCEL"] ?? ""
         XCTAssertTrue(["", "disable", "complete"].contains(cancellation))
         XCTAssertTrue(cancellation.isEmpty || !foreground, "Pending cancellation requires a future delivery time")
-        let app = XCUIApplication()
+        let app = calendarApp()
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
@@ -651,7 +707,7 @@ final class FRIWorkflowTests: XCTestCase {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["FRI_PHOTO_PICKER_TESTS"] == "1",
                           "Prepare synthetic Files fixtures using apple/Tools/PrepareSidebarPhotoFixtures.py and enable FRI_PHOTO_PICKER_TESTS.")
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         XCUIDevice.shared.orientation = .landscapeLeft
@@ -719,7 +775,7 @@ final class FRIWorkflowTests: XCTestCase {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["FRI_AVAILABILITY_PICKER_TESTS"] == "1",
                           "Prepare today's synthetic Files fixtures using apple/Tools/PrepareAvailabilityFixtures.py and enable FRI_AVAILABILITY_PICKER_TESTS.")
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         XCUIDevice.shared.orientation = .portrait
@@ -816,7 +872,7 @@ final class FRIWorkflowTests: XCTestCase {
 
     func testPlannerValidationAndReviewHandoff() throws {
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         XCUIDevice.shared.orientation = .portrait
@@ -867,7 +923,7 @@ final class FRIWorkflowTests: XCTestCase {
 
     func testPlannerDateSelection() throws {
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         XCUIDevice.shared.orientation = .portrait
@@ -907,7 +963,7 @@ final class FRIWorkflowTests: XCTestCase {
 
     func testYearMonthNavigationAndLeapDay() throws {
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         XCUIDevice.shared.orientation = .portrait
@@ -1010,7 +1066,7 @@ final class FRIWorkflowTests: XCTestCase {
 
     func testSidebarAndUpNextWithLargerText() throws {
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         XCUIDevice.shared.orientation = .landscapeLeft
@@ -1071,7 +1127,7 @@ final class FRIWorkflowTests: XCTestCase {
 
     func testDayConversationWithLargerTextAndKeyboard() throws {
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         XCUIDevice.shared.orientation = .portrait
@@ -1116,7 +1172,7 @@ final class FRIWorkflowTests: XCTestCase {
 
     func testDayDraftHandoffAndRotation() throws {
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         XCUIDevice.shared.orientation = .portrait
@@ -1190,7 +1246,7 @@ final class FRIWorkflowTests: XCTestCase {
             throw XCTSkip("Opt-in live Spotify embed; no account sign-in or paid subscription is used.")
         }
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launch()
@@ -1248,7 +1304,7 @@ final class FRIWorkflowTests: XCTestCase {
             throw XCTSkip("Opt-in live Open-Meteo interaction; offline behavior is covered by core transport tests.")
         }
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launch()
@@ -1309,7 +1365,7 @@ final class FRIWorkflowTests: XCTestCase {
                           "Opt-in live Apple Maps interaction on a QA Simulator")
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launch()
@@ -1369,7 +1425,7 @@ final class FRIWorkflowTests: XCTestCase {
 
     func testLargerTextReachesEditorAndRestoresLook() throws {
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launch()
@@ -1482,7 +1538,7 @@ final class FRIWorkflowTests: XCTestCase {
 
     func testWidgetAutoFitAtEverySize() throws {
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launchEnvironment["FRI_WIDGET_PREVIEW"] = "1"
@@ -1527,7 +1583,7 @@ final class FRIWorkflowTests: XCTestCase {
 
     func testDeadlineClarificationAndPersistence() throws {
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launch()
@@ -1630,7 +1686,7 @@ final class FRIWorkflowTests: XCTestCase {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["FRI_IMPORT_NETWORK_TESTS"] == "1",
                           "Opt in to a real public HTTPS calendar request")
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launch()
@@ -1687,7 +1743,7 @@ final class FRIWorkflowTests: XCTestCase {
 
     func testPreparedSourceSurvivesRelaunchAndRefreshHoldsOverlap() throws {
         continueAfterFailure = false
-        let app = XCUIApplication()
+        let app = calendarApp()
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launch()

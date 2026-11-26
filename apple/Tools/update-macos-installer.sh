@@ -33,8 +33,14 @@ app="$work/source/FRI.app"
 plist="$app/Contents/Info.plist"
 version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$plist")
 build=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$plist")
-[[ "$archive" == "$artifacts/FRI-$version-build$build-mac-arm64.zip" ]]
-[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$plist")" == com.fri.calendar.native.mac ]]
+if [[ "$archive" != "$artifacts/FRI-$version-build$build-mac-arm64.zip" ]]; then
+    echo "Archive filename disagrees with Info.plist ($version build $build): $archive" >&2
+    exit 1
+fi
+if [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$plist")" != com.fri.calendar.native.mac ]]; then
+    echo "Expected the native FRI Mac app in $archive" >&2
+    exit 1
+fi
 executable=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$plist")
 lipo -verify_arch arm64 "$app/Contents/MacOS/$executable"
 codesign --verify --deep --strict "$app"

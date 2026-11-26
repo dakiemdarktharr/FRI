@@ -1,6 +1,8 @@
 # FRI 0.7.0 build 7 · Hướng dẫn sử dụng lần đầu
 
-Build 7 thêm hướng dẫn tiếng Việt vào FRI native trên Mac và vào bản desktop Electron cho Windows và Linux. [Tải FRI cho Mac Apple Silicon](../artifacts/macos/FRI-0.7.0-build7-mac-arm64.zip).
+Build 7 thêm hướng dẫn tiếng Việt vào FRI native trên Mac và vào bản desktop Electron cho Windows và Linux. [Tải bộ cài DMG cho Mac Apple Silicon](../artifacts/macos/FRI-0.7.0-build7-mac-arm64.dmg) · [Tải bản ZIP](../artifacts/macos/FRI-0.7.0-build7-mac-arm64.zip).
+
+Để cài, mở DMG, kéo **FRI** vào **Applications**, rồi mở FRI từ Applications. DMG chứa bản thử nghiệm ký ad hoc, chưa được Apple công chứng. Gatekeeper có thể chặn ứng dụng tải từ Internet.
 
 ## Người dùng sẽ thấy gì?
 
@@ -74,3 +76,5 @@ Nếu dùng Wayland để chia sẻ cửa sổ chat, máy đích cần PipeWire 
 | Gói Windows/Linux | Đã dựng chéo bộ cài NSIS Windows x64 và gói Linux x64 trên Mac. Cả hai qua kiểm tra ASAR, có tệp hướng dẫn và mô hình OCR tiếng Việt. Việc cài, chạy giao diện và xác nhận quyền trên Windows/Linux thật chưa được thử trong đợt này. |
 
 SHA-256 của bản ZIP macOS trên GitHub là `b6399610c4b5a67ddc2fefccfd45cf6087783eddacc3000ba53883c437e5b6b1`.
+
+SHA-256 của DMG là `06242aadafddc06840dfc0ecd03b57685067d76e50a3a7a320b6ad7018787827`. Đã kiểm tra ảnh đĩa bằng `hdiutil verify`, gắn chỉ đọc, kiểm chữ ký của FRI bên trong và đối chiếu nội dung với ứng dụng build 7 trong Applications.

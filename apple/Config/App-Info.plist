@@ -41,6 +41,10 @@
 	<false/>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.productivity</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>FRI kiểm tra địa chỉ tab đang mở để chỉ nhận diện trang chat mà bạn đã chọn ghi nhớ.</string>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>FRI reads the selected chat window on this Mac to suggest appointments.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Import events you choose from your Apple calendars. FRI keeps your plans on this device.</string>
 	<key>UILaunchScreen</key>

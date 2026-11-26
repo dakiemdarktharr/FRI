@@ -1,9 +1,60 @@
 import AppKit
+import Carbon
 import XCTest
 @testable import FRIMac
 
 @MainActor
 final class FRIMeetingAgentTests: XCTestCase {
+    func testRememberedSourceSleepsOutsideChatAndSurvivesPauseAndRelaunch() throws {
+        let domain = "FRI-background-test-" + UUID().uuidString
+        let prefs = try XCTUnwrap(UserDefaults(suiteName: domain))
+        defer { prefs.removePersistentDomain(forName: domain) }
+        prefs.set(["com.vng.zalo"], forKey: "meeting.nativeApps")
+        prefs.set(true, forKey: "meeting.enabled")
+        let agent = FRIMeetingAgent(preferences: prefs)
+        agent.attach(FRICalendarSession())
+        XCTAssertTrue(agent.enabled)
+        XCTAssertFalse(agent.hasSamplingTask)
+        agent.pause()
+        XCTAssertTrue(agent.hasSources)
+        XCTAssertFalse(agent.enabled)
+        let next = FRIMeetingAgent(preferences: prefs)
+        next.attach(FRICalendarSession())
+        XCTAssertFalse(next.enabled)
+        next.resume()
+        XCTAssertTrue(next.enabled)
+        XCTAssertFalse(next.hasSamplingTask)
+        next.shutdown()
+        let restored = FRIMeetingAgent(preferences: prefs)
+        restored.attach(FRICalendarSession())
+        XCTAssertTrue(restored.enabled)
+        restored.stop()
+        XCTAssertFalse(FRIMeetingAgent(preferences: prefs).hasSources)
+    }
+
+    func testRememberedBrowserRequiresExactChatOriginAndUsesURLProperty() throws {
+        let zalo = try XCTUnwrap(MeetingWebSource(browser: "com.google.chrome", service: .zalo))
+        let messenger = try XCTUnwrap(MeetingWebSource(browser: "com.apple.safari", service: .messenger))
+        XCTAssertNil(MeetingWebSource(browser: "org.example.other", service: .zalo))
+        XCTAssertNotNil(zalo.chatRoute("https://chat.zalo.me/"))
+        for url in ["https://chat.zalo.me.example.org/", "http://chat.zalo.me/", "https://chat.zalo.me@other.test/",
+                    "https://chat.zalo.me:8443/", "https://chat.zalo.me/login", "https://accounts.zalo.me/"] {
+            XCTAssertNil(zalo.chatRoute(url), url)
+        }
+        XCTAssertNotEqual(messenger.chatRoute("https://www.messenger.com/t/1"), messenger.chatRoute("https://www.messenger.com/t/2"))
+        XCTAssertNotNil(messenger.chatRoute("https://www.facebook.com/messages/e2ee/t/1"))
+        for url in ["https://www.facebook.com/", "https://www.facebook.com/messages-pay/", "https://www.messenger.com/settings", "https://chat.zalo.me/"] {
+            XCTAssertNil(messenger.chatRoute(url), url)
+        }
+        for (source, expected) in [(zalo, OSType(0x55524C20)), (messenger, OSType(0x7055524C))] {
+            let event = try XCTUnwrap(MeetingBrowserReader.urlRequest(source, pid: ProcessInfo.processInfo.processIdentifier))
+            XCTAssertEqual(event.eventID, AEEventID(kAEGetData))
+            let object = try XCTUnwrap(event.paramDescriptor(forKeyword: keyDirectObject))
+            XCTAssertEqual(object.descriptorType, typeObjectSpecifier)
+            XCTAssertEqual(object.forKeyword(AEKeyword(keyAEKeyData))?.typeCodeValue, expected)
+        }
+    }
+
     func testDraftPanelWhileTyping() throws {
         let suite = "FRI-meeting-test-" + UUID().uuidString
         let prefs = try XCTUnwrap(UserDefaults(suiteName: suite))

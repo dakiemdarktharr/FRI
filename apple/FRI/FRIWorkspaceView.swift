@@ -94,8 +94,8 @@ struct FRIWorkspaceView: View {
             if ProcessInfo.processInfo.environment["FRI_WIDGET_PREVIEW"] == "1" { calendar.panel = .widget }
             #endif
         }
-        .task(id: scenePhase) {
-            if scenePhase == .active {
+        .task(id: scenePhase == .active && calendar.appInForeground) {
+            if scenePhase == .active && calendar.appInForeground {
                 calendar.open()
                 while !Task.isCancelled {
                     try? await Task.sleep(for: .seconds(3))
@@ -293,7 +293,7 @@ struct FRIWorkspaceView: View {
         .background {
             FRIBackdropArtwork(mode: calendar.state.settings["sidebar"]?.string ?? "solid",
                                image: calendar.state.sidebarImageData,
-                               motion: calendar.state.settings["motion"]?.bool != false)
+                               motion: calendar.animateCalendar)
         }
         .overlay(alignment: .trailing) { Rectangle().fill(FRIColors.line.opacity(0.2)).frame(width: 1) }
     }
@@ -564,7 +564,7 @@ struct FRIWorkspaceView: View {
                 .background(FRIColors.cloud, in: RoundedRectangle(cornerRadius: 14))
             Button { calendar.panel = .dayAssistant } label: {
                 VStack(spacing: 8) {
-                    FRIDayWave(motion: calendar.state.settings["motion"]?.bool != false).frame(width: 56, height: 56)
+                    FRIDayWave(motion: calendar.animateCalendar).frame(width: 56, height: 56)
                     Text("Meet Day").friFont(.caption)
                 }.frame(maxWidth: .infinity)
             }.buttonStyle(.plain).accessibilityLabel("Talk to Day")
@@ -734,9 +734,13 @@ struct FRIDayWave: View {
     @Environment(\.scenePhase) private var phase
     var body: some View {
         let paused = !motion || reduceMotion || phase != .active
-        TimelineView(.animation(minimumInterval: 1.0 / 20, paused: paused)) { timeline in
-            wave(offset: paused ? 0 : sin(timeline.date.timeIntervalSinceReferenceDate * 2 * .pi / 8) * 0.17)
-        }.accessibilityHidden(true)
+        if paused {
+            wave(offset: 0)
+        } else {
+            TimelineView(.animation(minimumInterval: 1.0 / 20)) { timeline in
+                wave(offset: sin(timeline.date.timeIntervalSinceReferenceDate * 2 * .pi / 8) * 0.17)
+            }.accessibilityHidden(true)
+        }
     }
 
     private func wave(offset: Double) -> some View {

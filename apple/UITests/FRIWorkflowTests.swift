@@ -12,10 +12,16 @@ final class FRIWorkflowTests: XCTestCase {
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
         app.launch()
-        let menu = app.menuBars.menuItems["File"]
+        let main = app.windows["FRI"].firstMatch
+        XCTAssertTrue(main.waitForExistence(timeout: 10))
+        app.typeKey("w", modifierFlags: .command)
+        XCTAssertTrue(main.waitForNonExistence(timeout: 5))
+        XCTAssertNotEqual(app.state, .notRunning)
+        app.activate()
+        let menu = app.menuBars.menuBarItems["File"]
         XCTAssertTrue(menu.waitForExistence(timeout: 10))
         menu.click()
-        app.menuItems["Thư ký lịch…"].click()
+        menu.menuItems["Thư ký lịch…"].click()
         let demo = app.buttons["fri.meeting.example"]
         XCTAssertTrue(demo.waitForExistence(timeout: 10))
         demo.click()

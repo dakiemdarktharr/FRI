@@ -39,6 +39,7 @@
 		4A00E4E4AF7549742F5D6BD0 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 9C6E98D4AD848E4800B338F6 /* PrivacyInfo.xcprivacy */; };
 		4FC3B0E24A1DF6EE5449B8EC /* FRIServiceCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB68307D8DFBC4F216C8E3F /* FRIServiceCardsView.swift */; };
 		50D2FAD1D0AA086BD76CFCF6 /* FRIDayAssistantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F387F2A0D3DF5A33BC469CD7 /* FRIDayAssistantView.swift */; };
+		50DB07106C06F4C9511C2EA4 /* FRIMeetingBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB66839B11EAFC5F526B82C /* FRIMeetingBrowser.swift */; };
 		53C872C5E8250BC8005D3018 /* FRIMacWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FA17A58D3F8DDE5F4F0C1DF7 /* FRIMacWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		53D8793D702D9CC391420B25 /* Gradient-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = C5F38879EF6E888D42A8EE18 /* Gradient-LICENSE.txt */; };
 		563BACFF0FDC212167C40319 /* FRIApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F187CB02BB0E038B703CE008 /* FRIApp.swift */; };
@@ -52,6 +53,7 @@
 		62A76FE1ABCA7553C3AA740E /* FRISpotifyPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDAC49D16F623958FF10495 /* FRISpotifyPlayer.swift */; };
 		64BF26E983C44AB8EA51A791 /* FRIWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BAEC6BF9E2B8A9280E645C7 /* FRIWidgetContent.swift */; };
 		69120A7FF4B2294E3308FDA8 /* FRIGradientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65554F67F867449A09A9947 /* FRIGradientView.swift */; };
+		6D542F9FBA896240764E75CC /* FRIMeetingBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB66839B11EAFC5F526B82C /* FRIMeetingBrowser.swift */; };
 		6E8584C03C13EEED7CD7651A /* FRIWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E6A093A9562979FC902AF2 /* FRIWorkflowTests.swift */; };
 		6E894551B51C1602295720F4 /* FRIDesign in Frameworks */ = {isa = PBXBuildFile; productRef = B12708056EC1863717844E29 /* FRIDesign */; };
 		7077E7F4327DC028361D68B2 /* import-image.png in Resources */ = {isa = PBXBuildFile; fileRef = E3E7D1075A3D7DD8890D646B /* import-image.png */; };
@@ -72,6 +74,7 @@
 		8CD156D0178C59AD5AF462DC /* FRIGradientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65554F67F867449A09A9947 /* FRIGradientView.swift */; };
 		9792B50B04950A913CBA201C /* FRIGradientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65554F67F867449A09A9947 /* FRIGradientView.swift */; };
 		9E6BD96D5B4F47B6C11E085C /* FRIBackdropArtwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D136FF0073B214ECE0A2A66 /* FRIBackdropArtwork.swift */; };
+		A10AE46A130D197AEE14133A /* FRIMeetingBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB66839B11EAFC5F526B82C /* FRIMeetingBrowser.swift */; };
 		A1BD739A26FD3ECD27B80920 /* FRIServicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FDC5569BA10EDCDB07AE7D9 /* FRIServicesView.swift */; };
 		A46615CB06871BB02D8C1661 /* import-review.ics in Resources */ = {isa = PBXBuildFile; fileRef = 1514B3D4EA4B12179710CD60 /* import-review.ics */; };
 		A6EB3C271EEF511443A5CDCC /* FRIWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BAEC6BF9E2B8A9280E645C7 /* FRIWidgetContent.swift */; };
@@ -186,6 +189,7 @@
 		17CCA72EA3562B08CE006A63 /* FRIiOSWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = FRIiOSWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		190915920C441BD9E4EFE883 /* FRIMacWidgetKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FRIMacWidgetKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C43C4A035AAA8EB1A0277E6 /* FRICalendarGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FRICalendarGridView.swift; sourceTree = "<group>"; };
+		1DB66839B11EAFC5F526B82C /* FRIMeetingBrowser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FRIMeetingBrowser.swift; sourceTree = "<group>"; };
 		1FDAC49D16F623958FF10495 /* FRISpotifyPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FRISpotifyPlayer.swift; sourceTree = "<group>"; };
 		200831043D48BD48B9EEAE58 /* FRIUtilityViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FRIUtilityViews.swift; sourceTree = "<group>"; };
 		31E6A093A9562979FC902AF2 /* FRIWorkflowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FRIWorkflowTests.swift; sourceTree = "<group>"; };
@@ -341,6 +345,7 @@
 				F65554F67F867449A09A9947 /* FRIGradientView.swift */,
 				4A65C1DBBDD305821ED10600 /* FRIImportView.swift */,
 				C7E574E9709C2EE8F9361E50 /* FRIMeetingAgent.swift */,
+				1DB66839B11EAFC5F526B82C /* FRIMeetingBrowser.swift */,
 				0F62E156B7FCB8DA9F19ABDE /* FRIPlanEditorView.swift */,
 				0AB68307D8DFBC4F216C8E3F /* FRIServiceCardsView.swift */,
 				5FDC5569BA10EDCDB07AE7D9 /* FRIServicesView.swift */,
@@ -742,6 +747,7 @@
 				8CD156D0178C59AD5AF462DC /* FRIGradientView.swift in Sources */,
 				C7DDB7CB2DCE5C4800C6A132 /* FRIImportView.swift in Sources */,
 				11E0E33BC6E08DA87E4B45C7 /* FRIMeetingAgent.swift in Sources */,
+				6D542F9FBA896240764E75CC /* FRIMeetingBrowser.swift in Sources */,
 				44F0040B6099BFE51916FB54 /* FRIPlanEditorView.swift in Sources */,
 				835012197CB74E295B8A608D /* FRIServiceCardsView.swift in Sources */,
 				A1BD739A26FD3ECD27B80920 /* FRIServicesView.swift in Sources */,
@@ -785,6 +791,7 @@
 				69120A7FF4B2294E3308FDA8 /* FRIGradientView.swift in Sources */,
 				42EE9DACE386D20320D933D3 /* FRIImportView.swift in Sources */,
 				5D986051FB9A681245BCBBAF /* FRIMeetingAgent.swift in Sources */,
+				50DB07106C06F4C9511C2EA4 /* FRIMeetingBrowser.swift in Sources */,
 				EF9F8D14F6E5ECCFEA121312 /* FRIPlanEditorView.swift in Sources */,
 				4FC3B0E24A1DF6EE5449B8EC /* FRIServiceCardsView.swift in Sources */,
 				0CC874FDFEEF1DD3CA8FABA6 /* FRIServicesView.swift in Sources */,
@@ -810,6 +817,7 @@
 				9792B50B04950A913CBA201C /* FRIGradientView.swift in Sources */,
 				25AAC40B826FF036C15206BE /* FRIImportView.swift in Sources */,
 				DFA8E35F437B6AFA45EE2BF9 /* FRIMeetingAgent.swift in Sources */,
+				A10AE46A130D197AEE14133A /* FRIMeetingBrowser.swift in Sources */,
 				2C2745A6AB2DDBBFD95982C4 /* FRIPlanEditorView.swift in Sources */,
 				7F4C9CDC49C811922B10EDF9 /* FRIServiceCardsView.swift in Sources */,
 				742A9BBFFB73A9E52A55CE13 /* FRIServicesView.swift in Sources */,
@@ -1012,7 +1020,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "$(FRI_MAC_ENTITLEMENTS)";
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRI_STORAGE_MODE = "$(FRI_MAC_STORAGE_MODE)";
 				INFOPLIST_FILE = "Config/App-Info.plist";
@@ -1031,7 +1039,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "$(FRI_MAC_ENTITLEMENTS)";
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRI_STORAGE_MODE = "$(FRI_MAC_STORAGE_MODE)";
 				INFOPLIST_FILE = "Config/App-Info.plist";

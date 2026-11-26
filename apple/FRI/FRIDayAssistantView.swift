@@ -29,7 +29,7 @@ struct FRIDayAssistantView: View {
                 ScrollView {
                     VStack(spacing: 16) {
                         HStack(spacing: 18) {
-                            FRIDayWave(motion: calendar.state.settings["motion"]?.bool != false).frame(width: 64, height: 64)
+                            FRIDayWave(motion: calendar.animateCalendar).frame(width: 64, height: 64)
                             Text("Your day, with a little company.").friFont(.title3)
                         }
                         if verticalSizeClass == .compact {

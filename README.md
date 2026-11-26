@@ -25,11 +25,13 @@ The Windows x64 workspace uses a guarded Direct3D desktop-refraction layer from 
 
 ### Thư ký lịch cho Zalo và Messenger
 
+**macOS native 0.7.0 build 6** giữ trợ lý trên thanh menu sau khi đóng lịch, ghi nhớ nguồn và nghỉ khi bạn chuyển sang ứng dụng khác. [Bản Mac để thử nội bộ và hướng dẫn dựng Windows/Linux](docs/thu-ky-lich-0.7.0-build-6.md).
+
 Mở **File → Thư ký lịch…** rồi chọn cửa sổ chat muốn dùng. Trên Mac, bấm **Cho phép chọn cửa sổ chat…** khi mới thiết lập. Bạn có thể bấm **Thử với hội thoại mẫu** để xem gợi ý trước khi cấp quyền. Muốn dùng sau khi khởi động lại, bật **Mở FRI khi đăng nhập**.
 
 Trên macOS, khi bạn đang gõ “ê xíu 9h trạm k” trong cửa sổ Zalo đã chọn, FRI có thể hiện **Bạn có muốn lên lịch hẹn này?** ngay trước khi gửi. Bạn vẫn gõ tiếp được. Nếu ngày hoặc buổi chưa rõ, bạn chọn lại khi lưu. Với lời rủ như “ê xíu trạm k”, FRI giữ địa điểm và hỏi giờ cụ thể. Nếu bạn gửi trước khi gợi ý kịp hiện, FRI có thể nhận ra lời rủ từ tin mới của bạn trong cửa sổ Zalo đang xem.
 
-Ví dụ, một người hỏi “Thứ sáu 19:00 họp nhé?” và bạn trả lời “Ok, mình đi”. FRI đề xuất lịch họp khi nhận diện được phần hỏi và phần chốt trong vùng chat. Chọn **Xem và lưu** để sửa và xác nhận hoặc **Bỏ qua** để đóng. Trên Mac, đưa cửa sổ chat ra trước. Với trình duyệt, dùng cửa sổ riêng có tên Zalo hoặc Messenger và chọn lại khi cửa sổ thay đổi. Trên Linux dùng PipeWire, chọn cửa sổ trong hộp thoại của hệ thống mỗi phiên nếu được yêu cầu. Bạn có thể tắt nhận diện từ biểu tượng FRI trên thanh menu hoặc khay hệ thống.
+Ví dụ, một người hỏi “Thứ sáu 19:00 họp nhé?” và bạn trả lời “Ok, mình đi”. FRI đề xuất lịch họp khi nhận diện được phần hỏi và phần chốt trong vùng chat. Chọn **Xem và lưu** để sửa và xác nhận hoặc **Bỏ qua** để đóng. Trên Mac, đưa cửa sổ chat ra trước. Trên Mac, chọn **Nhớ trang** cho Chrome/Safari để tự nhận lại đúng dịch vụ. Nếu chỉ chọn một cửa sổ, chọn lại khi cửa sổ thay đổi. Trên Linux dùng PipeWire, chọn cửa sổ trong hộp thoại của hệ thống mỗi phiên nếu được yêu cầu. Bạn có thể tắt nhận diện từ biểu tượng FRI trên thanh menu hoặc khay hệ thống.
 
 ## Day and calendar insights
 

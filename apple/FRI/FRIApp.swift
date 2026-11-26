@@ -6,12 +6,15 @@ import WidgetKit
 
 @main
 struct FRIApp: App {
-    @State private var calendar = FRICalendarSession()
     @Environment(\.scenePhase) private var scenePhase
 
     #if os(macOS)
-    @State private var meetingAgent = FRIMeetingAgent()
+    @NSApplicationDelegateAdaptor(FRIMacLifecycle.self) private var lifecycle
+    private var meetingAgent: FRIMeetingAgent { lifecycle.meetingAgent }
+    private var calendar: FRICalendarSession { lifecycle.calendar }
     @Environment(\.openWindow) private var openWindow
+    #else
+    @State private var calendar = FRICalendarSession()
     #endif
 
     init() {
@@ -23,7 +26,6 @@ struct FRIApp: App {
             FRIWorkspaceView(calendar: calendar)
                 #if os(macOS)
                 .frame(minWidth: 540, minHeight: 520)
-                .onAppear { meetingAgent.attach(calendar) }
                 #endif
         }
         .onChange(of: scenePhase, initial: true) { _, phase in
@@ -69,13 +71,48 @@ struct FRIApp: App {
             Text(meetingAgent.status)
             Button("Thư ký lịch…") { NSApp.activate(ignoringOtherApps: true); openWindow(id: "meeting-agent") }
             Button("Mở lịch FRI") { NSApp.activate(ignoringOtherApps: true); openWindow(id: "calendar") }
-            if meetingAgent.enabled { Button("Tắt nhận diện") { meetingAgent.stop() } }
+            if meetingAgent.hasSources {
+                Button(meetingAgent.enabled ? "Tạm dừng nhận diện" : "Tiếp tục nhận diện") {
+                    if meetingAgent.enabled { meetingAgent.pause() } else { meetingAgent.resume() }
+                }
+            }
             Divider()
             Button("Thoát FRI") { NSApp.terminate(nil) }
         }
         #endif
     }
 }
+
+#if os(macOS)
+@MainActor
+final class FRIMacLifecycle: NSObject, NSApplicationDelegate {
+    let calendar = FRICalendarSession()
+    let meetingAgent = FRIMeetingAgent()
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        calendar.appInForeground = NSApp.isActive
+        meetingAgent.attach(calendar)
+        if meetingAgent.enabled && !calendar.ready { calendar.open() }
+        if Self.launchedAtLogin { NSApp.hide(nil) }
+    }
+
+    private static var launchedAtLogin: Bool {
+        let event = NSAppleEventManager.shared().currentAppleEvent
+        return event?.eventID == kAEOpenApplication &&
+            event?.paramDescriptor(forKeyword: keyAEPropData)?.enumCodeValue == keyAELaunchedAsLogInItem
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) { calendar.appInForeground = true }
+    func applicationDidResignActive(_ notification: Notification) { calendar.appInForeground = false }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        meetingAgent.shutdown()
+        calendar.setPeriodicUpdatesEnabled(false)
+    }
+}
+#endif
 
 @MainActor
 @Observable
@@ -86,6 +123,14 @@ final class FRICalendarSession {
         var id: String { rawValue }
     }
     enum FileAction { case exportBackup, restoreBackup, exportAvailability, compareAvailability }
+
+    #if os(macOS)
+    var appInForeground = false
+    #else
+    let appInForeground = true
+    #endif
+
+    var animateCalendar: Bool { appInForeground && state.settings["motion"]?.bool != false }
 
     private(set) var state = CalendarState()
     private(set) var ready = false

@@ -78,3 +78,9 @@ Nếu dùng Wayland để chia sẻ cửa sổ chat, máy đích cần PipeWire 
 SHA-256 của bản ZIP macOS trên GitHub là `b6399610c4b5a67ddc2fefccfd45cf6087783eddacc3000ba53883c437e5b6b1`.
 
 SHA-256 của DMG là `06242aadafddc06840dfc0ecd03b57685067d76e50a3a7a320b6ad7018787827`. Đã kiểm tra ảnh đĩa bằng `hdiutil verify`, gắn chỉ đọc, kiểm chữ ký của FRI bên trong và đối chiếu nội dung với ứng dụng build 7 trong Applications.
+
+## Cập nhật bộ cài cho lần tải sau
+
+Nút **Apple silicon** trên website tải [DMG mới nhất trên main](https://github.com/dakiemdarktharr/FRI/raw/refs/heads/main/artifacts/macos/latest/FRI-mac-arm64.dmg). Các liên kết có số build trong tài liệu này vẫn tải đúng build 7.
+
+Với build mới, thêm ZIP chứa `FRI.app` vào `artifacts/macos/`, đặt tên theo mẫu `FRI-0.7.0-build8-mac-arm64.zip`. Trên Mac, chạy `./apple/Tools/update-macos-installer.sh` rồi commit ZIP, DMG theo số build và DMG trong `latest/` cùng nhau. GitHub Actions cũng thực hiện bước đóng gói khi ZIP lên `main`. Công cụ so sánh phiên bản và số build theo số, kiểm tra chữ ký và đối chiếu ứng dụng trong DMG với ZIP trước khi cập nhật tệp tải.

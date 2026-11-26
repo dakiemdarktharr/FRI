@@ -42,7 +42,7 @@ if [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$plist")" != co
     exit 1
 fi
 executable=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$plist")
-lipo -verify_arch arm64 "$app/Contents/MacOS/$executable"
+lipo "$app/Contents/MacOS/$executable" -verify_arch arm64
 codesign --verify --deep --strict "$app"
 ln -s /Applications "$work/source/Applications"
 

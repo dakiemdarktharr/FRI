@@ -27,7 +27,7 @@ The Windows x64 workspace uses a guarded Direct3D desktop-refraction layer from 
 
 Mở **File → Thư ký lịch…** rồi chọn cửa sổ chat muốn dùng. Trên Mac, bấm **Cho phép chọn cửa sổ chat…** khi mới thiết lập. Bạn có thể bấm **Thử với hội thoại mẫu** để xem gợi ý trước khi cấp quyền. Muốn dùng sau khi khởi động lại, bật **Mở FRI khi đăng nhập**.
 
-Trên macOS, khi bạn đang gõ “ê xíu 9h trạm k” trong cửa sổ Zalo đã chọn, FRI có thể hiện **Bạn có muốn lên lịch hẹn này?** ngay trước khi gửi. Bạn vẫn gõ tiếp được. Nếu ngày hoặc buổi chưa rõ, bạn chọn lại khi lưu.
+Trên macOS, khi bạn đang gõ “ê xíu 9h trạm k” trong cửa sổ Zalo đã chọn, FRI có thể hiện **Bạn có muốn lên lịch hẹn này?** ngay trước khi gửi. Bạn vẫn gõ tiếp được. Nếu ngày hoặc buổi chưa rõ, bạn chọn lại khi lưu. Với lời rủ như “ê xíu trạm k”, FRI giữ địa điểm và hỏi giờ cụ thể. Nếu bạn gửi trước khi gợi ý kịp hiện, FRI có thể nhận ra lời rủ từ tin mới của bạn trong cửa sổ Zalo đang xem.
 
 Ví dụ, một người hỏi “Thứ sáu 19:00 họp nhé?” và bạn trả lời “Ok, mình đi”. FRI đề xuất lịch họp khi nhận diện được phần hỏi và phần chốt trong vùng chat. Chọn **Xem và lưu** để sửa và xác nhận hoặc **Bỏ qua** để đóng. Trên Mac, đưa cửa sổ chat ra trước. Với trình duyệt, dùng cửa sổ riêng có tên Zalo hoặc Messenger và chọn lại khi cửa sổ thay đổi. Trên Linux dùng PipeWire, chọn cửa sổ trong hộp thoại của hệ thống mỗi phiên nếu được yêu cầu. Bạn có thể tắt nhận diện từ biểu tượng FRI trên thanh menu hoặc khay hệ thống.
 

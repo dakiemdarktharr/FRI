@@ -85,6 +85,11 @@
     // Vision may attach the insertion point to a final one-letter question.
     return input.trimEnd().replace(/\bk[ịI/]$/u, 'k').replace(/[|¦]$|([a-zà-ỹ])I$/u, '$1').trimEnd();
   }
+  // Informal invitations often omit both the verb and the exact clock time.
+  // Keep these location-only questions narrow; incidental mentions of a venue
+  // ("xíu trạm có mở cửa k") should not create an appointment.
+  const relativeWhen = /\b(?:mot |chut )?(?:xiu|lat|ti|ty|chut)(?: nua)?\b/;
+  const shortVenueInvite = /^(?:(?:e|nay|alo)[ ,!]+)?(?:(?:mot |chut )?(?:xiu|lat|ti|ty|chut)(?: nua)?[, ]+)?(?:(?:o|tai|ra|qua|toi|den) )?(?:tram(?: xe buyt| tau)?|thu vien|cang tin|san bong|nha sach)(?: (?:k|ko|khong|hong|hem|hok|hk|nhe|nha|nhi|chu))?[?.!… ]*$/;
   // Invitations in the author's composer may be questions. A time by itself,
   // or an acknowledgement in another person's message, is insufficient here.
   function proposeDraft(input, now=Date.now()) {
@@ -94,15 +99,18 @@
     if(sensitive.test(text) || reported.test(text) || cancelled.test(text) ||
        /\b(khong muon|dung hen|chua biet|de xem|gio mo cua|mo cua|dong cua|het chuyen|may gio|may h|bao gio|luc nao)\b/.test(text))return null;
     const plan=details(input,now,true);
-    if(!plan.date && !plan.time && !plan.timeHint)return null;
     const invite=/[?？]\s*$|\b(k|ko|khong|hong|hem|hok|hk|nhe|nha|nhi|chu)[.!… ]*$/.test(text);
     const meetingVerb=/\b(hen|gap|ghe|cung di|di an|di choi|ru|meet)\b/.test(text);
     const place=input.match(/(?:^|\s)(trạm(?: xe buýt| xe buýt nhanh| tàu)?|thư viện|căng tin|sân bóng|nhà sách)(?=\s|[?.!,]|$)/iu)?.[1];
     if(!(plan.title || meetingVerb || plan.location || place))return null;
     if(!invite && !meetingVerb && !commitment.test(text))return null;
+    const relative = relativeWhen.test(text);
+    const needsTime = !plan.date && !plan.time && !plan.timeHint;
+    if(needsTime && !(relative && invite && (shortVenueInvite.test(text) || meetingVerb || plan.title)))return null;
     const result={title:plan.title||'Cuộc hẹn',date:plan.date,time:plan.time};
     if(plan.location||place)result.location=plan.location||place;
     if(plan.timeHint)result.timeHint=plan.timeHint;
+    if(needsTime)result.relativeTime='Lát nữa';
     return result;
   }
   function lineKey(line) {
@@ -113,20 +121,25 @@
   // Each observation is an ordered list of visible chat lines. Baseline the first
   // frame and require overlap at the bottom before treating a suffix as new.
   class MeetingFrames {
-    constructor() { this.previous = []; this.recent = new Map(); }
-    reset() { this.previous = []; this.lastDraft = null; }
+    constructor() { this.recent = new Map(); this.reset(); }
+    reset() { this.previous = null; this.lastDraft = null; }
     draft(text, now=Date.now()) {
       const plan=proposeDraft(text,now);
-      if(plan)this.lastDraft={key:lineKey({side:'own',text:composerText(text)}),at:now};
+      if(plan){
+        const key=lineKey({side:'own',text:composerText(text)});
+        const fields=JSON.stringify(plan);
+        this.lastDraft={key,fields,at:now,handled:fields===this.lastDraft?.fields && this.lastDraft.handled};
+      }
       return plan;
     }
-    observe(rows, now=Date.now()) {
+    handleDraft() { if(this.lastDraft)this.lastDraft.handled=true; }
+    observe(rows, now=Date.now(), includeSentInvites=false) {
       const lines = rows.filter(r => r && typeof r.text==='string' && r.text.length<=480
         && ['own','other','unknown'].includes(r.side) && r.text.trim()).slice(-24);
       const keys = lines.map(lineKey);
       const before = this.previous;
       this.previous=keys;
-      if (!before.length || !keys.length) return null;
+      if (!before || !keys.length) return null;
       let overlap=0, end=0;
       for(let n=Math.min(before.length,keys.length);n>0 && !overlap;n--){
         const tail=before.slice(-n);
@@ -134,15 +147,20 @@
           if(tail.every((v,k)=>v===keys[j+k])){overlap=n;end=j+n;}
         }
       }
-      if (!overlap || end===keys.length) return null;
+      if ((!overlap && (before.length || !includeSentInvites)) || end===keys.length) return null;
       for(let i=lines.length-1;i>=end;i--){
         const current=lines[i], previous=lines[i-1];
         if(current.side==='unknown')continue;
-        if(this.lastDraft && now-this.lastDraft.at<60000 && keys[i]===this.lastDraft.key)continue;
+        const sameDraft=this.lastDraft && now-this.lastDraft.at<60000 && keys[i]===this.lastDraft.key;
+        if(sameDraft && (!includeSentInvites || this.lastDraft.handled))continue;
         const paired=previous && previous.side!=='unknown' && previous.side!==current.side;
         // An incoming reply concerns the owner only when accepting their own proposal.
         if(current.side==='other' && !(paired && acceptance.test(fold(current.text))))continue;
-        const result=recognize(current.text,paired?previous.text:'',now);
+        let result=recognize(current.text,paired?previous.text:'',now);
+        if(includeSentInvites && current.side==='own' && (!result || sameDraft)){
+          const invitation=proposeDraft(current.text,now);
+          if(invitation)result={...invitation, origin:'sentInvitation'};
+        }
         if(!result)continue;
         for(const [k,t] of this.recent)if(now-t>600000)this.recent.delete(k);
         const key=JSON.stringify(result);

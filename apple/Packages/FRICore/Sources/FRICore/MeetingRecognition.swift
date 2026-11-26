@@ -13,8 +13,9 @@ public final class MeetingRecognition {
         detector = value
     }
     public func reset() { detector.invokeMethod("reset", withArguments: []) }
-    public func observe(_ rows: [[String: String]], at date: Date = .now) -> [String: String]? {
-        fields(detector.invokeMethod("observe", withArguments: [rows, date.timeIntervalSince1970 * 1000]))
+    public func handleDraft() { detector.invokeMethod("handleDraft", withArguments: []) }
+    public func observe(_ rows: [[String: String]], at date: Date = .now, includeSentInvites: Bool = false) -> [String: String]? {
+        fields(detector.invokeMethod("observe", withArguments: [rows, date.timeIntervalSince1970 * 1000, includeSentInvites]))
     }
 
     public func draft(_ text: String, at date: Date = .now) -> [String: String]? {

@@ -97,7 +97,7 @@ final class FRIMeetingAgent {
     private func resetFrame() {
         lastImage = nil
         lastComposerImage = nil
-        if showingDraft { lastDraft = nil; dismiss() }
+        if showingDraft { lastDraft = nil; closePanel() }
         cachedSource = nil
         lastSource = nil
         detector?.reset()
@@ -161,7 +161,7 @@ final class FRIMeetingAgent {
         guard fields != lastDraft else { return }
         lastDraft = fields
         guard let fields else {
-            if showingDraft { dismiss() }
+            if showingDraft { closePanel() }
             return
         }
         if let pending, !showingDraft { waiting.insert(pending, at: 0) }
@@ -246,31 +246,44 @@ final class FRIMeetingAgent {
                 return check.windows.first(where: { $0.windowID == id })?.title == source.title &&
                     NSWorkspace.shared.frontmostApplication?.processIdentifier == pid && frontWindow()?.id == id
             }
+            var clearComposer = false
             if changedComposer {
                 let text = try await Task.detached(priority: .userInitiated) { try MeetingOCR.draftText(image) }.value
                 guard try await stillSelected() else { resetFrame(); return }
                 lastComposerImage = composerSignature
                 let fields = detector?.draft(text)
                 let willPresent = fields != nil && fields != lastDraft
-                updateDraft(fields)
+                if let fields { updateDraft(fields) } else { clearComposer = true }
                 if willPresent && showingDraft {
                     let elapsed = captureStart.duration(to: .now)
                     let ms = elapsed.components.seconds * 1000 + elapsed.components.attoseconds / 1_000_000_000_000_000
                     latencyLog.info("Draft suggestion shown, capture to panel: \(ms, privacy: .public) ms")
                 }
             }
-            guard changedChat else { return }
+            guard changedChat else {
+                if clearComposer { updateDraft(nil) }
+                return
+            }
             let rows = try await Task.detached(priority: .userInitiated) { try MeetingOCR.rows(image) }.value
             guard try await stillSelected() else { resetFrame(); return }
             lastImage = signature
             status = "Đang nhận diện trên máy · " + (source.native ? "cửa sổ chat" : "cửa sổ trình duyệt đã chọn")
-            if let suggestion = detector?.observe(rows) {
-                if pending == nil { present(suggestion) }
-                else if waiting.count < 32 { waiting.append(suggestion) }
-            }
+            applyConversation(detector?.observe(rows, includeSentInvites: source.isZalo), composerCleared: clearComposer)
         } catch {
             if !Task.isCancelled { resetFrame(); status = "Nguồn tạm dừng. Kiểm tra cửa sổ và quyền." }
         }
+    }
+
+    func applyConversation(_ suggestion: [String: String]?, composerCleared: Bool) {
+        if let suggestion {
+            let justSentDraft = showingDraft && composerCleared && suggestion["origin"] == "sentInvitation"
+            if pending == nil || justSentDraft {
+                present(suggestion)
+            } else if waiting.count < 32 {
+                waiting.append(suggestion)
+            }
+        }
+        if composerCleared { updateDraft(nil) }
     }
 
     func tryExample() {
@@ -283,6 +296,11 @@ final class FRIMeetingAgent {
     }
 
     func dismiss() {
+        if showingDraft { detector?.handleDraft() }
+        closePanel()
+    }
+
+    private func closePanel() {
         popup?.orderOut(nil)
         popup = nil
         pending = nil
@@ -292,15 +310,16 @@ final class FRIMeetingAgent {
 
     private func present(_ fields: [String: String], example: Bool = false, draft: Bool = false) {
         guard let screen = NSScreen.main else { return }
+        let invitation = draft || fields["origin"] == "sentInvitation"
         pending = fields
         showingDraft = draft
         let panel = popup ?? NSPanel(contentRect: NSRect(x: 0,y: 0,width: 340,height: 140), styleMask: [.nonactivatingPanel,.titled,.fullSizeContentView], backing: .buffered, defer: false)
         panel.title = draft ? "FRI · Gợi ý khi đang soạn" : "FRI · Nhắc kèo"; panel.isFloatingPanel = true; panel.hidesOnDeactivate = false; panel.level = .floating
         panel.collectionBehavior = [.canJoinAllSpaces,.fullScreenAuxiliary]
         panel.contentView = NSHostingView(rootView: VStack(alignment: .leading, spacing: 8) {
-            Text(draft ? "Bạn có muốn lên lịch hẹn này?" : (example ? "Thử với ví dụ · Thêm vào lịch FRI?" : "Thêm vào lịch FRI?")).font(.headline)
+            Text(invitation ? "Bạn có muốn lên lịch hẹn này?" : (example ? "Thử với ví dụ · Thêm vào lịch FRI?" : "Thêm vào lịch FRI?")).font(.headline)
             Text([fields["title"] ?? "Cuộc hẹn", fields["location"]].compactMap { $0 }.joined(separator: " · "))
-            Text([fields["date"] ?? "Chưa rõ ngày", fields["time"] ?? fields["timeHint"].map { $0 + " (sáng hay tối?)" } ?? "Chưa rõ giờ"].joined(separator: " · ")).font(.subheadline)
+            Text([fields["date"] ?? "Chưa rõ ngày", fields["time"] ?? fields["timeHint"].map { $0 + " (sáng hay tối?)" } ?? fields["relativeTime"].map { $0 + " · Mấy giờ?" } ?? "Chưa rõ giờ"].joined(separator: " · ")).font(.subheadline)
             HStack {
                 Button("Bỏ qua") { self.dismiss() }
                 Button("Xem và lưu") { self.review() }.buttonStyle(.borderedProminent)
@@ -315,7 +334,7 @@ final class FRIMeetingAgent {
         var item=Appointment()
         item.title=fields["title"] ?? "Cuộc hẹn"; item.date=fields["date"] ?? ""; item.time=fields["time"] ?? ""
         item.kind="schedule"; item.duration=0; item.location=fields["location"] ?? ""
-        if let hint = fields["timeHint"] { item.notes = "Giờ cần xác nhận: " + hint }
+        if let hint = fields["timeHint"] ?? fields["relativeTime"] { item.notes = "Giờ cần xác nhận: " + hint }
         if calendar.addDrafts([item]) { dismiss(); calendar.newDraft(deadline:false,startingID:item.id) }
     }
 }

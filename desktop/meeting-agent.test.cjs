@@ -58,6 +58,44 @@ test('unsent Vietnamese invitations preserve missing details and do not repeat o
   detector.draft('',wednesday+500);
   assert.equal(detector.observe([base,own],wednesday+500),null);
 });
+test('relative-time invitations survive a fast send and respect dismissal', () => {
+  const detector=new MeetingFrames();
+  const phrase='ê xíu trạm k';
+  const proposal={title:'Cuộc hẹn',date:null,time:null,location:'trạm',relativeTime:'Lát nữa'};
+  const sent={...proposal,origin:'sentInvitation'};
+  const baseline=[row('other','Chào')], own=row('own',phrase);
+  for(const value of [phrase,'Ê, xíu nữa trạm k?', 'lát nữa thư viện không?']){
+    assert.equal(detector.draft(value,wednesday)?.relativeTime,'Lát nữa',value);
+  }
+  assert.deepEqual(detector.draft(phrase,wednesday),proposal);
+  for(const text of ['xíu trạm', 'ê trạm k', 'xíu trạm có mở cửa k', 'xíu gửi hàng ở trạm k', 'xíu không đi gặp nhé', 'lát nữa gửi mã OTP ở trạm k']){
+    assert.equal(detector.draft(text,wednesday),null,text);
+  }
+  for(const sawDraft of [true,false]){
+    const frames=new MeetingFrames();
+    assert.equal(frames.observe(baseline,wednesday,true),null);
+    if(sawDraft) assert.deepEqual(frames.draft(phrase,wednesday),proposal);
+    frames.draft('',wednesday);
+    assert.deepEqual(frames.observe([...baseline,own],wednesday,true),sent);
+    assert.equal(frames.observe([...baseline,own],wednesday,true),null);
+  }
+  const ignored=new MeetingFrames();
+  ignored.observe(baseline,wednesday,true);
+  ignored.draft(phrase,wednesday);
+  ignored.handleDraft();
+  ignored.draft(phrase+'|',wednesday);
+  assert.equal(ignored.observe([...baseline,own],wednesday,true),null);
+  for(const side of ['other','unknown']){
+    const frames=new MeetingFrames();
+    frames.observe(baseline,wednesday,true);
+    assert.equal(frames.observe([...baseline,row(side,phrase)],wednesday,true),null);
+  }
+  const empty=new MeetingFrames();
+  assert.equal(empty.observe([own],wednesday,true),null);
+  empty.reset();
+  empty.observe([],wednesday,true);
+  assert.deepEqual(empty.observe([own],wednesday,true),sent);
+});
 test('bundled offline OCR reads both sides of a synthetic chat', async () => {
   const {createMeetingOCR} = require('./meeting-ocr.cjs');
   const d = new MeetingFrames();

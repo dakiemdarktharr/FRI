@@ -19,7 +19,8 @@ struct MeetingRecognitionTests {
         return try #require(context.makeImage())
     }
 
-    @Test func invitationInUnsentComposer() throws {
+    @Test(arguments: ["ê xíu 9h trạm k", "ê xíu trạm k"])
+    func invitationInUnsentComposer(phrase: String) throws {
         let ctx = try #require(CGContext(data: nil, width: 1200, height: 720, bitsPerComponent: 8, bytesPerRow: 4800,
                                          space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
         ctx.setFillColor(gray: 1, alpha: 1)
@@ -33,7 +34,7 @@ struct MeetingRecognitionTests {
         }
         write("Mai 19h họp nhé?", y: 290)
         let before = try #require(ctx.makeImage())
-        write("ê xíu 9h trạm k", y: 16)
+        write(phrase, y: 16)
         let after = try #require(ctx.makeImage())
         #expect(MeetingOCR.signature(before) == MeetingOCR.signature(after))
         #expect(MeetingOCR.signature(before, region: .zaloComposer) != MeetingOCR.signature(after, region: .zaloComposer))
@@ -41,10 +42,31 @@ struct MeetingRecognitionTests {
         #expect(try detector.draft(MeetingOCR.draftText(before)) == nil)
         let text = try MeetingOCR.draftText(after)
         let suggestion = detector.draft(text)
-        #expect(suggestion?["timeHint"] == "9h", "Synthetic OCR: \(text)")
+        if phrase.contains("9h") {
+            #expect(suggestion?["timeHint"] == "9h", "Synthetic OCR: \(text)")
+        } else {
+            #expect(suggestion?["relativeTime"] == "Lát nữa", "Synthetic OCR: \(text)")
+            #expect(suggestion?["timeHint"] == nil)
+        }
         #expect(suggestion?["location"] == "trạm")
         #expect(suggestion?["date"] == nil)
         #expect(suggestion?["time"] == nil)
+        // The previously visible conversation is static while the user types.
+        // Then the composer clears and the same phrase appears on the outgoing side.
+        let sentDetector = try MeetingRecognition()
+        let empty = try MeetingOCR.rows(before)
+        #expect(sentDetector.observe(empty, includeSentInvites: true) == nil)
+        ctx.setFillColor(gray: 1, alpha: 1)
+        ctx.fill(CGRect(x: 0, y: 0, width: 1200, height: 48))
+        ctx.textPosition = CGPoint(x: 945, y: 190)
+        CTLineDraw(CTLineCreateWithAttributedString(NSAttributedString(string: phrase, attributes: attrs)), ctx)
+        let sentImage = try #require(ctx.makeImage())
+        let rows = try MeetingOCR.rows(sentImage)
+        let sent = sentDetector.observe(rows, includeSentInvites: true)
+        #expect(sent?["origin"] == "sentInvitation")
+        #expect(sent?["location"] == "trạm")
+        #expect(sent?["relativeTime"] == suggestion?["relativeTime"])
+        #expect(sentDetector.observe(rows, includeSentInvites: true) == nil)
     }
 
     @Test func localVisionToCalendarProposal() throws {

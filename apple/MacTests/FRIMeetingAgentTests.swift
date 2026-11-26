@@ -28,6 +28,25 @@ final class FRIMeetingAgentTests: XCTestCase {
         XCTAssertTrue(panels().isEmpty)
     }
 
+    func testRecentlySentInvitationKeepsOneVisibleSuggestionAfterComposerClears() throws {
+        let suite = "FRI-send-test-" + UUID().uuidString
+        let prefs = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { prefs.removePersistentDomain(forName: suite) }
+        let agent = FRIMeetingAgent(preferences: prefs)
+        defer { agent.dismiss() }
+        let draft = ["title":"Cuộc hẹn", "location":"trạm", "relativeTime":"Lát nữa"]
+        let sent = draft.merging(["origin":"sentInvitation"]) { _, new in new }
+        agent.updateDraft(draft)
+        let original = try XCTUnwrap(NSApp.windows.first { $0.isVisible && $0.title == "FRI · Gợi ý khi đang soạn" })
+        agent.applyConversation(sent, composerCleared: true)
+        XCTAssertTrue(original.isVisible)
+        XCTAssertEqual(original.title, "FRI · Nhắc kèo")
+        agent.dismiss()
+        agent.applyConversation(sent, composerCleared: true)
+        let panels = NSApp.windows.filter { $0.isVisible && $0.title == "FRI · Nhắc kèo" }
+        XCTAssertEqual(panels.count, 1)
+    }
+
     func testVisibleSuggestionDismissalAndCalendarReview() async throws {
         let testID = UUID().uuidString
         let suite = "FRI-meeting-test-" + testID

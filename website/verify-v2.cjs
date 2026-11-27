@@ -20,7 +20,8 @@ async function check(name,fn){await fn();results.push(name);console.log('PASS '+
   assert.match(await page.locator('#dialog-content').textContent(),/Windows x64.*macOS preview.*Linux/s);
   await page.locator('#mac-download').click();
   assert.equal(await page.locator('#dialog-content a[href$=".dmg"]').count(),2);
-  assert.match(await page.locator('#dialog-content').textContent(),/Unsigned/);
+  assert.match(await page.locator('#dialog-content').textContent(),/Native Mac preview 0\.8\.2 \(build 8\).*not notarized/i);
+  assert.match(await page.locator('#dialog-content a').first().getAttribute('href'),/artifacts\/macos\/latest\/FRI-mac-arm64\.dmg$/);
   await page.keyboard.press('Escape');
  });
  await check(engine+' scramble timing 1300ms hold + 300ms transition',async()=>{for(const [t,text,changing] of [[0,'Fri.',false],[1.29,'Fri.',false],[1.31,'transition',true],[1.59,'transition',true],[1.61,'Make time\nfor your life.',false],[3.21,'[mark]',false],[4.81,'Fri.',false]]){await page.evaluate(t=>FRI_WEBSITE.review.seek(t),t);const s=await page.evaluate(()=>FRI_WEBSITE.evidence.scramble);assert.equal(s.text,text);assert.equal(s.changing,changing)}});

@@ -118,8 +118,13 @@ final class FRIWorkflowTests: XCTestCase {
         XCTAssertTrue(app.buttons["fri.sources.refresh"].waitForExistence(timeout: 12))
         app.menuBars.menuBarItems["File"].click()
         app.menuItems["New Desktop Widget"].click()
-        let panel = app.windows["FRI Desktop Widget"]
+        let panel = app.dialogs.containing(.button, identifier: "Close widget").firstMatch
         XCTAssertTrue(panel.waitForExistence(timeout: 8))
+        let original = panel.frame
+        let header = panel.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.015))
+        let roomOnLeft = original.minX > 320
+        header.press(forDuration: 0.25, thenDragTo: header.withOffset(CGVector(dx: roomOnLeft ? -390 : 390, dy: 0)))
+        XCTAssertGreaterThan(abs(panel.frame.minX - original.minX), 50)
         let options = panel.menuButtons["Widget options"]
         options.click()
         app.menuItems["Large"].click()

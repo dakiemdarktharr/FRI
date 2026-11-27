@@ -32,7 +32,7 @@ The Windows x64 workspace uses a guarded Direct3D desktop-refraction layer from 
 
 Windows 0.8.2 uses **File → Calendar assistant** and reads only the exact approved foreground window. It detects newly visible sent invitations or confirmed exchanges, not the unsent composer. Pause retains the source; Forget removes it. Android uses explicit Share. The native Mac behavior below is broader and is not a Windows/Android parity claim.
 
-**macOS native 0.7.0 build 7** giữ trợ lý trên thanh menu sau khi đóng lịch, ghi nhớ nguồn và nghỉ khi bạn chuyển sang ứng dụng khác. [Bản Mac để thử nội bộ và hướng dẫn dựng Windows/Linux](docs/thu-ky-lich-0.7.0-build-6.md).
+**macOS native 0.8.2 build 8** có lịch mẫu tùy chọn, bộ chọn giờ theo từng phút, phím tắt và nút **Add ready plans**. Thư ký lịch vẫn chạy trên thanh menu và ghi nhớ nguồn đã chọn. Bản DMG dùng chung cho Apple Silicon và Intel, ký ad-hoc để thử nghiệm và chưa được Apple notarize. [Tải DMG](artifacts/macos/latest/FRI-mac-arm64.dmg) · [Kết quả kiểm thử](docs/apple/verification/mac-0.8.2-build8.md).
 
 Mở **File → Thư ký lịch…** rồi chọn cửa sổ chat muốn dùng. Trên Mac, bấm **Cho phép chọn cửa sổ chat…** khi mới thiết lập. Bạn có thể bấm **Thử với hội thoại mẫu** để xem gợi ý trước khi cấp quyền. Muốn dùng sau khi khởi động lại, bật **Mở FRI khi đăng nhập**.
 

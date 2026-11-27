@@ -96,6 +96,8 @@ Official platform references: [SwiftUI accessibility](https://developer.apple.co
 
 ## Keyboard and time-picker parity (0.8.2)
 
+The complete portable kit now starts at [CODEX-APPLE-REBUILD.md](../../CODEX-APPLE-REBUILD.md). Follow its current source gap map and runbook; prepared resources and native acceptance cases live in `apple/Handoff/`. SwiftUI wheel style is available on iOS, not native macOS: implement an equivalent supported Mac control without using an unavailable API.
+
 Read `docs/keyboard-and-time-082.md` as the exact interaction contract. Use SwiftUI's platform wheel time selection on iOS; preserve every minute and AM/PM semantics without changing time-zone interpretation. The appointment footer has one full-width Confirm action. Closing/canceling the picker does not edit the appointment; closing a dirty editor asks before discarding. macOS keyboard menus and commands must not replace an active editor. Preserve focus across data refreshes and return it to a valid trigger. Implement arrows in month/date views and open-day tabs, Page Up/Down month changes with day clamping, and the shortcut reference. Do not intercept IME composition or text editing. On macOS use Command where Windows uses Ctrl. Keep single-character shortcuts configurable. Native Apple widgets remain subject to WidgetKit interaction limits; do not claim Windows free-placement or icon-repositioning behavior in WidgetKit.
 
 Acceptance cases: 12 AM/PM conversion, exact minute selection, Escape/Back discard, empty/invalid title, missing-time follow-up, confirmed overlap, source staging, task completion while filtered, closed tab focus fallback, reduced-motion and dark/light contrast. The Windows/Android binaries are not proof of native Apple parity.

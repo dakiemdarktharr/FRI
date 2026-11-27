@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "referenceVersion": "0.8.2",
+  "colors": {
+    "light": {"background":"#F4F7FA","surface":"#FFFFFF","raised":"#EAF0F4","text":"#172B3A","secondaryText":"#586D7C","accent":"#087F8C","onAccent":"#FFFFFF","separator":"#DBE4EB","controlEdge":"#7B8B98","tint":"#E0F2F2"},
+    "dark": {"background":"#14181F","surface":"#222833","raised":"#2C3441","text":"#F2F4F8","secondaryText":"#B3BECE","accent":"#75D8CC","onAccent":"#14181F","separator":"#465368","controlEdge":"#7D8BA1","tint":"#203D3B"}
+  },
+  "font": {"family":"Be Vietnam Pro","filesRoot":"brand/fonts/be-vietnam-pro","postScriptNames":{"400":"BeVietnamPro-Regular","600":"BeVietnamPro-SemiBold","700":"BeVietnamPro-Bold"},"license":"brand/fonts/be-vietnam-pro/OFL.txt","registration":"process scope in every host/extension; preserve Dynamic Type"},
+  "roles": {"pageTitle":{"weight":600,"size":32},"cardTitle":{"weight":600,"size":17},"body":{"weight":400,"size":17},"button":{"weight":600,"size":16},"metadata":{"weight":400,"size":13},"timeWheel":{"weight":400,"selectedWeight":600,"size":25,"rowHeight":44}},
+  "geometry": {"touchTargetMinimum":44,"confirmHeight":48,"confirmRadius":16,"timeSheetRadius":26,"timeSheetReferenceWidth":390,"focusRingWidth":3},
+  "materials": {"mainWorkspace":"native macOS backdrop with solid reduced-transparency fallback","cards":"opaque","controls":"opaque","dialogs":"opaque"},
+  "identity": {"mark":"brand/fri-mark.svg","welcome":"brand/first-plan.svg","symbols":"brand/symbols.json"}
+}

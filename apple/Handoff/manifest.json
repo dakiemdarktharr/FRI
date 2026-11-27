@@ -1,0 +1,375 @@
+{
+  "schema": 1,
+  "referenceCommit": "d31f0077745b85941b4fdd4e1bc3009de1e6a82b",
+  "windows": "0.8.2",
+  "android": "0.4.2",
+  "nativeBaseline": "0.7.0 build 7; parity not yet verified",
+  "hashPolicy": "Binary bytes for images/fonts; CRLF normalized to LF for text. Refresh intentionally after reviewing reference changes.",
+  "files": [
+    {
+      "path": "CODEX-APPLE-REBUILD.md",
+      "mode": "utf8-lf",
+      "sha256": "96113fa5287494312a11879c78b8025e35b0b8b1a65d363d77d5d53aca1e2d6b"
+    },
+    {
+      "path": "apple/Handoff/.gitattributes",
+      "mode": "utf8-lf",
+      "sha256": "e75184bdbee3f1a597cc5c5eb06dc1455c4bc840452dc0a7b096531b6f240937"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "mode": "utf8-lf",
+      "sha256": "5249e628bc958a945dfb3be03fb2a9f5f5b3d0a4b4e7fbe125b0e783970f8b57"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/AppIcon.appiconset/FRI-iOS-1024.png",
+      "mode": "binary",
+      "sha256": "4df1ce6c770dbc3b9d6b6e95891c82125053d85662ce9cd2b2b0873d928916d6"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/AppIcon.appiconset/FRI-mac-1024.png",
+      "mode": "binary",
+      "sha256": "283c5dd6daa5336d06bcbde2dcaf7abcd7c5be3c97736b3ca7573f6392924980"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/AppIcon.appiconset/FRI-mac-128.png",
+      "mode": "binary",
+      "sha256": "509c1dd137bfc700ddd6515b680a444fe0b0b311a06add259d69b7186119fb72"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/AppIcon.appiconset/FRI-mac-16.png",
+      "mode": "binary",
+      "sha256": "a80fa806cdd80885f405e31cb4a67a00a3b0812112f5f0d98475a54c36cd2239"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/AppIcon.appiconset/FRI-mac-256.png",
+      "mode": "binary",
+      "sha256": "64f861c853a068578ba24477febafa53c348e70d1787e130534f4f69b805f2f4"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/AppIcon.appiconset/FRI-mac-32.png",
+      "mode": "binary",
+      "sha256": "db4456d203ffd59490a363becba2aa2b484127721af36a40d855e410cf0e802f"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/AppIcon.appiconset/FRI-mac-512.png",
+      "mode": "binary",
+      "sha256": "49f4c6683d2270275e2ef33a55e3bb8888e00eb9a6f73689d2defc90f7d1e3ef"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/AppIcon.appiconset/FRI-mac-64.png",
+      "mode": "binary",
+      "sha256": "f84ad2c3a86e6cefd91927ebbf0099c06bed5d1ed5b421ec50814d988b926228"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/Contents.json",
+      "mode": "utf8-lf",
+      "sha256": "f5fb0e1f3a8142892ed092efb5955c1c2cc537003a89ad7bbdb9dade7fe8985f"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FRIMark.imageset/Contents.json",
+      "mode": "utf8-lf",
+      "sha256": "c01ee6f1a4b9bc48fe2c9fc76c230fddc2be0f2d3d264832101faa8695971760"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FRIMark.imageset/FRIMark.png",
+      "mode": "binary",
+      "sha256": "b62c43b814d32e40fca4573120d9471159e040efcfdfe70a977ab1f66a726ed7"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FirstPlan.imageset/Contents.json",
+      "mode": "utf8-lf",
+      "sha256": "38568fb154dbb217bca58c1e65a6ea8e97356f6f9d31178bf42d66eff12c62af"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FirstPlan.imageset/FirstPlan.png",
+      "mode": "binary",
+      "sha256": "24030711073bc59c62a9f2f1b134693f59497c20a7a1734591c75a6cd50090e9"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FriSymbolCalendar.imageset/Contents.json",
+      "mode": "utf8-lf",
+      "sha256": "39a3d16ceb73df275e455e643b69ce4a8860be03df071258b1a9702441938770"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FriSymbolCalendar.imageset/FriSymbolCalendar.png",
+      "mode": "binary",
+      "sha256": "44fba9e1e61b5c1d295436ad0aabbce6d0d727123d6ca29df3e4dcd282a0196a"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FriSymbolCheck.imageset/Contents.json",
+      "mode": "utf8-lf",
+      "sha256": "f6640d869787c2ce8881975cd740d0481a2672b46ee61025a760b089d06b8223"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FriSymbolCheck.imageset/FriSymbolCheck.png",
+      "mode": "binary",
+      "sha256": "ca9acd1ddbd272caeb8b95413bf88a1d0bbc2a73661c139af8cc5c2d72d69627"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FriSymbolClock.imageset/Contents.json",
+      "mode": "utf8-lf",
+      "sha256": "52a1508b671051b04e954083c0b7bc78b9e71f6e4beddd5ddce62c774c1764f6"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FriSymbolClock.imageset/FriSymbolClock.png",
+      "mode": "binary",
+      "sha256": "c80929f4ea5de1013fe8fdf668657edd373f1da4f27970ca7901f3021ab24f35"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FriSymbolFolder.imageset/Contents.json",
+      "mode": "utf8-lf",
+      "sha256": "7faacf80807aad527d4f6383cee020ef2242e39641fc7c604d3f139f20ed66a2"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FriSymbolFolder.imageset/FriSymbolFolder.png",
+      "mode": "binary",
+      "sha256": "9ed5ce8d9384683ca567ac98617cbcfc8daf2c403093d88d397828fbab789331"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FriSymbolGrid.imageset/Contents.json",
+      "mode": "utf8-lf",
+      "sha256": "fd75a36a144fded1bec3be6a72c061ffa9317f71645cdacc68df536910da6eba"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FriSymbolGrid.imageset/FriSymbolGrid.png",
+      "mode": "binary",
+      "sha256": "df5a532e0f7f4f0ab5e5a819e7dff92e9930f6dfc3ae463227b39083596b5dd0"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FriSymbolPlus.imageset/Contents.json",
+      "mode": "utf8-lf",
+      "sha256": "ea5a6fa082f7bd8af55aa1a1618daa04bd901b8b9bd620fa1877cbe833c00fd9"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FriSymbolPlus.imageset/FriSymbolPlus.png",
+      "mode": "binary",
+      "sha256": "1fc6f42297eff3080499f450848299d543fa203792d48df4f496d32bd0fc4ec2"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FriSymbolSearch.imageset/Contents.json",
+      "mode": "utf8-lf",
+      "sha256": "8fab7a5b384c408373565da097fb91e809471a4406662601ffb0a9880235824c"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FriSymbolSearch.imageset/FriSymbolSearch.png",
+      "mode": "binary",
+      "sha256": "79f39913b0bdb50902985668b8f7f41f934aa7d3beacfcd1a62092a0aa18c1c4"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FriSymbolSettings.imageset/Contents.json",
+      "mode": "utf8-lf",
+      "sha256": "623651ba78b746c1669f7d4ec4880242a6ef6ff6f3e5025338e2942c17fcc148"
+    },
+    {
+      "path": "apple/Handoff/Assets.xcassets/FriSymbolSettings.imageset/FriSymbolSettings.png",
+      "mode": "binary",
+      "sha256": "83271835593945d8747c3c6a80a8d38f8d73d9813ae9ef4203f81f50900a97b7"
+    },
+    {
+      "path": "apple/Handoff/Config/ExportOptions-Mac.example.plist",
+      "mode": "utf8-lf",
+      "sha256": "4e430ee28257aea07d503c6f3fe96ec630736bd6d36849b6ed953b9846de27c0"
+    },
+    {
+      "path": "apple/Handoff/Config/ExportOptions-iOS.example.plist",
+      "mode": "utf8-lf",
+      "sha256": "9ef4ab1f255a2e066b5882585e8aa0d22b231ee7184a17b9143c97b805cb632c"
+    },
+    {
+      "path": "apple/Handoff/Config/Local.xcconfig.example",
+      "mode": "utf8-lf",
+      "sha256": "e7bd895f1d399f3a946f72a5025ef3154d37b5d37f3fc64c9dbb1e3c033fee4c"
+    },
+    {
+      "path": "apple/Handoff/acceptance.json",
+      "mode": "utf8-lf",
+      "sha256": "99e8bcbdb26623d77f10e4205a7ab5bcd0066f954bdec1b37b1b1f8017639154"
+    },
+    {
+      "path": "apple/Handoff/design-tokens.json",
+      "mode": "utf8-lf",
+      "sha256": "ca6ed579b01b31f36b39cb01bec60141bcc251376c37d5930c10a91acf374c7c"
+    },
+    {
+      "path": "apple/Handoff/interaction-fixtures.json",
+      "mode": "utf8-lf",
+      "sha256": "14c1bb72c2cf88dedad6501c3e51f0ea8f52e766068d0cebcb33fcf80a779905"
+    },
+    {
+      "path": "apple/Handoff/keyboard-contract.json",
+      "mode": "utf8-lf",
+      "sha256": "65bbd23093c056ee8379c1ece22e827db4d72bc6e576cf3f02d84a4e9f8ff3f3"
+    },
+    {
+      "path": "apple/Packages/FRICore/Sources/FRICore/Resources/meeting-agent.js",
+      "mode": "utf8-lf",
+      "sha256": "813df0b6f12f69fe3abc13ffb30460b55baf900d01ec878a9388b224e25a08ba"
+    },
+    {
+      "path": "apple/Tools/archive-on-mac.sh",
+      "mode": "utf8-lf",
+      "sha256": "a42bf0f55cfaf0c4e226d67d3daeb2db0fd4b77feee04e6bf56c21be13bb2aaa"
+    },
+    {
+      "path": "apple/Tools/package-native-mac.sh",
+      "mode": "utf8-lf",
+      "sha256": "7df8a6b39e64fb4c00abb351a6db60e9d6585ccbcba0ff9c8ae549ceb3495869"
+    },
+    {
+      "path": "apple/Tools/rebuild-handoff.cjs",
+      "mode": "utf8-lf",
+      "sha256": "1a1c39216939e415a8a64298f44518acc85c980b03520e19d2212de5c8ac093d"
+    },
+    {
+      "path": "apple/Tools/rebuild-on-mac.sh",
+      "mode": "utf8-lf",
+      "sha256": "4ed295547ad2c8aa2cd7af666ca27006a3e1c426049ab8d4e1c0247c438e8f71"
+    },
+    {
+      "path": "brand/README.md",
+      "mode": "utf8-lf",
+      "sha256": "c54c4e7eff38a5386fb8212f2f13ecf593ac593e723740a82fd77dee3624df54"
+    },
+    {
+      "path": "brand/first-plan.svg",
+      "mode": "utf8-lf",
+      "sha256": "8a9586309d28133ba0632bd3e46e6b6de73c4c8ddd3d513840bec72354972744"
+    },
+    {
+      "path": "brand/fonts/be-vietnam-pro/BeVietnamPro-Bold.ttf",
+      "mode": "binary",
+      "sha256": "7f738fe5c43c8872807b20e2d30d42163618de8a4daf7f48a939adac32c16847"
+    },
+    {
+      "path": "brand/fonts/be-vietnam-pro/BeVietnamPro-Regular.ttf",
+      "mode": "binary",
+      "sha256": "cd1ef6e9d7db28ad5cdb88a65ccbe693870e60d340b791f349d248342b4fe4c3"
+    },
+    {
+      "path": "brand/fonts/be-vietnam-pro/BeVietnamPro-SemiBold.ttf",
+      "mode": "binary",
+      "sha256": "bd8e27eb02720b9d91e59e4f10a90878643219f25ce6a8d9a4f06a8a88d3bb71"
+    },
+    {
+      "path": "brand/fonts/be-vietnam-pro/OFL.txt",
+      "mode": "utf8-lf",
+      "sha256": "6b7f8f73609a25ea78c891e34cf37b06f8a676b7ea986e941e43b009110f2a85"
+    },
+    {
+      "path": "brand/fri-mark.svg",
+      "mode": "utf8-lf",
+      "sha256": "96170c853436bd6c47b6b17fac2bb079b7b0b814ac8a2519da00479a87dc93d6"
+    },
+    {
+      "path": "brand/symbols.json",
+      "mode": "utf8-lf",
+      "sha256": "02f5f00efd08f6b66ff52604f8b1cc700e67f18d7ca2ad158813d583db0cbbac"
+    },
+    {
+      "path": "desktop/widget-persistence.test.cjs",
+      "mode": "utf8-lf",
+      "sha256": "e484b9dd131697d27c75dd3bac36bbb544cba05c8d4a90c7c06e4de72304edd9"
+    },
+    {
+      "path": "desktop/widget-select.html",
+      "mode": "utf8-lf",
+      "sha256": "31c7e7573375e51547375b4abdfa89c718202e9377bfab87c78f29683cfde034"
+    },
+    {
+      "path": "desktop/widget.html",
+      "mode": "utf8-lf",
+      "sha256": "96d31dbee579a156890630173f381891b4979ca25fbe82794a838a25f3f3ff63"
+    },
+    {
+      "path": "desktop/widgets.cjs",
+      "mode": "utf8-lf",
+      "sha256": "0e1ae457560128fd4c0e240fbb79f2a82cc6f59ba5e1c997fa72fd866e376465"
+    },
+    {
+      "path": "docs/apple/10-082-REBUILD-PLAN.md",
+      "mode": "utf8-lf",
+      "sha256": "4d84ae8dbacfbc2cde0c106c6842d959da65373bcacc9ad965740172919d1473"
+    },
+    {
+      "path": "docs/apple/11-082-BUILD-RUNBOOK.md",
+      "mode": "utf8-lf",
+      "sha256": "da3ef825c8de2e52b181073572c063ecdc36a85bff3fb440097ccb9d5f6b0757"
+    },
+    {
+      "path": "docs/apple/12-082-HANDOFF-VERIFICATION.md",
+      "mode": "utf8-lf",
+      "sha256": "dc5193330e15eb0e4ae698db8cd30aa13ffbec950c172bc11c0289a0050d5726"
+    },
+    {
+      "path": "docs/apple/reference-082/README.md",
+      "mode": "utf8-lf",
+      "sha256": "21596f8084a0b6acfd87141697f5816bb784eaaa8fea6c0e2bbdc24bba902d83"
+    },
+    {
+      "path": "docs/apple/reference-082/time-picker-dark.png",
+      "mode": "binary",
+      "sha256": "788371853826dc37a4b3c660b6a6aaa8b60d1cbc3a597dd23b1be7b50099a987"
+    },
+    {
+      "path": "docs/apple/reference-082/time-picker-mobile.png",
+      "mode": "binary",
+      "sha256": "b4efdff022f6bac8066cb10657bf9fa9c78bbf7b575bf83de453a2c95152a0f8"
+    },
+    {
+      "path": "mobile/src/app/edit.tsx",
+      "mode": "utf8-lf",
+      "sha256": "20c325a63df8dfeb83a1e0a33670713c0b5551071c9ee2344a75aa9e005c8539"
+    },
+    {
+      "path": "mobile/src/components/TimeWheel.tsx",
+      "mode": "utf8-lf",
+      "sha256": "6088aac92705116dff16d3811eef92e05bfcc288675ce23b9f643271f0f29cc6"
+    },
+    {
+      "path": "preview/app.js",
+      "mode": "utf8-lf",
+      "sha256": "7b8132d63ca24cbe855ee6baa3ae06523cdb9e9b4225d5477a7184a876961b04"
+    },
+    {
+      "path": "preview/chrome.js",
+      "mode": "utf8-lf",
+      "sha256": "e9c3a89eb5fcaa327cc7566a3bd8f82261e4d51c2f5d9c629d28b040b4f215d4"
+    },
+    {
+      "path": "preview/import-plan.cjs",
+      "mode": "utf8-lf",
+      "sha256": "b900bfbfff64720c8ef3c974f1fad29266410bb1bb515b2d173c56c4f42c1572"
+    },
+    {
+      "path": "preview/inbox.cjs",
+      "mode": "utf8-lf",
+      "sha256": "4f587d7838f5a526252bed55d29d22e427a25ec10c28ef8748663fd32f93f8aa"
+    },
+    {
+      "path": "preview/keyboard.css",
+      "mode": "utf8-lf",
+      "sha256": "be24e0ae5dc1c8fb1aeec464365f1d48be59b2a2da42f4fb95901a5f81578321"
+    },
+    {
+      "path": "preview/keyboard.js",
+      "mode": "utf8-lf",
+      "sha256": "88e356dd9e15858f16de2ce4d4941279f9c5f408cf6f9ad62ac584e1b798a338"
+    },
+    {
+      "path": "preview/keyboard.test.cjs",
+      "mode": "utf8-lf",
+      "sha256": "e192169fdcf21fecb2addca65789c69f4bb8d63fa04c993a9a451b2a814df561"
+    },
+    {
+      "path": "preview/smart-intake.js",
+      "mode": "utf8-lf",
+      "sha256": "b78e62e1be75a52fd17e63a8406692eea2e4db2458340f46368e366086d268ad"
+    },
+    {
+      "path": "preview/time-picker.js",
+      "mode": "utf8-lf",
+      "sha256": "93a13d38d2a2f11eccd312441f9c8eb958c953df6298959d25da8c6c28431a5e"
+    }
+  ]
+}

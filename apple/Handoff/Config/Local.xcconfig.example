@@ -1,0 +1,9 @@
+// Copy to apple/Config/Local.xcconfig. Existing installed identifiers win.
+// Team ID is not a secret; certificates/passwords belong in Keychain, never here.
+DEVELOPMENT_TEAM = REPLACE_WITH_TEAM_ID
+FRI_BUNDLE_PREFIX = com.fri.calendar.native
+FRI_APP_GROUP = group.com.fri.calendar.native
+// Confirm the signing prefix against the owning team's provisioning profile.
+FRI_KEYCHAIN_GROUP = $(DEVELOPMENT_TEAM).$(FRI_BUNDLE_PREFIX).shared
+FRI_MAC_STORAGE_MODE = standalone
+FRI_MAC_ENTITLEMENTS = Config/MacStandalone.entitlements

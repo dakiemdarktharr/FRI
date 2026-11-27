@@ -1,4 +1,5 @@
 /Config/Local.xcconfig
+/Config/ExportOptions-*.local.plist
 /DerivedData/
 /artifacts/
 .swiftpm/

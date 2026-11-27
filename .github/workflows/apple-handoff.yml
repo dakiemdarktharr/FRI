@@ -1,0 +1,28 @@
+name: Apple handoff integrity
+on:
+  push:
+    branches: [main]
+    paths: ['apple/Handoff/**', 'apple/Tools/rebuild-*', 'apple/Tools/archive-on-mac.sh', 'apple/Tools/package-native-mac.sh', 'CODEX-APPLE-REBUILD.md', 'docs/apple/10-*', 'docs/apple/11-*', 'docs/apple/12-*', '.github/workflows/apple-handoff.yml']
+  pull_request:
+    paths: ['apple/Handoff/**', 'apple/Tools/rebuild-*', 'apple/Tools/archive-on-mac.sh', 'apple/Tools/package-native-mac.sh', 'CODEX-APPLE-REBUILD.md', 'docs/apple/10-*', 'docs/apple/11-*', 'docs/apple/12-*', '.github/workflows/apple-handoff.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  integrity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24'
+      - run: node apple/Tools/rebuild-handoff.cjs check
+      - run: bash -n apple/Tools/rebuild-on-mac.sh && bash -n apple/Tools/archive-on-mac.sh && bash -n apple/Tools/package-native-mac.sh
+      - run: |
+          python3 - <<'PY'
+          import pathlib, plistlib
+          for p in pathlib.Path('apple/Handoff/Config').glob('*.plist'):
+              plistlib.loads(p.read_bytes())
+          print('PASS export plist syntax; signing and Xcode execution are not checked by this job')
+          PY

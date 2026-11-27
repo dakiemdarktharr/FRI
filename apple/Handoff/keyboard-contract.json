@@ -1,0 +1,27 @@
+{
+  "schema":1,
+  "commands":[
+    {"action":"newMenu","single":"n"},
+    {"action":"newSchedule","mac":"Command+N"},
+    {"action":"search","mac":"Command+K","alternates":["Command+F","/"]},
+    {"action":"settings","mac":"Command+,"},
+    {"action":"sidebar","mac":"Command+B"},
+    {"action":"regions","keys":["F6","Shift+F6"],"note":"Respect macOS keyboard settings; keep native focus/menu alternatives"},
+    {"action":"today","single":"t"},
+    {"action":"view","singles":{"1":"feed","2":"week","3":"month","4":"year"}},
+    {"action":"applyPreparedSources","single":"r"},
+    {"action":"shortcutReference","single":"?"},
+    {"action":"confirmPrimaryForm","mac":"Command+Return"}
+  ],
+  "navigation":{
+    "dates":"Left/Right +/-1 day; Up/Down +/-7; Home/End week bounds; PageUp/PageDown month clamped to valid day; Shift+Page year",
+    "weekStart":"Follow the displayed week-start setting; Windows reference uses Sunday",
+    "tabs":"Left/Right/Home/End; Delete closes focused day tab; restore active tab focus",
+    "feed":"Up/Down/Home/End; Left details, Right completion",
+    "search":"Down from input; Up at first result returns to input; Return opens",
+    "menus":"Native menu arrows/typeahead/Escape; menu keys must not move widgets",
+    "time":"Up/Down/Home/End/PageUp/PageDown; Left/Right columns; A/P in period; Return confirms; Escape cancels"
+  },
+  "guards":["Pause single-key shortcuts in text editors and during IME composition","A native accelerator cannot replace an open editor","Single-key shortcuts can be disabled","Tab and Shift+Tab stay available","No focus in hidden sidebar","Restore focus by stable ID after rerender, otherwise a visible logical fallback","A late autofocus callback cannot override user-chosen focus"],
+  "widget":{"selection":"Arrows move; Shift+Arrows resize; Return creates; Escape cancels","panel":"Focused header arrows move 10 pt, Shift 40 pt; focused grip arrows resize; options menu keys never move panel","persistence":"Serialize or coalesce frame saves; removing during a pending save cannot resurrect the widget"}
+}

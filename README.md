@@ -10,6 +10,7 @@ A local-first calendar with a native glass workspace and desktop widgets. **Prem
 - **Installers:** [GitHub Releases](https://github.com/dakiemdarktharr/FRI/releases).
 - **Review files:** [website HTML](FRI-website.html) and [app HTML](FRI-liquid-glass.html), both self-contained.
 - **Design handoff:** [fri_design_guidebook.pdf](docs/fri_design_guidebook.pdf) and [Apple platform handoff](docs/apple-handoff.md).
+- **Rebuild on a Mac:** [Codex Apple rebuild kit](CODEX-APPLE-REBUILD.md) — native 0.8.2 port plan, ready assets, fixtures, Xcode/test/archive/DMG scripts and verification checklist.
 
 ## First-plan release
 

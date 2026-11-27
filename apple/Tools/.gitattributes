@@ -1,0 +1,4 @@
+rebuild-on-mac.sh text eol=lf
+archive-on-mac.sh text eol=lf
+package-native-mac.sh text eol=lf
+rebuild-handoff.cjs text eol=lf

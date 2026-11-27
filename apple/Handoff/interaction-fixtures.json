@@ -1,0 +1,26 @@
+{
+  "schema":1,
+  "synthetic":true,
+  "clock":{"date":"2030-11-27","time":"08:00","zone":"Asia/Ho_Chi_Minh"},
+  "timeCases":[
+    {"hour":12,"minute":0,"period":"AM","expected":"00:00"},
+    {"hour":12,"minute":0,"period":"PM","expected":"12:00"},
+    {"hour":9,"minute":3,"period":"PM","expected":"21:03"},
+    {"hour":1,"minute":37,"period":"AM","expected":"01:37"},
+    {"hour":11,"minute":59,"period":"PM","expected":"23:59"}
+  ],
+  "monthCases":[
+    {"from":"2030-01-31","delta":1,"expected":"2030-02-28"},
+    {"from":"2032-01-31","delta":1,"expected":"2032-02-29"},
+    {"from":"2030-12-30","delta":1,"expected":"2031-01-30"}
+  ],
+  "durationCase":{"start":"2030-11-27T09:00","end":"2030-11-27T10:00","newStart":"2030-11-27T21:03","expectedEnd":"2030-11-27T22:03"},
+  "unicodeTitles":["Lịch hẹn tiếng Việt — Cà phê cùng bạn","Nguyễn Thị Ánh · Đồ án kỹ thuật","ắ ầ ớ ự"],
+  "imports":{
+    "existing":{"title":"Fixed class","date":"2030-11-27","time":"19:00","duration":60,"kind":"schedule"},
+    "collision":{"title":"Coffee","date":"2030-11-27","time":"19:00","duration":30,"kind":"schedule"},
+    "resolution":{"time":"20:00","expected":"insert only after explicit correction and Add ready plans"},
+    "missing":{"title":"Review assignment","expectedQuestions":["date","time","duration"],"optionalNotRequired":["location","notes"]},
+    "past":{"date":"2030-11-26","time":"12:00","expected":"skip; no inserted appointment"}
+  }
+}

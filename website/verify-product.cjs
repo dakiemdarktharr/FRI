@@ -25,4 +25,3 @@ const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),
  await page.screenshot({path:'test-results/first-plan/web-calendar-mobile.png',fullPage:true});assert.deepEqual(errors,[]);assert.deepEqual(uploads,[]);console.log('PASS browser: fresh start, sample review, persistence, local invitation, missing-field card, staged commit, actual image OCR, failed-source recovery, 3 widths; no outbound uploads.');
  }catch(error){console.error('STATE',JSON.stringify(await saved()));console.error('MODAL',await page.locator('#modal').innerText().catch(()=>''));throw error}finally{await browser.close();server.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});
-

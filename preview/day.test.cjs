@@ -50,7 +50,7 @@ test('automatically detects conflict and deadline; applies only flexible task wi
 test('editing an imported event keeps provenance and disallows flexible flag',async t=>{
  const p=await fresh(t);await p.locator('[data-action=detail][data-id=fixed]').first().click();await p.locator('[data-action=edit][data-id=fixed]').click();
  assert.equal(await p.locator('[name=flexible]').isDisabled(),true);
- await p.locator('[name=title]').fill('Họp nhóm cập nhật');await p.locator('[name=time]').fill('13:00');await p.getByRole('button',{name:'Save changes'}).click();
+ await p.locator('[name=title]').fill('Họp nhóm cập nhật');await p.locator('[name=time]').fill('13:00');await p.locator('#appointment-form button[value=done]').click();
  await p.locator('#modal').waitFor({state:'hidden'});
  const event=await p.evaluate(()=>FRI_PREVIEW.getState().tasks.find(t=>t.id==='fixed'));assert.equal(event.sourceKey,'calendar-1');assert.equal(event.imported,true);assert.equal(event.flexible,false);
 });

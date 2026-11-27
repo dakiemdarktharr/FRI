@@ -3,7 +3,7 @@ const {BrowserWindow,ipcMain,screen,Menu,Tray,nativeImage}=require('electron');
 const path=require('node:path'),{execFile}=require('node:child_process'),{relocateIcons}=require('./widget-layout.cjs');
 const {windowsDesktop}=require('./windows-desktop.cjs');
 function createWidgets({store,getMain,onChange,onService}){
- const windows=new Map();let shuttingDown=false,overlay=null,selectionDisplay=null,tray=null,native=null,notice='',moveTimer;
+ const windows=new Map();let shuttingDown=false,overlay=null,selectionDisplay=null,tray=null,native=null,notice='',moveTimer,boundsQueue=Promise.resolve();
  const fs=require('node:fs'),journal=path.join(require('electron').app.getPath('userData'),'desktop-icon-positions.json');
  const shifted=new Map();let iconCount=null;
  try{native=windowsDesktop()}catch{notice='Desktop icon placement is unavailable on this system.'}
@@ -12,7 +12,7 @@ function createWidgets({store,getMain,onChange,onService}){
  function broadcast(){for(const w of windows.values())if(!w.isDestroyed())w.webContents.send('widget:state',read())}
  function trusted(e,selection=false){const w=selection?overlay:[...windows.values()].find(w=>w.webContents===e.sender);const url=selection?'app://fri/widget-select.html':'app://fri/widget.html';if(!w||e.sender!==w.webContents||e.senderFrame!==w.webContents.mainFrame||e.senderFrame.url!==url)throw Error('Untrusted widget request');return w}
  function secure(w,url){w.webContents.setWindowOpenHandler(()=>({action:'deny'}));w.webContents.on('will-navigate',(e,to)=>{if(to!==url)e.preventDefault()});w.loadURL(url)}
- async function saveBounds(){const base=store.read().state;if(!base)return;const next=structuredClone(base);next.settings.desktopWidgets=[...windows.entries()].map(([id,w])=>({id,...w.getBounds()}));if(JSON.stringify(base.settings.desktopWidgets)===JSON.stringify(next.settings.desktopWidgets))return;await store.commit(base,next);onChange()}
+ function saveBounds(){const operation=boundsQueue.then(async()=>{const base=store.read().state;if(!base)return;const next=structuredClone(base);next.settings.desktopWidgets=[...windows.entries()].map(([id,w])=>({id,...w.getBounds()}));if(JSON.stringify(base.settings.desktopWidgets)===JSON.stringify(next.settings.desktopWidgets))return;await store.commit(base,next);onChange()});boundsQueue=operation.catch(()=>{});return operation}
  function reconcileIcons(){
   if(!native||(process.env.FRI_TEST_MODE==='1'&&process.env.FRI_TEST_NATIVE_DESKTOP!=='1'))return;
   try{const snap=native.snapshot();if(iconCount!==null&&snap.count!==iconCount)shifted.clear();iconCount=snap.count;

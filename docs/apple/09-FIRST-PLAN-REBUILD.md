@@ -1,6 +1,6 @@
 # Rebuild the first-plan release on macOS and iOS
 
-Reference: Windows **0.8.1**, Android **0.4.1/code 5**, branch `codex/first-plan-release`, based on upstream `25cc294`. Read `docs/first-plan-release.md` and `docs/appearance-081.md` for the verification receipts. This is an implementation specification, not a claim that the Apple build already contains these changes.
+Reference: Windows **0.8.2**, Android **0.4.2/code 6**, branch `codex/first-plan-release`, based on upstream `25cc294`. Read `docs/first-plan-release.md` and `docs/appearance-081.md` for the verification receipts. This is an implementation specification, not a claim that the Apple build already contains these changes.
 
 ## Start from the existing native application
 
@@ -92,3 +92,10 @@ For each row record OS/device, build/commit, command or interaction, result and 
 Reference screenshots/tests: `website/verify-product.cjs`, `desktop/desktop.test.cjs`, `desktop/meeting-agent.test.cjs`, `desktop/widget.test.cjs`, `mobile/scripts/meeting.test.cjs`. Verification screenshots are generated into ignored `test-results/` directories; reproduce them from source rather than assuming the images are tracked.
 
 Official platform references: [SwiftUI accessibility](https://developer.apple.com/documentation/swiftui/accessibility), [WidgetKit](https://developer.apple.com/documentation/widgetkit), [App Intents](https://developer.apple.com/documentation/appintents), [Liquid Glass](https://developer.apple.com/documentation/swiftui/applying-liquid-glass-to-custom-views), [AppKit nonactivatingPanel](https://developer.apple.com/documentation/appkit/nswindow/stylemask/nonactivatingpanel), [Sharing data with extensions](https://developer.apple.com/documentation/xcode/configuring-app-groups). Recheck availability against the installed Xcode SDK before implementation.
+
+
+## Keyboard and time-picker parity (0.8.2)
+
+Read `docs/keyboard-and-time-082.md` as the exact interaction contract. Use SwiftUI's platform wheel time selection on iOS; preserve every minute and AM/PM semantics without changing time-zone interpretation. The appointment footer has one full-width Confirm action. Closing/canceling the picker does not edit the appointment; closing a dirty editor asks before discarding. macOS keyboard menus and commands must not replace an active editor. Preserve focus across data refreshes and return it to a valid trigger. Implement arrows in month/date views and open-day tabs, Page Up/Down month changes with day clamping, and the shortcut reference. Do not intercept IME composition or text editing. On macOS use Command where Windows uses Ctrl. Keep single-character shortcuts configurable. Native Apple widgets remain subject to WidgetKit interaction limits; do not claim Windows free-placement or icon-repositioning behavior in WidgetKit.
+
+Acceptance cases: 12 AM/PM conversion, exact minute selection, Escape/Back discard, empty/invalid title, missing-time follow-up, confirmed overlap, source staging, task completion while filtered, closed tab focus fallback, reduced-motion and dark/light contrast. The Windows/Android binaries are not proof of native Apple parity.

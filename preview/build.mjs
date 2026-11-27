@@ -17,13 +17,14 @@ const domain=[...index.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].find(m
 const planning=await readFile(path.join(here,'planning.cjs'),'utf8'),intake=await readFile(path.join(here,'intake.js'),'utf8');
 const native=await readFile(path.join(here,'native.js'),'utf8');
 const dayCore=await readFile(path.join(here,'../desktop/day-core.cjs'),'utf8'),day=await readFile(path.join(here,'day.js'),'utf8');
+const keyboard=await readFile(path.join(here,'keyboard.js'),'utf8'),timePicker=await readFile(path.join(here,'time-picker.js'),'utf8'),keyboardCss=await readFile(path.join(here,'keyboard.css'),'utf8');
 const chrome=await readFile(path.join(here,'chrome.js'),'utf8');
 const symbols='window.FriSymbols='+await readFile(path.join(here,'../brand/symbols.json'),'utf8')+';'+await readFile(path.join(here,'../apple/Packages/FRICore/Sources/FRICore/Resources/meeting-agent.js'),'utf8');
 const naiveCss=await readFile(path.join(here,'../brand/naive.css'),'utf8'),mark=(await readFile(path.join(here,'../brand/fri-mark.svg'),'utf8')).replace('<svg ','<svg class="fri-mark" aria-hidden="true" '),art=(await readFile(path.join(here,'../brand/first-plan.svg'),'utf8')).replace('<svg ','<svg class="first-plan-art" aria-hidden="true" ');
 let html = await readFile(path.join(here,'shell.html'),'utf8');
 const css=(await readFile(path.join(here,'style.css'),'utf8'))+'\n'+(await readFile(path.join(here,'brand.css'),'utf8'))+'\n'+(await readFile(path.join(here,'day.css'),'utf8'))+'\n'+(await readFile(path.join(here,'updates.css'),'utf8')),app=await readFile(path.join(here,'app.js'),'utf8');
-html=html.replace('/*__CSS__*/',()=>css+'\n'+typeCss+'\n'+naiveCss+'\n'+contrastCss).replaceAll('__FRI_MARK__',mark).replaceAll('__FIRST_PLAN_ART__',art)
-  .replace('/*__APP__*/',()=>symbols+'\n'+domain+'\n'+planning+'\n'+importPlan+'\n'+inbox+'\n'+feed+'\n'+calendarBundle.outputFiles[0].text+'\n'+smartIntake+'\n'+intake+'\n'+native+'\n'+dayCore+'\n'+day+'\n'+app.replaceAll('__FIRST_PLAN_ART__',art.replace(/\r?\n/g,'').replaceAll("'","\\'")))
+html=html.replace('/*__CSS__*/',()=>css+'\n'+typeCss+'\n'+naiveCss+'\n'+contrastCss+'\n'+keyboardCss).replaceAll('__FRI_MARK__',mark).replaceAll('__FIRST_PLAN_ART__',art)
+  .replace('/*__APP__*/',()=>keyboard+'\n'+timePicker+'\n'+symbols+'\n'+domain+'\n'+planning+'\n'+importPlan+'\n'+inbox+'\n'+feed+'\n'+calendarBundle.outputFiles[0].text+'\n'+smartIntake+'\n'+intake+'\n'+native+'\n'+dayCore+'\n'+day+'\n'+app.replaceAll('__FIRST_PLAN_ART__',art.replace(/\r?\n/g,'').replaceAll("'","\\'")))
   .replace('/*__CHROME__*/',()=>chrome)
   .replace('/*__GRADIENT__*/',()=>bundle.outputFiles[0].text.replace(/<\/script/gi,'<\\/script'))
   .replaceAll('__DAY_IMAGE__','data:image/png;base64,'+(await readFile(path.join(here,'assets/day.png'))).toString('base64'));

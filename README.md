@@ -1,6 +1,6 @@
 # FRI
 
-[Open the website](https://getfri.vercel.app/) · [Use Fri in your browser](https://getfri.vercel.app/app/) · [Download Windows / Android](https://github.com/dakiemdarktharr/FRI/releases/tag/v0.8.1)
+[Open the website](https://getfri.vercel.app/) · [Use Fri in your browser](https://getfri.vercel.app/app/) · [Download Windows / Android](https://github.com/dakiemdarktharr/FRI/releases/tag/v0.8.2)
 
 The browser calendar stores data in this browser and reads uploaded images locally. It supports manual plans and staged image/text/ICS/CSV/JSON imports; connected websites, native desktop widgets and behind-window glass belong to the desktop app. Android is a locally debug-signed alpha, not full desktop parity.
 
@@ -13,11 +13,11 @@ A local-first calendar with a native glass workspace and desktop widgets. **Prem
 
 ## First-plan release
 
-Windows **0.8.1** and Android **0.4.1/code 5** use the newest shared recognition rules, an optional first-plan sample and the original naive Fri identity. Windows reads selected foreground chat windows with Pause/Forget; Android accepts explicit text/image shares and requires review before saving. [Appearance update](docs/appearance-081.md) · [First-plan release and verification](docs/first-plan-release.md) · [MoMo research](docs/momo-tech-contest-2026.md) · [Exact Apple rebuild](docs/apple/09-FIRST-PLAN-REBUILD.md). [Android share flow](mobile/docs/meeting-share.md) · [Build verification](docs/build4-windows-android-verification.md). All current web/Electron/Android app screens use bundled [Be Vietnam Pro typography](brand/README.md), with simplified actions and decorative subtext removed. Native system controls and Glance widgets keep platform fonts.
+Windows **0.8.2** and Android **0.4.2/code 6** use the newest shared recognition rules, an optional first-plan sample and the original naive Fri identity. Windows reads selected foreground chat windows with Pause/Forget; Android accepts explicit text/image shares and requires review before saving. [Keyboard and time picker](docs/keyboard-and-time-082.md) · [Appearance update](docs/appearance-081.md) · [First-plan release and verification](docs/first-plan-release.md) · [MoMo research](docs/momo-tech-contest-2026.md) · [Exact Apple rebuild](docs/apple/09-FIRST-PLAN-REBUILD.md). [Android share flow](mobile/docs/meeting-share.md) · [Build verification](docs/build4-windows-android-verification.md). All current web/Electron/Android app screens use bundled [Be Vietnam Pro typography](brand/README.md), with simplified actions and decorative subtext removed. Native system controls and Glance widgets keep platform fonts.
 
 ## Use FRI
 
-Start with **New → Schedule** or **One-time deadline**. Name your plan, add details, choose **Add another**, then **Done**. FRI asks for missing information one card at a time and checks overlaps before saving. Complete each task to fill the day ring. The default feed scrolls through Today, Tomorrow and following days. One selector switches to week, month or year; date tabs stay available. Search, edit, bulk delete, undo, backup and restore are available from the sidebar and menus.
+Start with **New → Schedule** or **One-time deadline**. Name your plan, choose the time with the hour/minute/AM–PM wheels, then press **Confirm**. FRI asks for missing information one card at a time and checks overlaps before saving. Complete each task to fill the day ring. The default feed scrolls through Today, Tomorrow and following days. One selector switches to week, month or year; date tabs stay available. Search, edit, bulk delete, undo, backup and restore are available from the sidebar and menus.
 
 **File → Create FRI widget on desktop** opens a drawing overlay. Drag out an area, then release. Move the widget by its header, resize from its bottom-right grip (or use arrow keys on the focused header/grip), and complete the current task directly. Its content adapts to the available space. Windows Explorer icons move out of its area when Auto arrange icons is off, and unchanged positions are restored when the last widget closes. On macOS this is currently a floating window; Finder icon reflow and WidgetKit are not implemented.
 
@@ -29,7 +29,7 @@ The Windows x64 workspace uses a guarded Direct3D desktop-refraction layer from 
 
 ### Thư ký lịch cho Zalo và Messenger
 
-Windows 0.8.1 uses **File → Calendar assistant** and reads only the exact approved foreground window. It detects newly visible sent invitations or confirmed exchanges, not the unsent composer. Pause retains the source; Forget removes it. Android uses explicit Share. The native Mac behavior below is broader and is not a Windows/Android parity claim.
+Windows 0.8.2 uses **File → Calendar assistant** and reads only the exact approved foreground window. It detects newly visible sent invitations or confirmed exchanges, not the unsent composer. Pause retains the source; Forget removes it. Android uses explicit Share. The native Mac behavior below is broader and is not a Windows/Android parity claim.
 
 **macOS native 0.7.0 build 7** giữ trợ lý trên thanh menu sau khi đóng lịch, ghi nhớ nguồn và nghỉ khi bạn chuyển sang ứng dụng khác. [Bản Mac để thử nội bộ và hướng dẫn dựng Windows/Linux](docs/thu-ky-lich-0.7.0-build-6.md).
 
@@ -98,7 +98,7 @@ docker compose down
 
 For the macOS “damaged” download failure and the required signed release pipeline, see [macOS download repair](docs/macos-download-repair.md). On macOS, `npm run dist --prefix desktop` now requires Developer ID signing and notarization. Use `npm run dist:mac:development --prefix desktop` only for local development artifacts.
 
-v0.8.1 is a Windows-first release. Core calendar, ICS import and local planning work without API keys; optional source extraction uses the user’s OpenAI key. Calendar data is encrypted locally with OS-provided keys. No calendar-content server or telemetry exists. Windows installers replace old application files and retain user data; update installation happens after download succeeds. Builds are unsigned until signing certificates are supplied. Mac CI artifacts are development builds requiring signing, notarization and physical-device review before a supported Mac release.
+v0.8.2 is a Windows-first release. Core calendar, ICS import and local planning work without API keys; optional source extraction uses the user’s OpenAI key. Calendar data is encrypted locally with OS-provided keys. No calendar-content server or telemetry exists. Windows installers replace old application files and retain user data; update installation happens after download succeeds. Builds are unsigned until signing certificates are supplied. Mac CI artifacts are development builds requiring signing, notarization and physical-device review before a supported Mac release.
 
 Premium entitlement, account signup, OAuth/Spotify Web Playback SDK, Google Places/Routes APIs, automatic shared-calendar linking, multimodal Day and an iOS app are not shipped. Day has local suggestions plus separately opted-in OpenAI ranking; import consent does not enable Day. ICS import expands bounded recurrences and splits overnight events. Nested travel/context planning remains in the earlier research workspace in index.html and is not exposed in this desktop UI.
 

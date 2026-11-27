@@ -306,7 +306,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       <h1 id="hero-title" tabindex="-1" aria-label="Fri. Make time for your life."><span id="hero-word" aria-hidden="true">Fri.</span><span id="hero-mark" class="pole" aria-hidden="true" hidden><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor"><path d="M23 54c-1-12-1-24 0-36C24 8 33 5 43 8l-2 9c-5-2-9-1-9 5l15-1 1 9-16 2 1 22Z"/><path d="M46 48c1-4 8-5 11-1 3 9-9 12-11 1Z"/></svg>
 </span></h1>
       <div class="download-panel" id="downloads" role="group" aria-label="Download Fri" tabindex="-1">
-        <a class="pill light" id="primary-download" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.8.1/FRI-0.8.1-win-x64.exe">Download for Windows</a>
+        <a class="pill light" id="primary-download" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.8.2/FRI-0.8.2-win-x64.exe">Download for Windows</a>
         <button class="platform-picker" id="platform-picker" aria-label="Other platforms" aria-haspopup="dialog">⌄</button>
       </div>
       <a class="try-browser" href="/app/">Try it in your browser</a>
@@ -402,10 +402,10 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 <dialog id="info-dialog" aria-labelledby="dialog-title"><button class="dialog-close icon-button" aria-label="Close dialog">×</button><span class="pole"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor"><path d="M23 54c-1-12-1-24 0-36C24 8 33 5 43 8l-2 9c-5-2-9-1-9 5l15-1 1 9-16 2 1 22Z"/><path d="M46 48c1-4 8-5 11-1 3 9-9 12-11 1Z"/></svg>
 </span><h2 id="dialog-title"></h2><div id="dialog-content"></div></dialog>
 <template id="all-download-options">
-  <a class="pill dark" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.8.1/FRI-0.8.1-win-x64.exe">Windows x64 · unsigned</a>
-  <a class="pill dark" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.8.1/FRI-0.4.1-android-arm64.apk">Android ARM64 · local alpha</a>
+  <a class="pill dark" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.8.2/FRI-0.8.2-win-x64.exe">Windows x64 · unsigned</a>
+  <a class="pill dark" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.8.2/FRI-0.4.2-android-arm64.apk">Android ARM64 · local alpha</a>
   <button class="pill dark" id="mac-download">macOS preview</button>
-  <a class="pill dark" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.8.1/FRI-liquid-glass.html">Linux · browser preview</a>
+  <a class="pill dark" href="https://github.com/dakiemdarktharr/FRI/releases/download/v0.8.2/FRI-liquid-glass.html">Linux · browser preview</a>
 </template>
 <template id="mac-download-options">
   <p class="download-detail">Unsigned desktop preview. Not notarized; Apple silicon hardware validation is pending.</p>
@@ -523,8 +523,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   const platform=navigator.userAgentData?.platform||navigator.platform;
   const primary=$('#primary-download');
   if(/Mac/i.test(platform)){primary.textContent='Download for macOS';primary.href='https://github.com/dakiemdarktharr/FRI/releases/tag/v0.7.0';primary.onclick=e=>{if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;e.preventDefault();macOptions()}}
-  else if(/Linux/i.test(platform)&&!/Android/i.test(navigator.userAgent)){primary.textContent='Download for Linux';primary.href='https://github.com/dakiemdarktharr/FRI/releases/download/v0.8.1/FRI-liquid-glass.html'}
-  else if(/Android/i.test(navigator.userAgent)){primary.textContent='Download Android alpha';primary.href='https://github.com/dakiemdarktharr/FRI/releases/download/v0.8.1/FRI-0.4.1-android-arm64.apk'}
+  else if(/Linux/i.test(platform)&&!/Android/i.test(navigator.userAgent)){primary.textContent='Download for Linux';primary.href='https://github.com/dakiemdarktharr/FRI/releases/download/v0.8.2/FRI-liquid-glass.html'}
+  else if(/Android/i.test(navigator.userAgent)){primary.textContent='Download Android alpha';primary.href='https://github.com/dakiemdarktharr/FRI/releases/download/v0.8.2/FRI-0.4.2-android-arm64.apk'}
   else if(/iPhone|iPad/i.test(navigator.userAgent)){primary.textContent='Get Fri for desktop';primary.href='#downloads';primary.onclick=e=>{e.preventDefault();$('#platform-picker').click()}}
   $('.dialog-close').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('click',e=>{const r=dialog.getBoundingClientRect();if(e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))dialog.close()});
@@ -542,7 +542,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   let elapsed=reduced.matches?9000:0,paused=reduced.matches,lastFrame=performance.now(),startTime=lastFrame,lastKey='',lastChapter=-1;
   function formHTML(mode,typed,chosen){
     if(mode==='add')return '<h4>Bring your plans.</h4><div class="demo-field">calendar.ics<i class="typing-caret"></i></div><div class="form-row"><span class="form-chip">Link</span><span class="form-chip">File or image</span></div><div class="demo-submit">Read sources</div>';
-    return '<h4>When does it start?</h4><div class="form-row"><span class="form-chip '+(chosen?'selected':'')+'">11:30 AM</span><span class="form-chip">45 minutes</span></div><div class="demo-submit">Continue</div>';
+    return '<h4>When does it start?</h4><div class="form-row"><span class="form-chip '+(chosen?'selected':'')+'">11:30 AM</span><span class="form-chip">45 minutes</span></div><div class="demo-submit">Confirm</div>';
   }
   function renderDemo(){
     const t=elapsed%16000;

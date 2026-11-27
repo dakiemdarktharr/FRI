@@ -56,6 +56,8 @@
   }
   function closeMenu(focus=false){popover.hidden=true;trigger?.setAttribute('aria-expanded','false');if(focus)trigger?.focus();trigger=null;}
   async function command(action){
+    // Native accelerators must not replace an editor or a pending import question.
+    if(document.querySelector('dialog[open]'))return;
     if(['close','fullscreen'].includes(action)){
       if(bridge){await bridge.windowAction(action);return;}
       if(action==='fullscreen'){if(document.fullscreenElement)await document.exitFullscreen();else await $('#app').requestFullscreen?.();}
@@ -85,14 +87,19 @@
     const control=e.target.closest('[data-window]');if(control){if(bridge)await bridge.windowAction(control.dataset.window);else{ $('#toast').textContent='Window controls are available in the desktop app.';$('#toast').hidden=false;}}
   });
   document.addEventListener('keydown',e=>{
+    if(e.defaultPrevented||e.isComposing||e.keyCode===229||document.querySelector('dialog[open]'))return;
     if(e.key==='Escape'&&!popover.hidden){e.preventDefault();closeMenu(true);return;}
     if(!popover.hidden&&['ArrowDown','ArrowUp','Home','End'].includes(e.key)){
       e.preventDefault();const items=[...popover.querySelectorAll('button')],i=items.indexOf(document.activeElement);items[e.key==='Home'?0:e.key==='End'?items.length-1:(i+(e.key==='ArrowDown'?1:-1)+items.length)%items.length].focus();return;
     }
-    if(e.key==='Tab'&&!popover.hidden)closeMenu();
-    if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
-    const actions={f:'search',b:'sidebar',',':'settings',n:'schedule'};
-    if(actions[e.key.toLowerCase()]){e.preventDefault();closeMenu();command(actions[e.key.toLowerCase()]);}
+    if(e.key==='Tab'&&!popover.hidden){closeMenu(true);return;}
+    const bar=[...document.querySelectorAll('.app-menus [data-menu]')],button=e.target.closest('[data-menu]');
+    if(button&&['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();showMenu(button);if(e.key==='ArrowUp')popover.querySelector('button:last-child')?.focus();return;}
+    if(['ArrowLeft','ArrowRight'].includes(e.key)&&(bar.includes(button)||bar.includes(trigger))){e.preventDefault();const wasOpen=!popover.hidden,current=trigger||button,next=bar[(bar.indexOf(current)+(e.key==='ArrowRight'?1:bar.length-1))%bar.length];closeMenu();next.focus();if(wasOpen)showMenu(next);return;}
+    if(!popover.hidden&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&e.key.length===1&&e.key!==' '){
+      const items=[...popover.querySelectorAll('button')],index=items.indexOf(document.activeElement),ordered=[...items.slice(index+1),...items.slice(0,index+1)];
+      const next=ordered.find(b=>b.textContent.trim().toLowerCase().startsWith(e.key.toLowerCase()));if(next){e.preventDefault();next.focus()}
+    }
   });
   document.querySelector('.app-titlebar').addEventListener('dblclick',e=>{if(!e.target.closest('button')&&bridge)bridge.windowAction('maximize');});
   window.addEventListener('resize',()=>closeMenu());

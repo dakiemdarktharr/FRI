@@ -2,14 +2,14 @@
   "expo": {
     "name": "Fri",
     "slug": "fri",
-    "version": "0.4.1",
+    "version": "0.4.2",
     "scheme": "fri",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "android": {
       "package": "com.fri.calendar.android",
-      "versionCode": 5,
+      "versionCode": 6,
       "allowBackup": false,
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",

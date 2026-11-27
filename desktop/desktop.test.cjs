@@ -33,7 +33,7 @@ test('native window, isolated IPC, real commands and persistent calendar',async(
     assert.equal(await p.evaluate(()=>window.friDesktop.openExternal('file:///C:/Windows/System32/cmd.exe').then(()=>false,()=>true)),true);
     await p.locator('[data-menu=new]').click();await p.locator('[data-command=deadline]').click();
     await p.locator('[name=title]').fill('Native deadline persistence');await p.locator('[name=time]').fill('09:30');
-    await p.getByRole('button',{name:'Done',exact:true}).click();await p.locator('#modal').waitFor({state:'hidden'});
+    await p.locator('#appointment-form button[value=done]').click();await p.locator('#modal').waitFor({state:'hidden'});
     const deadline=await p.evaluate(()=>FRI_PREVIEW.getState().tasks.find(t=>t.title==='Native deadline persistence'));
     assert.equal(deadline.kind,'deadline');assert.equal(deadline.duration,0);
     await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].webContents.send('fri:meeting-review',
@@ -42,7 +42,7 @@ test('native window, isolated IPC, real commands and persistent calendar',async(
     assert.equal(await p.locator('[name=location]').inputValue(),'Góc Phố');
     assert.equal(await p.evaluate(()=>FRI_PREVIEW.getState().tasks.some(t=>t.title==='Cà phê')),false);
     await p.locator('[name=duration]').selectOption('30');
-    await p.getByRole('button',{name:'Done',exact:true}).click();
+    await p.locator('#appointment-form button[value=done]').click();
     await p.locator('#modal').waitFor({state:'hidden'});
     assert.equal(await p.evaluate(()=>FRI_PREVIEW.getState().tasks.find(t=>t.title==='Cà phê').time),'19:00');
     await p.locator('[data-action=search]').click();await p.locator('#search-input').fill('Native deadline');await p.locator('[data-action=search-result]').click();await p.locator('[data-action=close-modal]').first().click();
@@ -73,8 +73,8 @@ test('Cloud UI, new plan types, menus, keyboard and safe restore',async()=>{
     await p.locator('[data-menu=new]').click();await p.keyboard.press('ArrowDown');await p.keyboard.press('Enter');
     await p.getByRole('heading',{name:'New schedule',exact:true}).waitFor();await p.locator('[data-action=close-modal]').first().click();
     await p.locator('[data-menu=new]').click();await p.locator('[data-command=deadline]').click();
-    await p.locator('[name=title]').fill('Submit the concept');await p.getByRole('button',{name:'Done',exact:true}).click();
-    await p.getByRole('heading',{name:'When is it due?'}).waitFor();await p.locator('[name=answer]').fill('23:59');await p.getByRole('button',{name:/Continue/}).click();
+    await p.locator('[name=title]').fill('Submit the concept');await p.locator('#appointment-form button[value=done]').click();
+    await p.getByRole('heading',{name:'When is it due?'}).waitFor();await p.locator('[name=answer]').fill('23:59');await p.locator('#review-form .primary').click();
     await p.locator('#modal').waitFor({state:'hidden'});
     assert.equal(await p.evaluate(()=>FRI_PREVIEW.getState().tasks.at(-1).duration),0);
     await p.keyboard.press('Control+f');await p.locator('#search-input').waitFor();await p.keyboard.press('Escape');
@@ -101,7 +101,7 @@ test('first plan can be tried or skipped, saves only after review, and reopens a
   await page.locator('#review').click();await page.waitForURL('app://fri/index.html');
   await page.locator('.sample-label').waitFor();assert.equal(await page.evaluate(()=>FRI_PREVIEW.getState().tasks.length),0);
   assert.equal(await page.locator('[name=title]').inputValue(),'Coffee');
-  await page.locator('[name=duration]').selectOption('30');await page.getByRole('button',{name:'Done',exact:true}).click();
+  await page.locator('[name=duration]').selectOption('30');await page.locator('#appointment-form button[value=done]').click();
   await page.locator('#modal').waitFor({state:'hidden'});await page.evaluate(()=>FRI_PREVIEW.flush());
   assert.equal(await page.evaluate(()=>FRI_PREVIEW.getState().tasks.length),1);
   await page.waitForTimeout(400);await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));

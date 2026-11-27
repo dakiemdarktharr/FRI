@@ -1,4 +1,4 @@
-# Fri for Android · 0.4.1 local alpha
+# Fri for Android · 0.4.2 local alpha
 
 Native home-screen widgets backed by the same Room database as the Expo app. No login, server, analytics, calendar permission or cloud account is required. This is the Android starting point; it is not a claim of complete Windows feature parity.
 
@@ -106,3 +106,6 @@ No publishing or account setup is performed by these scripts. Do not delete user
 0.4.0/code 4 uses the shared `25cc294` recognition baseline, including relative-time invitations, an optional sample, progressive editor details and the naive Fri identity. See `../docs/first-plan-release.md` for observed checks. Background cross-app monitoring is still desktop-only.
 
 0.4.1/code 5 adds Be Vietnam Pro, charcoal dark surfaces, brighter control borders and correct on-accent calendar text. See `../docs/appearance-081.md`. The native widget editor uses the same color roles; launcher widget text keeps the supported system family.
+
+
+0.4.2/code 6 adds hour/minute/AM-PM wheels, one Confirm action, unsaved-edit protection on Back, and duration-preserving start changes. See `../docs/keyboard-and-time-082.md`.

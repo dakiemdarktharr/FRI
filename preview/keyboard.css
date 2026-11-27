@@ -1,0 +1,17 @@
+.skip-calendar{position:fixed;left:24px;top:-100px;z-index:100;background:var(--surface);color:var(--ink);padding:12px 18px;border:2px solid var(--accent);border-radius:10px}.skip-calendar:focus{top:12px}
+:where(button,a,input,textarea,select,summary,[tabindex]):focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.upload-label:focus-within{outline:3px solid var(--accent);outline-offset:3px}
+#calendar-content:focus-visible{outline-offset:6px;border-radius:12px}
+.app-menu-popover button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.shortcut-list{margin:0}.shortcut-list>div{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:12px 0;border-bottom:1px solid var(--line)}.shortcut-list dt{font-size:13px}.shortcut-list dd{margin:0;text-align:right;max-width:55%}.shortcut-list kbd{font:600 12px BeVietnamPro,sans-serif;color:var(--ink);overflow-wrap:anywhere}
+.discard-guard{padding:16px;border:1px solid var(--control-edge);background:var(--surface-alt);border-radius:12px;margin-bottom:18px}.discard-guard p{margin:0 0 12px}.discard-guard>div{display:flex;gap:8px;flex-wrap:wrap}
+#appointment-form>.modal-actions>.primary,#review-form>.modal-actions>.primary{width:100%;min-height:48px;border-radius:16px}
+input.time-value{position:absolute!important;width:1px!important;height:1px!important;min-height:0!important;padding:0!important;clip-path:inset(50%);opacity:0;pointer-events:none}
+.time-field{width:100%;min-height:47px;border:1px solid var(--control-edge);border-radius:9px;background:var(--surface);color:var(--ink);text-align:left;padding:12px;font:inherit;font-size:14px;font-variant-numeric:tabular-nums}
+#time-picker{width:min(390px,calc(100vw - 32px));max-height:calc(100dvh - 24px);padding:24px;border-radius:26px;background:var(--surface);color:var(--ink);overflow-y:auto}
+#time-picker header{display:flex;justify-content:space-between;align-items:center;gap:12px}#time-picker h2{margin:0;font-size:21px;font-weight:600}#time-picker .icon-button{font-size:24px}
+.time-wheels{display:grid;grid-template-columns:1fr 1fr 1fr;position:relative;margin:28px 0;isolation:isolate}
+.wheel-selection{position:absolute;inset:88px 0;height:44px;z-index:-1;border-radius:12px;background:var(--surface-alt);border-block:1px solid var(--control-edge);pointer-events:none}
+.time-wheel{height:220px;overflow-y:auto;scroll-snap-type:y mandatory;padding-block:88px;scrollbar-width:none;overscroll-behavior:contain;text-align:center;border-radius:10px;touch-action:pan-y}.time-wheel::-webkit-scrollbar{display:none}
+.time-option{height:44px;display:grid;place-items:center;scroll-snap-align:center;flex:none;font-size:25px;line-height:44px;font-weight:400;font-variant-numeric:tabular-nums;color:var(--muted);cursor:pointer;user-select:none}.time-option[aria-selected=true]{font-weight:600;color:var(--ink)}
+#time-picker .time-confirm{width:100%;min-height:48px;border-radius:16px}

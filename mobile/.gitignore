@@ -50,3 +50,5 @@ modules/fri-android/android/src/main/assets/meeting/*.gz
 modules/fri-android/android/src/main/assets/meeting/*.traineddata
 
 /modules/fri-android/android/src/main/res/font/inter_*.ttf
+/modules/fri-android/android/src/main/res/font/be_vietnam_pro_*.ttf
+/modules/fri-android/android/src/main/assets/FONT-LICENSE.txt

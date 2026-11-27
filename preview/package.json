@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node --test preview.test.cjs intake.test.cjs import-plan.test.cjs calendar-source.test.cjs day.test.cjs updates.test.cjs inbox.test.cjs"
+    "test": "node --test preview.test.cjs intake.test.cjs import-plan.test.cjs calendar-source.test.cjs day.test.cjs updates.test.cjs inbox.test.cjs appearance.test.cjs"
   },
   "dependencies": {
     "@react-three/fiber": "9.8.2",

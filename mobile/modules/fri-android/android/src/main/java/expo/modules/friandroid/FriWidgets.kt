@@ -45,7 +45,7 @@ class TodayAgendaWidget:FriWidget("today_agenda")
 class NextEventWidget:FriWidget("next_event")
 @Composable private fun WidgetContent(context:Context,id:Int,template:String,configured:Boolean,s:WidgetSettings,agenda:List<FriEvent>,next:FriEvent?,day:LocalDate,zone:ZoneId,now:Long){
  val size=LocalSize.current;val availableHeight=size.height/context.resources.configuration.fontScale.coerceAtLeast(1f);val dark=s.theme=="dark"||(s.theme=="system"&&(context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)==Configuration.UI_MODE_NIGHT_YES)
- val ink=if(dark)Color(0xfff4f7fa)else Color(0xff172b3a);val paper=if(dark)Color(0xff1c2d3b)else Color.White;val base=if(dark)Color(0xff111d27)else Color(0xffeaf0f4)
+ val ink=if(dark)Color(0xfff4f7fa)else Color(0xff172b3a);val paper=if(dark)Color(0xff222833)else Color.White;val base=if(dark)Color(0xff14181f)else Color(0xffeaf0f4)
  fun open(path:String)=actionStartActivity(Intent(Intent.ACTION_VIEW,Uri.parse("fri://$path")).setPackage(context.packageName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP))
  fun editor()=actionStartActivity(Intent(context,FriWidgetEditorActivity::class.java).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,id))
  Column(GlanceModifier.fillMaxSize().background(base).appWidgetBackground().cornerRadius(24.dp).padding(if(availableHeight<180.dp)6.dp else 12.dp)){

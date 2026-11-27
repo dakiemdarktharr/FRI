@@ -34,4 +34,4 @@ Before submission, pin a commit and an immutable deployment, export the exact so
 
 Carbon distinguishes first-use, no-result, error and completion states; Acorn similarly recommends matching the content and next action to context. Fri uses a real first task, an optional labelled sample, contextual source instructions and a separate save step. Secondary editor fields are disclosed on request, and empty widgets invite setup rather than showing meaningless zero metrics. [Carbon](https://www.carbondesignsystem.com/building-blocks/core/patterns/empty-states) · [Acorn](https://acorn.firefox.com/latest/content/patterns/writing-for-empty-states-NQLxhgJJ).
 
-We adapt these interaction conventions, not other companies' marks or screens. The new naive identity is an original vector design in `brand/`; readable Inter typography and Cloud/Ink/Teal remain the interface foundation.
+We adapt these interaction conventions, not other companies' marks or screens. The new naive identity is an original vector design in `brand/`; readable Vietnamese-capable typography and Cloud/Ink/Teal remain the interface foundation.

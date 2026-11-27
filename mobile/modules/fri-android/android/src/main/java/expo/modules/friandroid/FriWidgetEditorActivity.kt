@@ -38,7 +38,7 @@ class FriWidgetEditorActivity:ComponentActivity(){
       draftName=saved?.getString("name")?:data.second?.name?:"My widget"
       val events=withContext(Dispatchers.IO){repo.dao.events()}
       val theme=withContext(Dispatchers.IO){repo.dao.preferences().firstOrNull{it.key=="theme"}?.value}
-      setContent{val dark=theme=="dark"||(theme!="light"&&androidx.compose.foundation.isSystemInDarkTheme());MaterialTheme(typography=FriTypography,colorScheme=if(dark)darkColorScheme(primary=Color(0xFF64D4D0),surface=Color(0xFF111D27),onSurface=Color(0xFFEAF2F6))else lightColorScheme(primary=Color(0xFF087F8C),surface=Color(0xFFF4F7FA),onSurface=Color(0xFF172B3A))){Editor(data.third,data.first?.state=="confirmed",events)}}
+      setContent{val dark=theme=="dark"||(theme!="light"&&androidx.compose.foundation.isSystemInDarkTheme());MaterialTheme(typography=FriTypography,colorScheme=if(dark)darkColorScheme(primary=Color(0xff75d8cc),onPrimary=Color(0xff14181f),secondary=Color(0xff75d8cc),secondaryContainer=Color(0xff203d3b),onSecondaryContainer=Color(0xfff2f4f8),background=Color(0xff14181f),onBackground=Color(0xfff2f4f8),outlineVariant=Color(0xff7d8ba1),surface=Color(0xff14181f),surfaceVariant=Color(0xff2c3441),onSurface=Color(0xfff2f4f8),onSurfaceVariant=Color(0xffb3bece),outline=Color(0xff7d8ba1),error=Color(0xffffb2bb))else lightColorScheme(primary=Color(0xFF087F8C),onPrimary=Color.White,secondary=Color(0xFF087F8C),secondaryContainer=Color(0xFFE0F2F2),onSecondaryContainer=Color(0xFF172B3A),background=Color(0xFFF4F7FA),onBackground=Color(0xFF172B3A),outlineVariant=Color(0xFF7B8B98),surface=Color(0xFFF4F7FA),surfaceVariant=Color(0xFFEAF0F4),onSurface=Color(0xFF172B3A),onSurfaceVariant=Color(0xFF586D7C),outline=Color(0xFF7B8B98),error=Color(0xFFA12E3A))){Editor(data.third,data.first?.state=="confirmed",events)}}
     }
   }
   override fun onSaveInstanceState(out:Bundle){out.putString("session",session);out.putString("settings",draft.json());out.putString("name",draftName);super.onSaveInstanceState(out)}
@@ -65,7 +65,7 @@ class FriWidgetEditorActivity:ComponentActivity(){
       val preview=if(template=="next_event")CalendarLogic.next(filtered,now)else CalendarLogic.agenda(filtered,LocalDate.now(zone),zone).firstOrNull{!it.done&&(!it.allDay||settings.showAllDay)}
       val dark=settings.theme=="dark"||(settings.theme=="system"&&androidx.compose.foundation.isSystemInDarkTheme())
       Text("Preview · size is set by your launcher",style=MaterialTheme.typography.labelMedium)
-      Surface(color=if(dark)Color(0xFF172B3A)else Color(0xFFE0F2F2),contentColor=if(dark)Color(0xFFF4F7FA)else Color(0xFF172B3A),shape=MaterialTheme.shapes.large){Column(Modifier.fillMaxWidth().padding(20.dp)){
+      Surface(color=if(dark)Color(0xFF222833)else Color(0xFFE0F2F2),contentColor=if(dark)Color(0xFFF2F4F8)else Color(0xFF172B3A),shape=MaterialTheme.shapes.large){Column(Modifier.fillMaxWidth().padding(20.dp)){
         Text(if(preview==null)"Nothing planned yet."else if(settings.privacy=="busy")"Busy"else preview.title,style=MaterialTheme.typography.titleLarge,maxLines=2)
         if(preview!=null){Text(if(preview.allDay)"All day"else formatTime(this@FriWidgetEditorActivity,preview.startUtc,zone,settings.hourFormat));if(settings.showLocation&&settings.privacy=="full"&&preview.location.isNotBlank())Text(preview.location,maxLines=1)}
         Text(if(settings.filter=="all")"All calendars"else "${settings.calendarIds.size} calendars selected")

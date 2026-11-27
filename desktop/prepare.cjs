@@ -12,6 +12,8 @@ fs.writeFileSync(path.join(__dirname, 'ui/index.html'), html);
 fs.writeFileSync(path.join(__dirname, 'ui/csp.json'), JSON.stringify(csp));
 console.log('Prepared desktop UI with hashed scripts and an offline content policy.');
 
-fs.copyFileSync(path.join(root,'brand/fonts/InterVariable.woff2'),path.join(__dirname,'ui/InterVariable.woff2'));
-fs.copyFileSync(path.join(root,'brand/fonts/LICENSE.txt'),path.join(__dirname,'ui/FONT-LICENSE.txt'));
+for(const [name] of require('../brand/typography.cjs').weights) fs.copyFileSync(path.join(root,'brand/fonts/be-vietnam-pro/BeVietnamPro-'+name+'.woff2'),path.join(__dirname,'ui/BeVietnamPro-'+name+'.woff2'));
+fs.rmSync(path.join(__dirname,'ui/InterVariable.woff2'),{force:true});
+fs.writeFileSync(path.join(__dirname,'ui/typography-embedded.css'),require('../brand/typography.cjs').typography());
+fs.copyFileSync(path.join(root,'brand/fonts/be-vietnam-pro/OFL.txt'),path.join(__dirname,'ui/FONT-LICENSE.txt'));
 for(const name of ['fri-mark.svg','first-plan.svg']) fs.copyFileSync(path.join(root,'brand',name),path.join(__dirname,'ui',name));

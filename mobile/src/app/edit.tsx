@@ -23,7 +23,7 @@ export default function Edit(){
    }
    const saved=await call<FriEvent>(meeting?'saveMeetingEvent':'saveEvent',payload);clearMeeting(meeting);await refresh();router.replace({pathname:'/event',params:{id:saved.id}})
  }catch(e){setError((e as Error).message)}finally{setBusy(false)}}
- const input={color:colors.ink,backgroundColor:colors.paper,borderColor:colors.line,borderWidth:1,borderRadius:16,padding:16,fontFamily:'Inter',fontSize:17} as const;
+ const input={color:colors.ink,backgroundColor:colors.paper,borderColor:colors.control,borderWidth:1,borderRadius:16,padding:16,fontFamily:'BeVietnamPro',fontSize:17} as const;
  if(id&&data&&!original)return <Page><Label>This plan was removed.</Label><Button title="Back" onPress={()=>router.back()}/></Page>;
  return <Page>
  <Label large>{meeting?'Review plan':id?'Edit plan':'New plan'}</Label>

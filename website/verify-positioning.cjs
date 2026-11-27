@@ -9,8 +9,8 @@ const output='test-results/positioning';fs.mkdirSync(output,{recursive:true});
   await p.locator('#intro').waitFor({state:'hidden'});
   assert.equal(await p.locator('.product-story,.widget-story').count(),8);
   assert.equal(await p.locator('.story-kicker,.hero-category,.hero-facts,.widget-proof').count(),0);
-  assert.match(await p.locator('body').evaluate(el=>getComputedStyle(el).fontFamily),/Inter/);
-  assert(await p.evaluate(async()=>{await document.fonts.load('16px Inter');return document.fonts.check('16px Inter')}));
+  assert.match(await p.locator('body').evaluate(el=>getComputedStyle(el).fontFamily),/BeVietnamPro/);
+  assert(await p.evaluate(async()=>{await document.fonts.load('16px BeVietnamPro');return document.fonts.check('16px BeVietnamPro')}));
   assert.equal(await p.locator('[data-dialog="signup"],.answers,details').count(),0);
   for(const width of [320,390,768,1440]){
    await p.setViewportSize({width,height:1000});await p.evaluate(()=>{history.replaceState(null,'','#home');document.documentElement.style.scrollBehavior='auto';scrollTo(0,0)});

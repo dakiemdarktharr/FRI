@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import {typography} from '../brand/typography.mjs';
 const typeCss=await typography();
+const contrastCss=await readFile(new URL('./contrast.css',import.meta.url),'utf8');
 const here = path.dirname(fileURLToPath(import.meta.url));
 await mkdir(path.join(here,'.build'),{recursive:true});
 const bundle = await build({entryPoints:[path.join(here,'gradient.jsx')],bundle:true,minify:true,write:false,format:'iife',target:'es2022',define:{'process.env.NODE_ENV':'"production"'},legalComments:'inline'});
@@ -21,7 +22,7 @@ const symbols='window.FriSymbols='+await readFile(path.join(here,'../brand/symbo
 const naiveCss=await readFile(path.join(here,'../brand/naive.css'),'utf8'),mark=(await readFile(path.join(here,'../brand/fri-mark.svg'),'utf8')).replace('<svg ','<svg class="fri-mark" aria-hidden="true" '),art=(await readFile(path.join(here,'../brand/first-plan.svg'),'utf8')).replace('<svg ','<svg class="first-plan-art" aria-hidden="true" ');
 let html = await readFile(path.join(here,'shell.html'),'utf8');
 const css=(await readFile(path.join(here,'style.css'),'utf8'))+'\n'+(await readFile(path.join(here,'brand.css'),'utf8'))+'\n'+(await readFile(path.join(here,'day.css'),'utf8'))+'\n'+(await readFile(path.join(here,'updates.css'),'utf8')),app=await readFile(path.join(here,'app.js'),'utf8');
-html=html.replace('/*__CSS__*/',()=>css+'\n'+typeCss+'\n'+naiveCss).replaceAll('__FRI_MARK__',mark).replaceAll('__FIRST_PLAN_ART__',art)
+html=html.replace('/*__CSS__*/',()=>css+'\n'+typeCss+'\n'+naiveCss+'\n'+contrastCss).replaceAll('__FRI_MARK__',mark).replaceAll('__FIRST_PLAN_ART__',art)
   .replace('/*__APP__*/',()=>symbols+'\n'+domain+'\n'+planning+'\n'+importPlan+'\n'+inbox+'\n'+feed+'\n'+calendarBundle.outputFiles[0].text+'\n'+smartIntake+'\n'+intake+'\n'+native+'\n'+dayCore+'\n'+day+'\n'+app.replaceAll('__FIRST_PLAN_ART__',art.replace(/\r?\n/g,'').replaceAll("'","\\'")))
   .replace('/*__CHROME__*/',()=>chrome)
   .replace('/*__GRADIENT__*/',()=>bundle.outputFiles[0].text.replace(/<\/script/gi,'<\\/script'))

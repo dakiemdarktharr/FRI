@@ -2,14 +2,14 @@
   "expo": {
     "name": "Fri",
     "slug": "fri",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "scheme": "fri",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "android": {
       "package": "com.fri.calendar.android",
-      "versionCode": 4,
+      "versionCode": 5,
       "allowBackup": false,
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",
@@ -48,18 +48,18 @@
           "android": {
             "fonts": [
               {
-                "fontFamily": "Inter",
+                "fontFamily": "BeVietnamPro",
                 "fontDefinitions": [
                   {
-                    "path": "../brand/fonts/Inter-Regular.ttf",
+                    "path": "../brand/fonts/be-vietnam-pro/BeVietnamPro-Regular.ttf",
                     "weight": 400
                   },
                   {
-                    "path": "../brand/fonts/Inter-SemiBold.ttf",
+                    "path": "../brand/fonts/be-vietnam-pro/BeVietnamPro-SemiBold.ttf",
                     "weight": 600
                   },
                   {
-                    "path": "../brand/fonts/Inter-Bold.ttf",
+                    "path": "../brand/fonts/be-vietnam-pro/BeVietnamPro-Bold.ttf",
                     "weight": 700
                   }
                 ]

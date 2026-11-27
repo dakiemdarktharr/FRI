@@ -15,7 +15,7 @@ export async function buildBrowser(){
  await copyFile(path.join(data,'4.0.0_best_int/vie.traineddata.gz'),path.join(out,'vie.traineddata.gz'));
  await copyFile(path.join(core,'LICENSE'),path.join(out,'TESSERACT-CORE-LICENSE.txt'));
  await copyFile(path.join(tess,'LICENSE.md'),path.join(out,'TESSERACT-JS-LICENSE.txt'));
- await copyFile(path.join(here,'../brand/fonts/LICENSE.txt'),path.join(here,'public/assets/INTER-LICENSE.txt'));
+ await copyFile(path.join(here,'../brand/fonts/be-vietnam-pro/OFL.txt'),path.join(here,'public/assets/FONT-LICENSE.txt'));
  await writeFile(path.join(out,'MODEL-NOTICE.txt'),'Vietnamese OCR model: @tesseract.js-data/vie 1.0.0. Package license: MIT. Upstream: https://github.com/naptha/tessdata . Tesseract recognition core: Apache-2.0; see TESSERACT-CORE-LICENSE.txt.');
  console.log('Built /app with on-device Vietnamese image recognition.');
 }

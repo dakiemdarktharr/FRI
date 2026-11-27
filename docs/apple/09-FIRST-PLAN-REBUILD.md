@@ -1,6 +1,6 @@
 # Rebuild the first-plan release on macOS and iOS
 
-Reference: Windows **0.8.0**, Android **0.4.0/code 4**, branch `codex/first-plan-release`, based on upstream `25cc294`. Read `docs/first-plan-release.md` for the final verification receipt. This is an implementation specification, not a claim that the Apple build already contains these changes.
+Reference: Windows **0.8.1**, Android **0.4.1/code 5**, branch `codex/first-plan-release`, based on upstream `25cc294`. Read `docs/first-plan-release.md` and `docs/appearance-081.md` for the verification receipts. This is an implementation specification, not a claim that the Apple build already contains these changes.
 
 ## Start from the existing native application
 
@@ -14,17 +14,17 @@ Canonical assets are `brand/fri-mark.svg`, `brand/first-plan.svg` and `brand/sym
 
 | Token | Light | Dark |
 | --- | --- | --- |
-| Background | #F4F7FA | #111D27 |
-| Opaque surface | #FFFFFF | #1C2D3B |
-| Secondary surface | #EAF0F4 | #273C4B |
-| Text | #172B3A | #EAF2F6 |
-| Secondary text | #586D7C | #A8BAC6 |
-| Accent | #087F8C | #64D4D0 |
-| On accent | #FFFFFF | #111D27 |
-| Border | #DBE4EB | #354B5A |
-| Tint | #E0F2F2 | #193F46 |
+| Background | #F4F7FA | #14181F |
+| Opaque surface | #FFFFFF | #222833 |
+| Secondary surface | #EAF0F4 | #2C3441 |
+| Text | #172B3A | #F2F4F8 |
+| Secondary text | #586D7C | #B3BECE |
+| Accent | #087F8C | #75D8CC |
+| On accent | #FFFFFF | #14181F |
+| Border | #DBE4EB | #465368 |
+| Tint | #E0F2F2 | #203D3B |
 
-Update `FRIColors.swift`, `FRITypography.swift`, `FRIWorkspaceView.swift`, `FRICalendarGridView.swift`, `FRIPlanEditorView.swift`, `FRIImportView.swift`, `FRIUsageGuide.swift`, `FRIWidgetContent.swift`, and `FRIDayWidget.swift` as appropriate. Inter is the brand font; use the bundled font files and preserve the OFL notice. Use 600 for headlines/titles/actions, 400 for body, and 700 only for the wordmark/emphasis. Reference `brand/README.md` for roles. Dynamic Type scales content and allows reflow; native system controls keep system typography. Standard WidgetKit layouts must remain readable at system text sizes.
+Update `FRIColors.swift`, `FRITypography.swift`, `FRIWorkspaceView.swift`, `FRICalendarGridView.swift`, `FRIPlanEditorView.swift`, `FRIImportView.swift`, `FRIUsageGuide.swift`, `FRIWidgetContent.swift`, and `FRIDayWidget.swift` as appropriate. Be Vietnam Pro is the brand font. Bundle `brand/fonts/be-vietnam-pro/BeVietnamPro-{Regular,SemiBold,Bold}.ttf` and its OFL notice in each app/extension that needs it; register the correct PostScript names (BeVietnamPro-Regular, BeVietnamPro-SemiBold, BeVietnamPro-Bold). Use 700 for web/display headings, 600 for app titles/actions, and 400 for body. Preserve Vietnamese NFC and NFD diacritics; use line height 1.2–1.25 for headings and 1.4–1.55 for body. Inputs/control borders use #7B8B98 light / #7D8BA1 dark. Selected dark calendar cells use dark #14181F text on #75D8CC, never white on that pale teal. Reference `brand/README.md` for roles. Dynamic Type scales content and allows reflow; native system controls keep system typography. Standard WidgetKit layouts must remain readable at system text sizes.
 
 Cards and controls are fully opaque. Only the main workspace uses native behind-window material on macOS, with solid reduced-transparency fallback. Use existing `FRIWindowBackdrop.swift`; do not add screen recording just for glass. iOS material can composite the app's content but cannot reveal arbitrary other applications. The naive mark does not justify wobbly typography or constantly animated controls. Honor Reduce Motion and Increase Contrast. Keep 44 pt touch targets, visible keyboard focus and VoiceOver labels.
 

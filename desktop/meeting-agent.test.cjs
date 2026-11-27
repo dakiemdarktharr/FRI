@@ -128,7 +128,7 @@ test('sandboxed assistant accepts a chosen source, reviews once, and revokes a c
     dialog.showMessageBox = async () => { fixture.prompts++; return {response:0}; };
     app.whenReady().then(() => {
       const agent = require(${JSON.stringify(require.resolve('./meeting-agent.cjs'))}).createMeetingAgent({
-        showCalendar() {}, review(item) {fixture.reviews.push(item);}
+        isForeground() { return global.fixture.foreground!==false; }, prompt: () => dialog.showMessageBox(), showCalendar() {}, review(item) {fixture.reviews.push(item);}
       });
       app.on('before-quit',()=>agent.shutdown());
       agent.open(process.env.FRI_TEST_HIDDEN !== '1');
@@ -173,7 +173,10 @@ test('sandboxed assistant accepts a chosen source, reviews once, and revokes a c
       const encode=HTMLCanvasElement.prototype.toBlob;
       HTMLCanvasElement.prototype.toBlob=function(...args){ window.fixtureFrames++;return encode.apply(this,args); };
     },frames);
+    await app.evaluate(()=>{global.fixture.foreground=false});
     await page.locator('#start').click();
+    await new Promise(r=>setTimeout(r,600));assert.equal(await page.evaluate(()=>window.fixtureFrames),0);
+    await app.evaluate(()=>{global.fixture.foreground=true});
     await page.waitForFunction(()=>window.fixtureFrames>=1);
     assert.equal(await app.evaluate(()=>global.fixture.prompts),0);
     const visibleChange=performance.now();
@@ -191,11 +194,29 @@ test('sandboxed assistant accepts a chosen source, reviews once, and revokes a c
     await page.locator('#refresh').click();
     await page.locator('#sources').selectOption('window:43:0');
     await page.locator('#start').click();
-    await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('2 cửa sổ'));
+    await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('2 windows'));
     await app.evaluate(()=>{global.fixture.title='Unrelated private window';});
     await page.waitForFunction(()=>window.firstTrack.readyState==='ended' && window.testTrack.readyState==='live');
+    await page.locator('#pause').click();
+    assert.equal(await page.evaluate(()=>document.querySelector('#pause').textContent),'Resume');
+    const stored=JSON.parse(fs.readFileSync(path.join(folder,'profile','meeting-window.json'),'utf8'));
+    assert.equal(stored.paused,true);assert.ok(stored.sources.length);
+    await page.locator('#pause').click();
     await page.locator('#stop').click();
     await page.waitForFunction(()=>document.querySelector('#stop').disabled && window.testTrack.readyState==='ended');
     assert.equal(await app.evaluate(()=>global.fixture.prompts),1);
   } finally {await app.close();fs.rmSync(folder,{recursive:true,force:true});}
+});
+
+test('non-blocking plan prompt uses an isolated branded window and explicit review or dismissal', async()=>{
+ const {_electron}=require('../tests/node_modules/playwright'),os=require('node:os');
+ const folder=fs.mkdtempSync(path.join(os.tmpdir(),'fri-prompt-'));
+ fs.writeFileSync(path.join(folder,'main.cjs'),`const {app}=require('electron');app.whenReady().then(()=>{const p=require(${JSON.stringify(require.resolve('./meeting-prompt.cjs'))}).createMeetingPrompt();global.prompt=p;global.result=null;p.show({title:'Coffee <script>unsafe</script>',date:null,relativeTime:'Later'},'dark').then(r=>global.result=r);});app.on('window-all-closed',()=>{});`);
+ const env={...process.env,FRI_TEST_MODE:'1',FRI_TEST_HIDDEN:'1'};delete env.ELECTRON_RUN_AS_NODE;
+ const app=await _electron.launch({executablePath:require('electron'),args:[path.join(folder,'main.cjs')],env});
+ try{const page=await app.firstWindow();await page.locator('#name').filter({hasText:'Coffee'}).waitFor();assert.equal(await page.locator('#name script').count(),0);assert.equal(await page.evaluate(()=>typeof require),'undefined');assert.equal(await page.locator('body.dark').count(),1);assert.match(await page.locator('#time').innerText(),/Choose a date/);
+ const prefs=await app.evaluate(({BrowserWindow})=>{const w=BrowserWindow.getAllWindows()[0];return {visible:w.isVisible(),sandbox:w.webContents.getLastWebPreferences().sandbox}});assert.deepEqual(prefs,{visible:false,sandbox:true});
+ await page.locator('#review').click();await new Promise(r=>setTimeout(r,100));assert.equal((await app.evaluate(()=>global.result)).response,0);
+ const next=app.waitForEvent('window');await app.evaluate(()=>{global.result=null;global.prompt.show({title:'Walk',time:'17:00'},'light').then(r=>global.result=r)});const second=await next;await second.locator('#dismiss').waitFor();const dismissed=second.waitForEvent('close');await second.keyboard.press('Escape').catch(e=>{if(!/closed/.test(e.message))throw e});await dismissed;await new Promise(r=>setTimeout(r,100));assert.equal((await app.evaluate(()=>global.result)).response,1);
+ }finally{await app.close();fs.rmSync(folder,{recursive:true,force:true})}
 });

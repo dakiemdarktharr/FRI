@@ -1,5 +1,5 @@
 'use strict';
-const {app, BrowserWindow, desktopCapturer, dialog, ipcMain, Menu, session, Tray} = require('electron');
+const {app, BrowserWindow, desktopCapturer, ipcMain, Menu, session, Tray, powerMonitor} = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
@@ -31,15 +31,18 @@ function login(value) {
   return fs.existsSync(entry);
 }
 
-function createMeetingAgent({showCalendar, review, getTheme=()=> 'system'}) {
+function createMeetingAgent({showCalendar, review, getTheme=()=> 'system', isForeground=require('./meeting-activity.cjs').isForeground, prompt}) {
+  const notification=require('./meeting-prompt.cjs').createMeetingPrompt();
+  prompt=prompt||((item)=>notification.show(item,getTheme()));
   const {MeetingFrames} = require('./ui/meeting-agent.js');
   const capture = session.fromPartition('fri-window-capture');
   const portal = process.platform === 'linux' && (process.env.XDG_SESSION_TYPE === 'wayland' || !!process.env.WAYLAND_DISPLAY);
   const file = path.join(app.getPath('userData'), 'meeting-window.json');
-  let saved = [];
+  let saved = [], paused=false, sleeping=false;
   try {
     const previous = JSON.parse(fs.readFileSync(file, 'utf8'));
-    saved = (Array.isArray(previous) ? previous : [previous]).filter(s => s?.id && s?.label);
+    saved = (Array.isArray(previous) ? previous : previous.sources||[previous]).filter(s => s?.id && s?.label);
+    paused=previous.paused===true;
   } catch {}
   const grants = new Map();
   let portalChoices = [], nextToken = 0, requested = null, panel, tray, quitting = false, ocr;
@@ -50,20 +53,31 @@ function createMeetingAgent({showCalendar, review, getTheme=()=> 'system'}) {
   })).filter(chatWindow);
   function persist() {
     if (portal || !saved.length) { fs.rmSync(file, {force:true}); return; }
-    fs.writeFileSync(file + '.pending', JSON.stringify(saved), {mode:0o600});
+    fs.writeFileSync(file + '.pending', JSON.stringify({sources:saved,paused}), {mode:0o600});
     fs.renameSync(file + '.pending', file);
   }
   function menu() {
     if (!tray) return;
-    tray.setToolTip(grants.size ? 'FRI · Đang nhận diện cửa sổ chat' : 'FRI · Thư ký lịch');
+    tray.setToolTip(grants.size ? 'FRI · Watching selected chat windows' : 'FRI · Meeting assistant');
     tray.setContextMenu(Menu.buildFromTemplate([
-      {label:'Thư ký lịch…', click:()=>open(true)},
-      {label:'Mở lịch FRI', click:showCalendar},
-      {label:'Tắt nhận diện', enabled:!!grants.size, click:()=>stop()},
-      {type:'separator'}, {label:'Thoát FRI', click:()=>app.quit()}
+      {label:'Meeting assistant…', click:()=>open(true)},
+      {label:'Open Fri calendar', click:showCalendar},
+      {label:paused?'Resume recognition':'Pause recognition', enabled:!!grants.size, click:()=>pause(!paused)},
+      {label:'Forget selected windows',enabled:!!saved.length||!!grants.size,click:()=>stop()},
+      {type:'separator'}, {label:'Quit Fri', click:()=>app.quit()}
     ]));
   }
-  function stop(message='Đang tắt', token=null, remember=false) {
+  function pause(value){
+    paused=value;if(value)notification.close();for(const grant of grants.values())grant.detector.reset();persist();
+    panel?.webContents.send('meeting:paused',paused);menu();return paused;
+  }
+  const suspend=()=>{sleeping=true;notification.close();for(const grant of grants.values())grant.detector.reset();};
+  const wake=()=>{sleeping=false;for(const grant of grants.values())grant.detector.reset();};
+  for(const name of ['suspend','lock-screen'])powerMonitor.on(name,suspend);
+  for(const name of ['resume','unlock-screen'])powerMonitor.on(name,wake);
+  const activeSource=token=>{const grant=grants.get(token);return !!grant&&!paused&&!sleeping&&isForeground(grant.id)};
+  function stop(message='Recognition off', token=null, remember=false) {
+    notification.close();
     const old = grants.get(token);
     if (token !== null && !old) return;
     if (old) grants.delete(token); else grants.clear();
@@ -88,7 +102,7 @@ function createMeetingAgent({showCalendar, review, getTheme=()=> 'system'}) {
     // Re-enumerating a PipeWire session would reopen its OS chooser.
     const current = (portal ? portalChoices : await sources()).find(s=>s.id===grant.id && fingerprint(s.name)===grant.label);
     if (!grants.has(token)) return null;
-    if (!current) stop('Cửa sổ đóng hoặc đổi tên. Chọn lại cửa sổ chat.', token);
+    if (!current) stop('This window closed or changed. Choose the chat window again.', token);
     return current;
   }
   capture.setDisplayMediaRequestHandler((request, callback)=>{
@@ -117,7 +131,7 @@ function createMeetingAgent({showCalendar, review, getTheme=()=> 'system'}) {
   handle('state', async()=>{
     const list=saved.length && !portal ? await sources() : [];
     const resume=list.filter(s=>saved.some(g=>g.id===s.id && g.label===fingerprint(s.name))).map(s=>s.id);
-    return {login:login(),portal,resume,theme:getTheme()};
+    return {login:login(),portal,resume,paused,saved:saved.length,theme:getTheme()};
   });
   handle('login', value=>{
     if (typeof value!=='boolean') throw Error('Invalid preference');
@@ -133,50 +147,53 @@ function createMeetingAgent({showCalendar, review, getTheme=()=> 'system'}) {
     if (!ocr) {
       const engine=require('./meeting-ocr.cjs').createMeetingOCR();
       ocr=engine;
-      void engine.catch(()=>{ if(ocr===engine) stop('Không thể khởi động bộ đọc chữ cục bộ.'); });
+      void engine.catch(()=>{ if(ocr===engine) stop('The local text reader could not start. Try again.'); });
     }
     menu();
     return token;
   });
   handle('check', async token=>!!await matching(token));
-  handle('stop', token=>stop('Đã tắt nhận diện.',token??null));
+  handle('active', async token=>{
+    if(!activeSource(token)){grants.get(token)?.detector.reset();return false;}
+    return !!await matching(token);
+  });
+  handle('pause', value=>{if(typeof value!=='boolean')throw Error('Invalid pause state');return pause(value)});
+  handle('stop', token=>stop('Recognition stopped.',token??null));
   function suggest(token, item) {
     promptQueue=promptQueue.then(async()=>{
-      if (!grants.has(token)) return;
-      const detail=[item.title,item.date||'Chưa rõ ngày',item.time||'Chưa rõ giờ',item.location].filter(Boolean).join(' · ');
-      const {response}=await dialog.showMessageBox({type:'question',title:'FRI · Thư ký lịch',
-        message:'Thêm vào lịch FRI?',detail,buttons:['Xem và lưu','Bỏ qua'],defaultId:1,cancelId:1});
+      if (!activeSource(token)) return;
+      const {response}=await prompt(item);
       if(response===0 && grants.has(token)) review(item);
     }).catch(()=>{});
   }
   handle('frame', (token,bytes,width)=>{
     const grant=grants.get(token), engine=ocr;
-    if (!grant || grant.busy || !engine || !(bytes instanceof Uint8Array) || bytes.length>6*1024*1024 || !Number.isInteger(width) || width<=0 || width>1280) return;
+    if (!grant || !activeSource(token) || grant.busy || !engine || !(bytes instanceof Uint8Array) || bytes.length>6*1024*1024 || !Number.isInteger(width) || width<=0 || width>1280) return;
     grant.busy=true;
     recognitionQueue=recognitionQueue.then(async()=>{
-      if (!grants.has(token) || !(await matching(token))) return;
+      if (!activeSource(token) || !(await matching(token))) return;
       const rows=await (await engine).lines(Buffer.from(bytes),width);
-      if (!(await matching(token))) return;
-      const item=grant.detector.observe(rows);
+      if (!activeSource(token) || !(await matching(token))) {grant.detector.reset();return;}
+      const item=grant.detector.observe(rows,Date.now(),true);
       if (item) suggest(token,item);
-    }).catch(()=>stop('Bộ đọc chữ tạm dừng. Kiểm tra nguồn và quyền chia sẻ.',token)).finally(()=>{grant.busy=false;});
+    }).catch(()=>stop('Reading paused. Check the source and sharing permission.',token)).finally(()=>{grant.busy=false;});
     return recognitionQueue;
   });
   function open(visible=true) {
     if (panel) {panel.webContents.send('meeting:theme',getTheme());if(visible){panel.show();panel.focus();} return;}
     if (!tray) {tray=new Tray(path.join(__dirname,'resources/icon.png')); tray.on('click',()=>open(true)); menu();}
-    panel=new BrowserWindow({width:560,height:640,minWidth:400,minHeight:560,show:visible,title:'FRI · Thư ký lịch',webPreferences:{
+    panel=new BrowserWindow({width:560,height:640,minWidth:400,minHeight:560,show:visible,title:'FRI · Meeting assistant',webPreferences:{
       session:capture,preload:path.join(__dirname,'meeting-preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false
     }});
     panel.removeMenu();
     panel.webContents.setWindowOpenHandler(()=>({action:'deny'}));
     panel.webContents.on('will-navigate',e=>e.preventDefault());
-    panel.webContents.on('render-process-gone',()=>stop('Cửa sổ chia sẻ đã đóng.'));
+    panel.webContents.on('render-process-gone',()=>stop('The shared window closed.'));
     panel.on('close',e=>{if(!quitting&&grants.size){e.preventDefault();panel.hide();}});
     panel.on('closed',()=>{panel=null;if(!quitting){stop();tray?.destroy();tray=null;}});
-    panel.loadURL(page).then(()=>panel?.webContents.executeJavaScript('window.initializeMeetingAgent()',true)).catch(()=>stop('Chưa mở được cửa sổ.'));
+    panel.loadURL(page).then(()=>panel?.webContents.executeJavaScript('window.initializeMeetingAgent()',true)).catch(()=>stop('Could not open the window.'));
   }
   return {open,active:()=>!!grants.size,resume:()=>{if(saved.length&&!portal)open(false);},
-    shutdown:()=>{quitting=true;stop('Đang thoát',null,true);panel?.destroy();tray?.destroy();tray=null;}};
+    shutdown:()=>{quitting=true;for(const name of ['suspend','lock-screen'])powerMonitor.removeListener(name,suspend);for(const name of ['resume','unlock-screen'])powerMonitor.removeListener(name,wake);stop('Closing',null,true);panel?.destroy();tray?.destroy();tray=null;}};
 }
 module.exports={createMeetingAgent};

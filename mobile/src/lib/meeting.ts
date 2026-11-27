@@ -1,5 +1,5 @@
 import rules from '../generated/meeting-agent';
-export type MeetingDraft={title:string;date:string|null;time:string|null;location?:string;timeHint?:string};
+export type MeetingDraft={title:string;date:string|null;time:string|null;location?:string;timeHint?:string;relativeTime?:string};
 const drafts=new Map<string,MeetingDraft>();
 // Router can mount a second assistant before unmounting the first. Consume the
 // native single-use handoff once, even when both screens request the same share.

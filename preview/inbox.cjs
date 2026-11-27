@@ -27,6 +27,15 @@
   }
   const lines=input.split(/\r?\n/).filter(s=>/\d{4}-\d{2}-\d{2}/.test(s)&&(/\b\d{1,2}:\d{2}\b/.test(s)||/deadline|due|assignment|hạn nộp|bài tập/i.test(s)));
   const rows=F.plain(lines.join('\n')).filter(r=>r.title);
+  // Invitations share the same local rules as native Windows/Apple/Android.
+  // Missing dates and durations remain empty and go through clarification cards.
+  if(!rows.length&&root.FRIMeetingAgent){
+   const seen=new Set(),messages=input.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).slice(0,60);
+   for(let i=0;i<messages.length;i++){
+    const plan=root.FRIMeetingAgent.proposeDraft(messages[i])||root.FRIMeetingAgent.recognize(messages[i],messages[i-1]||'');
+    if(plan&&!seen.has(JSON.stringify(plan))){seen.add(JSON.stringify(plan));rows.push(F.normalize({...plan,kind:'schedule',duration:0,notes:plan.timeHint?'Confirm AM or PM: '+plan.timeHint:plan.relativeTime?'Choose an exact time for “later”.':''}));}
+   }
+  }
   return {rows:rows.slice(0,500),method:'Text',warnings:rows.length>500?['Only the first 500 plans were read.']:[]};
  }
  function prepare(batches,existing,options={}){

@@ -5,6 +5,8 @@ RUN npm ci --prefix preview
 COPY preview/ preview/
 COPY desktop/day-core.cjs desktop/day-core.cjs
 COPY index.html index.html
+COPY brand/ brand/
+COPY apple/Packages/FRICore/Sources/FRICore/Resources/meeting-agent.js apple/Packages/FRICore/Sources/FRICore/Resources/meeting-agent.js
 RUN npm run build --prefix preview
 
 FROM nginxinc/nginx-unprivileged:stable-alpine

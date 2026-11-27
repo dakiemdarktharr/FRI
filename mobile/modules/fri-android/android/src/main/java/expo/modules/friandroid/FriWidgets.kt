@@ -54,7 +54,7 @@ class NextEventWidget:FriWidget("next_event")
   if(availableHeight>=180.dp)Text(day.format(DateTimeFormatter.ofPattern("MMMM d, yyyy")),style=TextStyle(color=ColorProvider(ink),fontSize=12.sp))
   if(availableHeight>=180.dp)Spacer(GlanceModifier.height(8.dp))
   val visible=if(template=="next_event")listOfNotNull(next)else agenda.filter{!it.done&&(!it.allDay||s.showAllDay)}
-  if(visible.isEmpty())Text(if(template=="next_event")"No upcoming events. +"else"No plans today. +",GlanceModifier.background(paper).cornerRadius(16.dp).padding(14.dp).fillMaxWidth().clickable(open("edit?date=$day")),style=TextStyle(color=ColorProvider(ink),fontSize=16.sp),maxLines=2)
+  if(visible.isEmpty())Text(if(template=="next_event")"No upcoming events. +"else if(agenda.isNotEmpty()&&agenda.all{it.done})"All done today. +"else"No plans today. +",GlanceModifier.background(paper).cornerRadius(16.dp).padding(14.dp).fillMaxWidth().clickable(open("edit?date=$day")),style=TextStyle(color=ColorProvider(ink),fontSize=16.sp),maxLines=2)
   else {
    val rows=if(template=="next_event")1 else if(availableHeight>=320.dp)2 else 1
    visible.take(rows).forEach{e->
@@ -74,7 +74,7 @@ class NextEventWidget:FriWidget("next_event")
    Text("Done ✓",GlanceModifier.padding(vertical=6.dp).clickable(actionRunCallback<DoneCallback>(actionParametersOf(eventKey to visible.first().id))),style=TextStyle(color=ColorProvider(ink),fontSize=12.sp))
   }
   if(template=="next_event"&&s.showAllDay&&availableHeight>=250.dp){agenda.filter{it.allDay&&!it.done}.take(1).forEach{Text("All day · "+if(s.privacy=="busy")"Busy"else it.title,GlanceModifier.padding(vertical=8.dp).clickable(open("event?id=${it.id}")),style=TextStyle(color=ColorProvider(ink),fontSize=12.sp),maxLines=1)}}
-  if(availableHeight>=320.dp){val completed=agenda.count{it.done};Text("$completed of ${agenda.size} complete",style=TextStyle(color=ColorProvider(ink),fontSize=12.sp))}
+  if(availableHeight>=320.dp&&agenda.isNotEmpty()){val completed=agenda.count{it.done};Text("$completed of ${agenda.size} complete",style=TextStyle(color=ColorProvider(ink),fontSize=12.sp))}
   if(availableHeight>=230.dp)Text("View day",GlanceModifier.padding(top=5.dp).clickable(open("?date=$day")),style=TextStyle(color=ColorProvider(ink),fontSize=12.sp))
  }
 }

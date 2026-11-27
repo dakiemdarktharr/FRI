@@ -1,0 +1,15 @@
+/* Hand-made character in the mark; a steady, accessible interface. */
+.fri-mark{display:inline-block;width:1em;height:1em;vertical-align:middle;flex:none}
+.fri-logo{display:inline-flex;align-items:center;gap:.18em;font-weight:700;letter-spacing:-.06em;line-height:1}
+.fri-logo .fri-mark{color:var(--accent,#087f8c);width:1.15em;height:1.15em}
+.first-plan-art{width:200px;max-width:60%;height:auto}
+.first-plan-card{padding:clamp(24px,4vw,44px);border:1px solid var(--line);border-radius:24px;background:var(--surface,#fff);color:var(--ink);display:grid;justify-items:start;gap:18px}
+.first-plan-card h2{font-size:clamp(24px,3vw,36px);line-height:1.15;letter-spacing:-1px;margin:0;max-width:18ch}
+.first-plan-card p{font-size:15px;line-height:1.5;color:var(--muted);max-width:38ch;margin:0}
+.first-plan-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.first-plan-card button,.feed-empty button{min-height:44px}
+.first-plan-card .text-action{color:var(--accent);padding:8px 0;background:none;border:0;text-decoration:underline;text-underline-offset:4px}
+.sample-label{font-size:12px;font-weight:600;border:1px solid var(--line);border-radius:8px;padding:4px 8px;width:fit-content}
+.first-plan-success{padding:16px;background:var(--surface-alt,#e0f2f2);border-radius:16px;color:var(--ink)}
+.naive-icon .icon{stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+@media(prefers-reduced-motion:no-preference){.first-plan-art{animation:first-plan-in .35s ease-out both}@keyframes first-plan-in{from{opacity:0;transform:translateY(8px) rotate(-3deg)}to{opacity:1;transform:none}}}

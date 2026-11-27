@@ -1,4 +1,4 @@
-# Fri for Android · 0.3.0 local alpha
+# Fri for Android · 0.4.0 local alpha
 
 Native home-screen widgets backed by the same Room database as the Expo app. No login, server, analytics, calendar permission or cloud account is required. This is the Android starting point; it is not a claim of complete Windows feature parity.
 
@@ -100,3 +100,7 @@ Included: local events, all-day ranges, ongoing/next selection, calendar filters
 Not yet Android parity: Windows ICS/OCR intake, availability-file exchange, native desktop refraction, Spotify/maps/weather integrations, account/billing, Day. Android has opaque Fri surfaces; Android launchers control widget backgrounds and system blur. The desktop app retains its native glass implementation and integrations.
 
 No publishing or account setup is performed by these scripts. Do not delete user app storage to test an upgrade.
+
+## First-plan update
+
+0.4.0/code 4 uses the shared `25cc294` recognition baseline, including relative-time invitations, an optional sample, progressive editor details and the naive Fri identity. See `../docs/first-plan-release.md` for observed checks. Background cross-app monitoring is still desktop-only.

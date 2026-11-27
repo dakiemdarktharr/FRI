@@ -7,7 +7,7 @@
     const book = document.createElement('button');
     book.id = 'fri-usage-guide';
     book.className = 'titlebar-toggle';
-    book.title = 'Hướng dẫn sử dụng FRI';
+    book.title = 'Try a sample plan';
     book.setAttribute('aria-label', book.title);
     book.innerHTML = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6c-3-2-6-2-9-1v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1Zm0 0v14"/></svg>';
     book.addEventListener('click', () => bridge.openUsageGuide());
@@ -17,12 +17,12 @@
   let trigger=null;
   const menus={
     new:[['One-time deadline','deadline','A single due date and time'],['Schedule','schedule','An appointment with a duration']],
-    file:[['Add a source','intake'],['Refresh prepared sources','refresh'],['Find time for a task','focus'],['Calendar insights','insights'],['Find time together · Local preview','together'],null,['Create FRI widget on desktop','desktop-widget'],null,['New deadline','deadline'],['New schedule','schedule'],null,['Export calendar backup…','export'],['Restore calendar backup…','import'],null,['Settings','settings','Ctrl/⌘ ,'],['Close window','close']],
+    file:[['Add a source','intake'],['Add ready plans','refresh'],['Find time for a task','focus'],['Calendar insights','insights'],['Find time together · Local preview','together'],null,['Create FRI widget on desktop','desktop-widget'],null,['New deadline','deadline'],['New schedule','schedule'],null,['Export calendar backup…','export'],['Restore calendar backup…','import'],null,['Settings','settings','Ctrl/⌘ ,'],['Close window','close']],
     edit:[['Undo last deletion','undo'],['Search appointments','search','Ctrl/⌘ F'],['Edit or delete appointments','manage']],
     view:[['My feed','day'],['Week','week'],['Month','month'],['Year','year'],null,['Toggle sidebar','sidebar','Ctrl/⌘ B'],['Toggle full screen','fullscreen']],
     help:[['Keyboard shortcuts','shortcuts'],['Check for updates…','updates'],['About FRI','about']]
   };
-  if(bridge?.openMeetingAgent && platform!=='darwin') menus.file.unshift(['Thư ký lịch…','meeting-agent']);
+  if(bridge?.openMeetingAgent && platform!=='darwin') menus.file.unshift(['Calendar assistant…','meeting-agent']);
   const updateButton=$('#fri-update'), updateAnnouncement=$('#fri-update-status');
   let updateState=null, updateBusy=false, lastUpdatePhase='';
   function updateToast(message){$('#toast').textContent=message;$('#toast').hidden=false;}

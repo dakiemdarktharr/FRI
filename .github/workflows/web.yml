@@ -56,10 +56,30 @@ jobs:
       - run: npm ci --prefix preview
       - run: npm run build --prefix preview
       - run: npm test --prefix preview
+      - run: npm ci --prefix website
       - run: node website/build.mjs
+      - run: node website/verify-product.cjs
       - run: node website/verify-v2.cjs
         env:
           FRI_SKIP_FRAMES: '1'
 
       - run: node website/verify-responsive.cjs
       - run: node website/verify-positioning.cjs
+
+  container:
+    name: Container build inputs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - run: docker build -t fri-web:test .
+      - run: docker run -d --name fri-test -p 127.0.0.1:8080:8080 fri-web:test
+      - run: |
+          curl --retry 10 --retry-all-errors --retry-connrefused --retry-delay 1 -fsS http://127.0.0.1:8080/ -o /tmp/fri.html
+          grep -q 'data-menu="new"' /tmp/fri.html
+          grep -q 'One-time deadline' /tmp/fri.html
+          test "$(docker inspect --format='{{.Config.User}}' fri-test)" != 'root'
+      - if: always()
+        run: docker rm -f fri-test || true

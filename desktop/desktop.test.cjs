@@ -88,40 +88,30 @@ test('Cloud UI, new plan types, menus, keyboard and safe restore',async()=>{
   }finally{await browser.close();}
 });
 
-test('first run requires all guide chapters and the book reopens without replacing the calendar', async () => {
-  const profile = fs.mkdtempSync(path.join(results, 'guide-'));
-  const env = {...process.env, FRI_TEST_MODE: '1', FRI_TEST_USER_DATA: profile};
-  delete env.ELECTRON_RUN_AS_NODE;
-  const options = {executablePath: process.env.FRI_TEST_EXE || require('electron'), args: process.env.FRI_TEST_EXE ? [] : [__dirname], env};
-  let app = await electron.launch(options);
-  try {
-    let page = await app.firstWindow();
-    await page.getByRole('heading', {name: 'Tạo lịch trình đầu tiên'}).waitFor();
-    assert.equal(await page.getByRole('button', {name: 'Đã đọc · Vào FRI'}).count(), 0);
-    assert.equal(await page.evaluate(() => typeof window.FRI_PREVIEW), 'undefined');
-    await page.getByRole('button', {name: 'Tiếp tục'}).click();
-    await page.getByRole('heading', {name: 'Kết nối ứng dụng chat'}).waitFor();
-    await app.close();
-    app = await electron.launch(options);
-    page = await app.firstWindow();
-    await page.getByRole('heading', {name: 'Tạo lịch trình đầu tiên'}).waitFor();
-    await readUsageGuide(page);
-    await app.close();
-    app = await electron.launch(options);
-    page = await app.firstWindow();
-    await page.waitForURL('app://fri/index.html');
-    const reviewOpened = app.waitForEvent('window');
-    await page.getByRole('button', {name: 'Hướng dẫn sử dụng FRI'}).click();
-    const review = await reviewOpened;
-    await review.getByRole('heading', {name: 'Tạo lịch trình đầu tiên'}).waitFor();
-    await review.getByRole('button', {name: 'Tiếp tục'}).click();
-    await review.getByRole('button', {name: 'Quay lại'}).click();
-    await review.getByRole('heading', {name: 'Tạo lịch trình đầu tiên'}).waitFor();
-    const closed = review.waitForEvent('close');
-    await review.getByRole('button', {name: 'Đóng', exact: true}).click();
-    await closed;
-    assert.equal(page.url(), 'app://fri/index.html');
-  } finally {
-    await app.close();
-  }
+test('first plan can be tried or skipped, saves only after review, and reopens as contextual help', async () => {
+ const profile=fs.mkdtempSync(path.join(results,'first-plan-'));
+ const env={...process.env,FRI_TEST_MODE:'1',FRI_TEST_USER_DATA:profile};delete env.ELECTRON_RUN_AS_NODE;
+ const options={executablePath:process.env.FRI_TEST_EXE||require('electron'),args:process.env.FRI_TEST_EXE?[]:[__dirname],env};
+ let app=await electron.launch(options);
+ try{
+  let page=await app.firstWindow();await page.locator('#try').waitFor();
+  assert.equal(await page.evaluate(()=>typeof window.FRI_PREVIEW),'undefined');
+  await page.locator('#try').click();await page.getByRole('heading',{name:'There’s your plan.'}).waitFor();
+  assert.match(await page.locator('#when').innerText(),/7:00/);
+  await page.locator('#review').click();await page.waitForURL('app://fri/index.html');
+  await page.locator('.sample-label').waitFor();assert.equal(await page.evaluate(()=>FRI_PREVIEW.getState().tasks.length),0);
+  assert.equal(await page.locator('[name=title]').inputValue(),'Coffee');
+  await page.locator('[name=duration]').selectOption('30');await page.getByRole('button',{name:'Done',exact:true}).click();
+  await page.locator('#modal').waitFor({state:'hidden'});await page.evaluate(()=>FRI_PREVIEW.flush());
+  assert.equal(await page.evaluate(()=>FRI_PREVIEW.getState().tasks.length),1);
+  await page.waitForTimeout(400);await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+  const png=await app.evaluate(async({BrowserWindow})=>(await BrowserWindow.getAllWindows()[0].webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG().toString('base64'));
+  fs.writeFileSync(path.join(results,'first-plan-saved.png'),Buffer.from(png,'base64'));
+  await app.close();app=await electron.launch(options);page=await app.firstWindow();await page.waitForURL('app://fri/index.html');await page.waitForFunction(()=>window.FRI_PREVIEW);
+  assert.equal(await page.evaluate(()=>FRI_PREVIEW.getState().tasks.length),1);
+  const opened=app.waitForEvent('window');await page.locator('#fri-usage-guide').click();const guide=await opened;
+  await guide.locator('#try').click();await guide.locator('#again').click();
+  const closed=guide.waitForEvent('close');await guide.locator('#skip').click();await closed;
+  assert.equal(await page.evaluate(()=>FRI_PREVIEW.getState().tasks.length),1);
+ }finally{await app.close()}
 });

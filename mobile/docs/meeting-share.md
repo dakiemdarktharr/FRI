@@ -1,6 +1,6 @@
 # Calendar assistant · Android share flow
 
-Android 0.3.0 ports the **explicit share** path selected by the user on 2026-11-25. It uses the same recognition rules as native Apple build 4 and Windows. It does not continuously read another application or request MediaProjection/accessibility access.
+Android 0.4.0 ports the **explicit share** path selected by the user on 2026-11-25. It uses the same recognition rules as the latest native Apple source at `25cc294` and Windows. It does not continuously read another application or request MediaProjection/accessibility access.
 
 ## Use
 
@@ -18,7 +18,7 @@ Use the existing Cloud `#F4F7FA`, Ink `#172B3A`, Teal `#087F8C` palette, shared 
 - Only the image URI explicitly shared by the source app is read. `file://` and Fri's own providers are rejected. The image is bounded to 12 MB and downsampled to at most 2048 pixels on the longest edge before recognition; EXIF orientation is applied.
 - Raw text and image buffers remain in memory. A random, single-use token transfers text to the app; content is never placed in a deep-link URL, log or Room. Unconsumed shares expire after ten minutes. The app does not copy screenshots to disk; the offline OCR model is extracted to private no-backup storage.
 - OCR can be wrong. Users can correct extracted text. At most eight candidate invitations from the first 60 nonempty lines are proposed; each is reviewed separately. No background source monitoring, sender identity inference or automatic calendar writes are claimed.
-- The Windows build currently recognizes new confirmed messages in a chosen Zalo/Messenger window. macOS's unsent Zalo-composer panel has not been ported to this Windows build.
+- The Windows build currently recognizes new sent invitations or confirmed messages in a chosen Zalo/Messenger window. macOS's unsent Zalo-composer panel has not been ported to this Windows build.
 
 ## Reproduce
 

@@ -11,3 +11,8 @@ docs
 !index.html
 website
 test-results
+
+artifacts/
+mobile/
+.env*
+!preview/shell.html

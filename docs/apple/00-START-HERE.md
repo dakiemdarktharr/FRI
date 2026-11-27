@@ -2,7 +2,7 @@
 
 Research date: 2026-11-23; integration checkpoint: 2026-11-24. The native Xcode project and local verification are now included on `main`. See the [production readiness ledger](verification/PRODUCTION-READINESS.md) and [earlier receipt](verification/RELEASE.md). The earlier native implementation targeted Windows/Linux 0.5. The local 0.7.0 update implements the Cloud feed, calendar views and staged source workflow.
 
-Windows 0.7.0 is the current reference for further parity work; inspect its release verification and import addendum before starting. Preserve the shipped calendar behavior and Cloud/Ink/Teal light and dark design with an actual glass workspace and opaque controls. This handoff does not authorize new Day development. Marketing shares Cloud/Ink/Teal; Premium is **50,000 VND/month, coming soon**, without a payment backend.
+Windows 0.8.0 is the current first-plan reference; read [the exact rebuild specification](09-FIRST-PLAN-REBUILD.md) before the older chapters. The native Mac 0.7 build 7 remains the published native baseline; inspect its release verification and import addendum before starting. Preserve the shipped calendar behavior and Cloud/Ink/Teal light and dark design with an actual glass workspace and opaque controls. This handoff does not authorize new Day development. Marketing shares Cloud/Ink/Teal; Premium is **50,000 VND/month, coming soon**, without a payment backend.
 
 
 Read in order:

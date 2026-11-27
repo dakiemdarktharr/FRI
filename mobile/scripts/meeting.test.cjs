@@ -5,7 +5,7 @@ const ts=require('typescript');
 const requireFromLib=require('node:module').createRequire(path.resolve(__dirname,'../src/lib/meeting.ts'));
 const code=ts.transpileModule(fs.readFileSync(path.join(__dirname,'../src/lib/meeting.ts'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,esModuleInterop:true,target:ts.ScriptTarget.ES2020}}).outputText;
 const result={exports:{}};vm.runInNewContext(code,{exports:result.exports,module:result,require:requireFromLib,Date,Map,Math});const {proposeMeetings,stageMeeting,getMeeting,clearMeeting}=result.exports;
-test('shared rules stay identical to the build 4 source',()=>{
+test('shared rules stay identical to the latest canonical source',()=>{
  assert.deepEqual(fs.readFileSync(path.join(__dirname,'../src/generated/meeting-agent.js')),fs.readFileSync(path.join(__dirname,'../../apple/Packages/FRICore/Sources/FRICore/Resources/meeting-agent.js')));
 });
 test('explicit sharing proposes invitations and preserves unknown date/time',()=>{
@@ -24,4 +24,10 @@ test('concurrent mounted screens consume a shared invitation only once',async()=
  const a=result.exports.readSharedText('one',read),b=result.exports.readSharedText('one',read);
  assert.equal(a,b);assert.equal((await b).text,'Thứ sáu 19:00 họp nhé?');assert.equal(calls,1);
  await result.exports.readSharedText('two',read);assert.equal(calls,2);
+});
+
+test('new relative-time rules retain uncertainty after sharing',()=>{
+ const now=new Date(2026,10,27,10).getTime();const plans=proposeMeetings('ê xíu trạm k',now);
+ assert.equal(plans.length,1);assert.equal(plans[0].relativeTime,'Lát nữa');assert.equal(plans[0].date,null);assert.equal(plans[0].time,null);
+ assert.equal(proposeMeetings('xíu trạm có mở cửa k',now).length,0);
 });

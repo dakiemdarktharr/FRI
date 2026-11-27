@@ -1,3 +1,9 @@
+# Android verification · 0.4.0 local alpha
+
+2026-11-27. See [first-plan release receipt](../../docs/first-plan-release.md). Existing app data and widget ID 4 survived installation over 0.3.0. New sample and actual Android text Share were reviewed, supplied a duration and saved through the production editor. Release APK on the API 35 Pixel Launcher was used for widget pin, drag, resize and completion checks; ARM64 is build-only. Final launcher evidence distinguishes All-calendars completion from a Work-only empty day; removing new instance 6 retained existing instance 4.
+
+## Historical 0.3.0 receipt
+
 # Android verification · 0.3.0 local alpha
 
 2026-11-25. Explicit text/image Share, offline Vietnamese OCR and reviewed calendar saves. Inter typography and simplified controls follow Fri's Cloud / Ink / Teal design. Four instrumentation tests, nine Kotlin unit tests, four parser/handoff tests and lint/typecheck passed. A real Google Photos share sheet supplied image access; repeated shares were verified after fixing duplicate token reads during route mounting. Text review/save and duplicate rejection ran on API 35 x86_64. ARM64 was built, not executed.

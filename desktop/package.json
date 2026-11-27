@@ -1,7 +1,7 @@
 {
   "name": "fri-desktop",
   "productName": "FRI",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "A local calendar with a native glass workspace.",
   "author": "FRI contributors",
   "license": "UNLICENSED",
@@ -63,7 +63,9 @@
       "meeting-agent.html",
       "meeting-view.js",
       "!node_modules/@tesseract.js-data/vie/4.0.0/**/*",
-      "!node_modules/tesseract.js-core/*.wasm.js"
+      "!node_modules/tesseract.js-core/*.wasm.js",
+      "meeting-prompt.html",
+      "meeting-prompt-view.js"
     ],
     "asar": true,
     "artifactName": "FRI-${version}-${os}-${arch}.${ext}",

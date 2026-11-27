@@ -2,7 +2,11 @@
 
 Updated 23 November 2026. Current user instruction authorizes GitHub commits, public web deployment on Vercel, desktop packaging and guidebook publication. Premium is **Coming soon**, with no billing. Spotify/Google/account/signing credentials are not available; implement and verify the parts that need no keys first. Never claim keyed integrations are live before configuring and testing them.
 
-## Current milestone — v0.7.0 Cloud feed and staged sources
+## Current milestone — v0.8.0 first-plan release
+
+See [implementation and evidence](first-plan-release.md), [MoMo evaluation](momo-tech-contest-2026.md), and [Apple rebuild contract](apple/09-FIRST-PLAN-REBUILD.md). Optional real-parser onboarding, naive identity, useful empty states, working browser calendar/OCR, foreground-only Windows assistant, Android share and widget verification. Premium remains 50,000 VND/month, coming soon; no billing backend.
+
+## Previous milestone — v0.7.0 Cloud feed and staged sources
 
 Cloud/Ink/Teal with dark mode, continuous day feed, wave Day, Sources sidebar and explicit Refresh. Website demo/intro and desktop/Android widgets use the new visual language. PDF/DOCX are read locally; structured parsing/OCR/cache reduce model calls. See [acceptance and evidence](release-verification-0.7.0.md).
 

@@ -1,1 +1,1 @@
-{"name":"fri-website","private":true,"version":"0.3.0","scripts":{"build":"node build.mjs","test":"node verify-v2.cjs"},"engines":{"node":">=22"}}
+{"name":"fri-website","private":true,"version":"0.3.0","scripts":{"build":"node build.mjs","test":"node verify-v2.cjs"},"engines":{"node":">=22"},"dependencies":{"@tesseract.js-data/vie":"1.0.0","tesseract.js":"7.0.0"}}

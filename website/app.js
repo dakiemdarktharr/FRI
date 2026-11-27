@@ -108,8 +108,9 @@
   const platform=navigator.userAgentData?.platform||navigator.platform;
   const primary=$('#primary-download');
   if(/Mac/i.test(platform)){primary.textContent='Download for macOS';primary.href='https://github.com/dakiemdarktharr/FRI/releases/tag/v0.7.0';primary.onclick=e=>{if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;e.preventDefault();macOptions()}}
-  else if(/Linux/i.test(platform)&&!/Android/i.test(navigator.userAgent)){primary.textContent='Download for Linux';primary.href='https://github.com/dakiemdarktharr/FRI/releases/download/v0.7.0/FRI-liquid-glass.html'}
-  else if(/Android|iPhone|iPad/i.test(navigator.userAgent)){primary.textContent='Get Fri for desktop';primary.href='#downloads';primary.onclick=e=>{e.preventDefault();$('#platform-picker').click()}}
+  else if(/Linux/i.test(platform)&&!/Android/i.test(navigator.userAgent)){primary.textContent='Download for Linux';primary.href='https://github.com/dakiemdarktharr/FRI/releases/download/v0.8.0/FRI-liquid-glass.html'}
+  else if(/Android/i.test(navigator.userAgent)){primary.textContent='Download Android alpha';primary.href='https://github.com/dakiemdarktharr/FRI/releases/download/v0.8.0/FRI-0.4.0-android-arm64.apk'}
+  else if(/iPhone|iPad/i.test(navigator.userAgent)){primary.textContent='Get Fri for desktop';primary.href='#downloads';primary.onclick=e=>{e.preventDefault();$('#platform-picker').click()}}
   $('.dialog-close').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('click',e=>{const r=dialog.getBoundingClientRect();if(e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))dialog.close()});
 

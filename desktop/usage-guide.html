@@ -1,46 +1,19 @@
 <!doctype html>
-<html lang="vi">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'">
-  <title>Hướng dẫn FRI</title>
-  <style>
-    @font-face { font-family: Inter; src: url(ui/InterVariable.woff2); font-weight: 100 900 }
-    :root { color-scheme: light dark; font: 16px/1.55 Inter,system-ui,sans-serif; background: light-dark(#f4f7fa,#152530); color: light-dark(#172b3a,#edf3f6); --accent:light-dark(#087781,#87dfd8); --line:light-dark(#cdd9e0,#39505e) }
-    * { box-sizing:border-box } body { margin:0 } [hidden] { display:none!important }
-    header { display:flex; align-items:center; gap:1rem; padding:1rem 1.5rem; border-bottom:1px solid var(--line); -webkit-app-region:drag }
-    header span { margin-left:auto } h1 { font-size:clamp(1.75rem,5vw,2.5rem); line-height:1.15; margin:0 0 1.5rem }
-    h2 { font-size:1.05rem; margin:1.3rem 0 .15rem } p { margin:0 } main { max-width:42rem; margin:0 auto; padding:clamp(1.5rem,5vw,3rem) 1.5rem }
-    footer { display:flex; align-items:center; gap:1rem; border-top:1px solid var(--line); margin-top:1.6rem; padding-top:1.2rem }
-    button { font:inherit; font-weight:600; min-height:42px; padding:.45rem .9rem; border:1px solid var(--line); border-radius:.65rem; color:inherit; background:transparent; cursor:pointer; -webkit-app-region:no-drag }
-    button:focus-visible { outline:3px solid var(--accent); outline-offset:3px } #next { margin-left:auto; color:light-dark(white,#142628); background:var(--accent) } #exit { font-size:.875rem }
-  </style>
-</head>
-<body>
-  <header><strong>Hướng dẫn FRI</strong><span id="progress" aria-live="polite"></span><button id="exit" hidden>Đóng</button></header>
-  <main>
-    <section>
-      <h1 tabindex="-1">Tạo lịch trình đầu tiên</h1>
-      <h2>Mở lịch mới</h2><p>Trong lịch FRI, bấm New → Schedule hoặc chọn File → New schedule.</p>
-      <h2>Điền cuộc hẹn</h2><p>Thử đặt “Cà phê với An” vào ngày mai, lúc 09:00, trong 30 phút. Bạn có thể thêm tên quán vào Location.</p>
-      <h2>Lưu và kiểm tra</h2><p>Bấm Done. Nếu FRI hỏi thêm giờ hoặc thời lượng, điền thông tin và xác nhận. Mở ngày vừa chọn để xem hoặc sửa cuộc hẹn.</p>
-    </section>
-    <section hidden>
-      <h1 tabindex="-1">Kết nối ứng dụng chat</h1>
-      <h2>Mở cuộc trò chuyện</h2><p>Mở ứng dụng Zalo hoặc Messenger trên máy. Trong FRI, vào File → Thư ký lịch…</p>
-      <h2>Chọn cửa sổ</h2><p>Bấm Tìm cửa sổ, chọn cửa sổ chat và bấm Bật nhận diện. Nếu hệ điều hành hỏi quyền chia sẻ, chọn đúng cửa sổ muốn dùng.</p>
-      <h2>Xem gợi ý</h2><p>Khi có lời mời kèm ngày giờ và tin nhắn chốt hẹn, FRI có thể gợi ý ghi lịch. Mở gợi ý để kiểm tra và lưu cuộc hẹn. Chọn Tắt trong Thư ký lịch khi muốn dừng.</p>
-    </section>
-    <section hidden>
-      <h1 tabindex="-1">Kết nối trang web</h1>
-      <h2>Mở một cửa sổ riêng</h2><p>Mở chat.zalo.me hoặc messenger.com và chuyển tab chat thành một cửa sổ riêng. Để trang chat hiển thị trong cửa sổ đó.</p>
-      <h2>Cho FRI đọc cửa sổ đã chọn</h2><p>Vào File → Thư ký lịch… → Tìm cửa sổ, chọn cửa sổ trình duyệt đang mở chat rồi bấm Bật nhận diện. Nếu đã đóng và mở lại cửa sổ, hãy tìm và chọn lại khi cần.</p>
-      <h2>Dùng hằng ngày</h2><p>FRI xử lý nội dung trên máy. Bạn có thể bật Mở Fri khi đăng nhập trong Thư ký lịch. Để đọc lại hướng dẫn, bấm nút hình cuốn sách trên thanh công cụ của lịch.</p>
-    </section>
-    <footer><button id="back" hidden>Quay lại</button><button id="next">Tiếp tục</button></footer>
-    <p id="error" role="alert"></p>
-  </main>
-  <script src="usage-guide.js"></script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; font-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+<title>Start with one plan · Fri</title>
+<style>
+@font-face{font-family:Inter;src:url(ui/InterVariable.woff2);font-weight:100 900}
+:root{color-scheme:light dark;font:16px/1.5 Inter,system-ui,sans-serif;background:light-dark(#f4f7fa,#111d27);color:light-dark(#172b3a,#eaf2f6);--accent:light-dark(#087f8c,#64d4d0);--paper:light-dark(#fff,#1c2d3b);--muted:light-dark(#586d7c,#a8bac6);--line:light-dark(#dbe4eb,#354b5a)}
+*{box-sizing:border-box}body{margin:0}[hidden]{display:none!important}header{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;-webkit-app-region:drag}header strong{font-size:24px;letter-spacing:-1px}button,input{font:inherit}button{min-height:44px;border-radius:14px;padding:11px 18px;border:1px solid var(--line);background:var(--paper);color:inherit;cursor:pointer;font-weight:600;-webkit-app-region:no-drag}button:focus-visible{outline:3px solid var(--accent);outline-offset:4px}button:disabled{opacity:.5;cursor:wait}.quiet{background:transparent;border:0;color:var(--muted)}main{max-width:580px;margin:0 auto;padding:clamp(16px,4vh,48px) 24px 32px}h1{font-size:clamp(32px,5vw,48px);line-height:1.06;letter-spacing:-1.8px;margin:16px 0}p{color:var(--muted);margin:0 0 24px}.art{width:170px;height:113px}.label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px}.invitation{padding:22px;background:var(--paper);border:1px solid var(--line);border-radius:22px;margin:24px 0}.invitation blockquote{font-size:20px;margin:0 0 12px}.primary{color:light-dark(white,#111d27);background:var(--accent);border-color:transparent}.actions{display:flex;gap:10px;flex-wrap:wrap}.actions .primary{flex:1}#result dl{display:grid;grid-template-columns:85px 1fr;gap:12px;margin:18px 0}dt{color:var(--muted)}dd{margin:0;font-weight:600}.help{margin-top:26px;border-top:1px solid var(--line);padding-top:18px}.help summary{cursor:pointer;min-height:44px}.help li{margin:10px 0;color:var(--muted)}#error{color:light-dark(#a32d36,#ffb2b9)}.privacy{font-size:13px;margin:16px 0 0}
+</style></head><body>
+<header><strong>fri.</strong><button id="skip" class="quiet">Explore Fri</button></header>
+<main>
+<section id="welcome"><img class="art" src="ui/first-plan.svg" alt=""><h1>One message.<br>One plan.</h1><p>Try a sample. Nothing is saved until you say so.</p>
+<div class="invitation"><div class="label">SAMPLE INVITATION</div><blockquote>“Tomorrow at 7 pm, coffee?”</blockquote><span>“Count me in.”</span></div>
+<div class="actions"><button id="try" class="primary">Find the plan</button><button id="new">Create my own</button></div></section>
+<section id="result" hidden><img class="art" src="ui/first-plan.svg" alt=""><h1 tabindex="-1">There’s your plan.</h1><div class="invitation"><div class="label">SAMPLE · NOT SAVED</div><dl><dt>Plan</dt><dd>Coffee</dd><dt>When</dt><dd id="when"></dd><dt>Duration</dt><dd>Choose before saving</dd></dl></div><div class="actions"><button id="review" class="primary">Review this plan</button><button id="again" class="quiet">Back</button></div></section>
+<p class="privacy">No account. No chat access. This example runs on your device.</p>
+<details class="help"><summary>Bring your own plans</summary><ul><li><strong>Files & links:</strong> add a source, answer missing details, then choose Add ready plans.</li><li><strong>Chat on Windows:</strong> choose a specific Zalo or Messenger window in Calendar assistant. You review every suggestion before saving.</li><li><strong>Desktop widget:</strong> File → Create FRI widget on desktop, then drag an area.</li></ul></details>
+<p id="error" role="alert"></p>
+</main><script src="ui/meeting-agent.js"></script><script src="usage-guide.js"></script></body></html>

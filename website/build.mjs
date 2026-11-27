@@ -1,10 +1,10 @@
 import {readFile,writeFile,mkdir,copyFile} from 'node:fs/promises';
 import {typography} from '../brand/typography.mjs';
-const typeCss=await typography();
+const typeCss=await typography()+'\n'+await readFile(new URL('../brand/naive.css',import.meta.url),'utf8');
 const root=new URL('./',import.meta.url);
 const read=name=>readFile(new URL(name,root),'utf8');
 const [shell,css,js,logo,refine,motion,surf]=await Promise.all([
-  read('page.html'),read('style.css'),read('app.js'),read('assets/fri-pole.svg'),read('refinement.css'),read('motion.js'),readFile(new URL('assets/ocean-loop.mp4',root))
+  read('page.html'),read('style.css'),read('app.js'),read('../brand/fri-mark.svg'),read('refinement.css'),read('motion.js'),readFile(new URL('assets/ocean-loop.mp4',root))
 ]);
 const widgetVideo=await readFile(new URL('assets/widget-walkthrough.mp4',root));
 const widgetWebm=await readFile(new URL('assets/widget-walkthrough.webm',root));
@@ -26,3 +26,10 @@ const served=html.replace('__SURF__','/assets/ocean-loop.mp4').replace('__WIDGET
 await writeFile(new URL('public/index.html',root),served);
 await writeFile(new URL('public/pricing/index.html',root),served);
 console.log('Built FRI-website.html ('+Math.round((Buffer.byteLength(html)+surf.length*4/3)/1024)+' KiB), self-contained.');
+
+await (await import('./build-browser.mjs')).buildBrowser();
+
+// Public release provenance: no host paths, user data or environment values.
+let revision=process.env.VERCEL_GIT_COMMIT_SHA||'';
+if(!revision){try{revision=(await import('node:child_process')).execFileSync('git',['rev-parse','HEAD'],{cwd:new URL('../',root),encoding:'utf8'}).trim()}catch{revision='local'}}
+await writeFile(new URL('public/build.json',root),JSON.stringify({revision,windows:JSON.parse(await read('../desktop/package.json')).version,android:JSON.parse(await read('../mobile/package.json')).version}));

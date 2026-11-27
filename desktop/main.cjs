@@ -19,6 +19,7 @@ const guideFile = path.join(__dirname, 'usage-guide.html');
 const guideURL = require('node:url').pathToFileURL(guideFile).href;
 const guideReceipt = path.join(app.getPath('userData'), 'usage-guide-read');
 let guideCompleted = false;
+let startAction = null;
 let reviewWindow;
 const startURL = 'app://fri/index.html';
 const uiPath = path.join(__dirname, 'ui');
@@ -134,19 +135,22 @@ if(!app.requestSingleInstanceLock()){app.quit();}else{
       ipcMain.handle('fri:meeting-open',e=>{trusted(e);meetingAgent.open();});
     }
     guideCompleted = fs.existsSync(guideReceipt);
-    ipcMain.handle('fri:guide-finish', event => {
-      if (event.sender !== win?.webContents || event.senderFrame !== win.webContents.mainFrame || event.senderFrame.url !== guideURL) {
-        throw new Error('Guide completion requires the first-run window');
-      }
+    ipcMain.handle('fri:take-start-action', event => { trusted(event); const action=startAction; startAction=null; return action; });
+    ipcMain.handle('fri:guide-finish', (event, action='explore') => {
+      const first=event.sender===win?.webContents && event.senderFrame===win.webContents.mainFrame && event.senderFrame.url===guideURL;
+      const replay=event.sender===reviewWindow?.webContents && event.senderFrame===reviewWindow.webContents.mainFrame && event.senderFrame.url===guideURL+'#review';
+      if ((!first&&!replay)||!['explore','sample','schedule'].includes(action)) throw new Error('Invalid first-plan action');
+      if(replay){setTimeout(()=>{reviewWindow?.close();if(action!=='explore')win?.webContents.send('fri:command',action)},0);return;}
       fs.writeFileSync(guideReceipt, '');
       guideCompleted = true;
+      startAction=action==='explore'?null:action;
       return win.loadURL(startURL).then(() => { widgets.restore(); meetingAgent?.resume(); });
     });
     ipcMain.handle('fri:guide-open', event => {
       trusted(event);
       if (reviewWindow) { reviewWindow.focus(); return; }
       reviewWindow = new BrowserWindow({
-        parent: win, modal: true, title: 'Hướng dẫn FRI', width: 660, height: 620,
+        parent: win, modal: true, title: 'Start with one plan · Fri', width: 660, height: 740,
         minWidth: 420, minHeight: 340, autoHideMenuBar: true, show: false,
         webPreferences: {preload: path.join(__dirname, 'preload.cjs'), sandbox: true, contextIsolation: true, nodeIntegration: false}
       });

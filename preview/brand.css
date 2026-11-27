@@ -55,3 +55,5 @@ body.is-background .day-orb:before,body.is-background .day-orb:after{animation-p
 .app-titlebar .titlebar-name{position:absolute;left:50%;transform:translateX(-50%);pointer-events:none}#refresh-sources{margin-left:24px;margin-right:auto}.brand-swatches{display:flex;gap:6px}.brand-swatches i{width:20px;height:20px;border-radius:50%;background:var(--cloud);border:1px solid var(--line)}.brand-swatches i:nth-child(2){background:#172b3a}.brand-swatches i:nth-child(3){background:#087f8c}
 
 .app-titlebar .titlebar-name{opacity:1;color:var(--muted)}.primary,.new-button,.day-cell.today,.mini-month .today{color:var(--on-accent)}.today .date-dots i{background:var(--on-accent)}
+
+.plan-extras summary{min-height:44px;display:flex;align-items:center;color:var(--accent);cursor:pointer}.plan-extras[open] summary{margin-bottom:12px}.wordmark.fri-logo{gap:2px}.wordmark.fri-logo>span{color:var(--ink)}.wordmark .fri-mark{width:38px;height:38px}.first-plan-card{margin-bottom:24px}

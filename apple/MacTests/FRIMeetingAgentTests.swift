@@ -1,3 +1,4 @@
+import FRICore
 import AppKit
 import Carbon
 import XCTest
@@ -5,6 +6,30 @@ import XCTest
 
 @MainActor
 final class FRIMeetingAgentTests: XCTestCase {
+    func testBuild7FixtureSurvivesUpgrade() async throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["FRI_UPGRADE_PROFILE"] != nil, "Requires an existing isolated profile written by native build 7")
+        let profile = try XCTUnwrap(ProcessInfo.processInfo.environment["FRI_UPGRADE_PROFILE"].flatMap(UUID.init(uuidString:)))
+        let originalID = ProcessInfo.processInfo.environment["FRI_TEST_STORE_ID"]
+        let originalPreview = ProcessInfo.processInfo.environment["FRI_SYNTHETIC_PREVIEW"]
+        setenv("FRI_TEST_STORE_ID", profile.uuidString, 1)
+        setenv("FRI_SYNTHETIC_PREVIEW", "1", 1)
+        defer {
+            if let originalID { setenv("FRI_TEST_STORE_ID", originalID, 1) } else { unsetenv("FRI_TEST_STORE_ID") }
+            if let originalPreview { setenv("FRI_SYNTHETIC_PREVIEW", originalPreview, 1) } else { unsetenv("FRI_SYNTHETIC_PREVIEW") }
+        }
+        let session = FRICalendarSession()
+        session.open()
+        for _ in 0..<100 where !session.ready { try await Task.sleep(for: .milliseconds(50)) }
+        XCTAssertTrue(session.ready && session.synthetic)
+        let appointment = try XCTUnwrap(session.state.tasks.first { $0.id == "upgrade-build7-plan" })
+        XCTAssertEqual(appointment.title, "Đồ án · QA")
+        XCTAssertTrue(appointment.done)
+        XCTAssertEqual(session.state.drafts.first { $0.id == "upgrade-build7-draft" }?.time, "13:37")
+        XCTAssertEqual(session.state.settings["theme"]?.string, "dark")
+        XCTAssertEqual(session.state.sourceLibrary.last?.label, "QA nguồn cũ")
+        XCTAssertEqual(session.state.importQueue.last?.label, "QA inbox")
+    }
+
     func testRememberedSourceSleepsOutsideChatAndSurvivesPauseAndRelaunch() throws {
         let domain = "FRI-background-test-" + UUID().uuidString
         let prefs = try XCTUnwrap(UserDefaults(suiteName: domain))

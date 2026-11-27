@@ -10,9 +10,15 @@ struct FRIWorkspaceView: View {
     @Environment(\.openWindow) private var openWindow
     #if os(macOS)
     @State private var showUsageGuide = false
+    @State private var keyboardNewMenu = false
+    @FocusState private var focusedTab: String?
+    @FocusState private var region: Int?
+
     #endif
+    @FocusState private var feedFocus: FeedFocus?
     @State private var feedDays = 14
     @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var replayFirstPlan = false
     @State private var showSidebar = true
     @State private var showUpcoming = false
     @State private var fileExport: FRIFile?
@@ -35,9 +41,17 @@ struct FRIWorkspaceView: View {
         GeometryReader { geometry in
             let wide = geometry.size.width >= 800
             HStack(spacing: 0) {
-                if wide && showSidebar { sidebar.frame(width: 235) }
+                if wide && showSidebar {
+                    sidebar.frame(width: 235)
+                        #if os(macOS)
+                        .focusable().focused($region, equals: 0)
+                        #endif
+                }
                 VStack(alignment: .leading, spacing: 0) {
                     toolbar(wide: wide)
+                        #if os(macOS)
+                        .focusable().focused($region, equals: 1)
+                        #endif
                     if calendar.synthetic {
                         Text("Development preview · sample data only")
                             .friFont(.caption).foregroundStyle(.secondary)
@@ -45,11 +59,11 @@ struct FRIWorkspaceView: View {
                     }
                     if let message = calendar.message {
                         HStack {
-                            Text(message).friFont(.callout)
+                            Text(message).friFont(.callout).fixedSize(horizontal: false, vertical: true).accessibilityLabel(message)
                             Spacer()
                             Button("Dismiss", systemImage: "xmark") { calendar.message = nil }.labelStyle(.iconOnly)
                         }
-                        .padding(12).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                        .padding(12).background(FRIColors.surface, in: RoundedRectangle(cornerRadius: 12))
                         .padding(.horizontal, 18).padding(.bottom, 10)
                     }
                     if calendar.ready {
@@ -59,6 +73,9 @@ struct FRIWorkspaceView: View {
                                 workspaceContent(wide: wide && geometry.size.width >= 1000)
                             }.padding(.horizontal, wide ? 26 : 16).padding(.vertical, 20)
                         }
+                        #if os(macOS)
+                        .focusable().focused($region, equals: 2)
+                        #endif
                         .accessibilityIdentifier("fri.calendar.content")
                     } else if calendar.opening {
                         VStack(spacing: 12) {
@@ -107,15 +124,74 @@ struct FRIWorkspaceView: View {
             }
         }
         #if os(macOS)
-        .sheet(isPresented: $showUsageGuide) {
-            FRIUsageGuide(reviewing: true) { showUsageGuide = false }
+        .onChange(of: calendar.sidebarToggle) { showSidebar.toggle() }
+        .onKeyPress(phases: .down) { key in
+            guard calendar.ready, calendar.panel == nil, calendar.appointment == nil,
+                  !showUsageGuide, !calendar.shortcutHelp, !keyboardNewMenu,
+                  !(NSApp.keyWindow?.firstResponder is NSTextInputClient) else { return .ignored }
+            if key.key.character == Character(UnicodeScalar(NSF6FunctionKey)!) {
+                let visible = showSidebar && (NSApp.keyWindow?.contentView?.bounds.width ?? 0) >= 800 ? [0, 1, 2] : [1, 2]
+                let current = region.flatMap { visible.firstIndex(of: $0) } ?? -1
+                let next = (current + (key.modifiers.contains(.shift) ? visible.count - 1 : 1) + visible.count) % visible.count
+                region = visible[next]
+                return .handled
+            }
+            guard key.modifiers.intersection([.command, .control, .option]).isEmpty,
+                  calendar.state.settings["singleKeys"]?.bool != false else { return .ignored }
+            switch key.characters.lowercased() {
+            case "n": keyboardNewMenu = true
+            case "/": calendar.show(.search)
+            case "t": calendar.select(CalendarClock.day())
+            case "1": calendar.view = .day
+            case "2": calendar.view = .week
+            case "3": calendar.view = .month
+            case "4": calendar.view = .year
+            case "r": calendar.refreshSources()
+            case "?": calendar.shortcutHelp = true
+            default: return .ignored
+            }
+            return .handled
+        }
+        .confirmationDialog("New plan", isPresented: $keyboardNewMenu) {
+            Button("Schedule") { calendar.newDraft(deadline: false) }
+            Button("One-time deadline") { calendar.newDraft(deadline: true) }
+            Button("Collection") { calendar.show(.collections) }
+        }
+        .sheet(isPresented: $calendar.shortcutHelp) {
+            FRISheetView(title: "Keyboard shortcuts") {
+                Form {
+                    LabeledContent("Create a schedule", value: "⌘N")
+                    LabeledContent("Search appointments", value: "⌘K · ⌘F · /")
+                    LabeledContent("Settings · Sidebar", value: "⌘, · ⌘B")
+                    LabeledContent("New plan · Today · Add ready plans", value: "N · T · R")
+                    LabeledContent("Feed · Week · Month · Year", value: "1 · 2 · 3 · 4")
+                    LabeledContent("Change region", value: "F6 · Shift F6")
+                    LabeledContent("Confirm a plan", value: "⌘Return")
+                }.formStyle(.grouped)
+            }
+        }
+        .sheet(isPresented: $showUsageGuide, onDismiss: { calendar.presentFirstPlanIfReady() }) {
+            VStack(spacing: 0) {
+                if replayFirstPlan {
+                    FRIFirstPlanWelcome { item in
+                        calendar.prepareFirstPlan(item)
+                        showUsageGuide = false
+                    } explore: { showUsageGuide = false }
+                } else {
+                    Button("Thử tạo lịch từ tin nhắn mẫu") { replayFirstPlan = true }.padding(.top, 12)
+                    FRIUsageGuide(reviewing: true) { showUsageGuide = false }
                 .frame(minWidth: 500, idealWidth: 600, minHeight: 470, idealHeight: 570)
                 .environment(\.dynamicTypeSize, effectiveType)
+                }
+            }.onDisappear { replayFirstPlan = false }
         }
         #else
         .onOpenURL { url in calendar.open(); calendar.openURL(url) }
         #endif
         .sheet(item: $calendar.panel, onDismiss: {
+            #if os(macOS)
+            calendar.firstPlan = nil
+            #endif
             if let item = searchedAppointment {
                 calendar.select(item.date)
                 calendar.appointment = item
@@ -124,7 +200,12 @@ struct FRIWorkspaceView: View {
         }) { panel in
             Group {
                 switch panel {
-                case .draft: FRIPlanEditorView(calendar: calendar)
+                case .draft:
+                    #if os(macOS)
+                    FRIMacPlanEditor(calendar: calendar)
+                    #else
+                    FRIPlanEditorView(calendar: calendar)
+                    #endif
                 case .dayAssistant: FRIDayAssistantView(calendar: calendar)
                 case .collections: FRICollectionsView(calendar: calendar)
                 case .search: FRISearchView(tasks: calendar.state.tasks) { item in
@@ -331,7 +412,13 @@ struct FRIWorkspaceView: View {
     }
 
     private func toolbarIcon(_ title: String, systemImage: String) -> some View {
-        Label(title, systemImage: systemImage)
+        let asset = ["magnifyingglass": "FriSymbolSearch", "plus": "FriSymbolPlus", "gearshape": "FriSymbolSettings", "calendar": "FriSymbolCalendar", "folder": "FriSymbolFolder"][systemImage]
+        return Label {
+            Text(title)
+        } icon: {
+            if let asset { Image(asset).resizable().scaledToFit().frame(width: 21, height: 21) }
+            else { Image(systemName: systemImage) }
+        }
             .labelStyle(.iconOnly)
             .frame(width: 44, height: 44)
             .foregroundStyle(FRIColors.ink)
@@ -362,7 +449,7 @@ struct FRIWorkspaceView: View {
                 Spacer(minLength: 0)
             }
             Button { calendar.refreshSources() } label: {
-                Label("Refresh", systemImage: "arrow.clockwise")
+                Label("Add ready plans", systemImage: "arrow.clockwise")
                     .frame(minHeight: 44)
             }.disabled(calendar.readingSource).accessibilityIdentifier("fri.sources.refresh")
             #if os(macOS)
@@ -410,6 +497,28 @@ struct FRIWorkspaceView: View {
                                 if key == CalendarClock.day() { Text("Today") }
                                 else { Text(date, format: .dateTime.month(.abbreviated).day()) }
                             }.buttonStyle(.plain)
+                                #if os(macOS)
+                                .focused($focusedTab, equals: key)
+                                .onKeyPress(phases: [.down, .repeat]) { press in
+                                    guard let index = tabs.firstIndex(of: key) else { return .ignored }
+                                    let next: String
+                                    switch press.key {
+                                    case .leftArrow: next = tabs[max(0, index - 1)]
+                                    case .rightArrow: next = tabs[min(tabs.count - 1, index + 1)]
+                                    case .home: next = tabs[0]
+                                    case .end: next = tabs[tabs.count - 1]
+                                    case .delete, .deleteForward:
+                                        guard key != CalendarClock.day() else { return .ignored }
+                                        calendar.closeTab(key)
+                                        focusedTab = calendar.state.active
+                                        return .handled
+                                    default: return .ignored
+                                    }
+                                    calendar.select(next)
+                                    focusedTab = next
+                                    return .handled
+                                }
+                                #endif
                                 .accessibilityIdentifier("fri.tab.\(key)")
                                 .accessibilityAddTraits(key == calendar.state.active ? .isSelected : [])
                             if key != CalendarClock.day() {
@@ -502,10 +611,28 @@ struct FRIWorkspaceView: View {
             .accessibilityIdentifier("fri.filter")
     }
 
+    private var visibleFeedIDs: [String] {
+        let last = CalendarClock.local.date(byAdding: .day, value: feedDays, to: selected) ?? selected
+        let start = CalendarClock.day(selected), end = CalendarClock.day(last)
+        return calendar.state.tasks.filter {
+            $0.date >= start && $0.date < end && (!calendar.onlyPending || !$0.done)
+                && (calendar.collection == nil || $0.category == calendar.collection)
+        }.sorted { ($0.date, $0.time, $0.id) < ($1.date, $1.time, $1.id) }.map(\.id)
+    }
+
     private var appointments: some View {
         let clock = CalendarClock.local
         let groups = Dictionary(grouping: calendar.state.tasks, by: \.date)
         return LazyVStack(alignment: .leading, spacing: 12) {
+            if (calendar.onlyPending || calendar.collection != nil) && visibleFeedIDs.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("No appointments match this view.")
+                    Button("Show all plans") {
+                        calendar.onlyPending = false
+                        calendar.collection = nil
+                    }
+                }.padding(14).modifier(FRISurface(glass: false, radius: 14))
+            }
             ForEach(0..<feedDays, id: \.self) { offset in
                 if let date = clock.date(byAdding: .day, value: offset, to: selected) {
                     let key = CalendarClock.day(date)
@@ -529,7 +656,31 @@ struct FRIWorkspaceView: View {
                         ForEach(rows) { item in
                             FRICardView(item: item, overlaps: item.conflict(in: daily) != nil,
                                         show: { calendar.appointment = item },
-                                        complete: { calendar.setDoneWithoutOpening(item) })
+                                        complete: {
+                                            if calendar.onlyPending, !item.done {
+                                                let ids = visibleFeedIDs
+                                                if let i = ids.firstIndex(of: item.id) {
+                                                    let fallback = ids.dropFirst(i + 1).first ?? ids.prefix(i).last
+                                                    feedFocus = fallback.map(FeedFocus.details)
+                                                }
+                                            }
+                                            calendar.setDoneWithoutOpening(item)
+                                        }, focus: $feedFocus)
+                                .id(item.id)
+                                .onKeyPress(phases: [.down, .repeat]) { key in
+                                    let ids = visibleFeedIDs
+                                    guard let i = ids.firstIndex(of: item.id) else { return .ignored }
+                                    switch key.key {
+                                    case .upArrow: feedFocus = .details(ids[max(0, i - 1)])
+                                    case .downArrow: feedFocus = .details(ids[min(ids.count - 1, i + 1)])
+                                    case .home: feedFocus = .details(ids[0])
+                                    case .end: feedFocus = .details(ids[ids.count - 1])
+                                    case .leftArrow: feedFocus = .details(item.id)
+                                    case .rightArrow: feedFocus = .completion(item.id)
+                                    default: return .ignored
+                                    }
+                                    return .handled
+                                }
                         }
                     }
                 }
@@ -543,7 +694,7 @@ struct FRIWorkspaceView: View {
         Button { calendar.view = .month; calendar.cursor = selected } label: {
             VStack(alignment: .leading, spacing: 7) {
                 Text(selected, format: .dateTime.weekday(.wide))
-                    .font(.system(size: 32, weight: .semibold)).minimumScaleFactor(0.75).lineLimit(1)
+                    .friFont(.largeTitle, weight: .semibold).minimumScaleFactor(0.75).lineLimit(1)
                     .accessibilityAddTraits(.isHeader)
                 HStack {
                     Text(selected, format: .dateTime.month(.wide).day().year())
@@ -704,11 +855,16 @@ struct FRIFile: FileDocument {
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper { FileWrapper(regularFileWithContents: data) }
 }
 
+private enum FeedFocus: Hashable {
+    case details(String), completion(String)
+}
+
 private struct FRICardView: View {
     let item: Appointment
     let overlaps: Bool
     let show: () -> Void
     let complete: () -> Void
+    let focus: FocusState<FeedFocus?>.Binding
 
     var body: some View {
         HStack(spacing: 12) {
@@ -726,11 +882,11 @@ private struct FRICardView: View {
                         if overlaps { Label("Time overlap", systemImage: "clock.badge.exclamationmark").friFont(.caption) }
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }.contentShape(Rectangle())
-            }.accessibilityIdentifier("fri.card.\(item.id)")
+            }.focused(focus, equals: .details(item.id)).accessibilityIdentifier("fri.card.\(item.id)")
             Button(action: complete) {
                 Image(systemName: item.done ? "checkmark.circle.fill" : "circle")
                     .font(.title2).foregroundStyle(FRIColors.accent).frame(width: 44, height: 44).contentShape(Rectangle())
-            }.accessibilityLabel(item.done ? "Mark as pending" : "Done").accessibilityIdentifier("fri.done.\(item.id)")
+            }.focused(focus, equals: .completion(item.id)).accessibilityLabel(item.done ? "Mark as pending" : "Done").accessibilityIdentifier("fri.done.\(item.id)")
         }.buttonStyle(.plain).padding(14).modifier(FRISurface(glass: false, radius: 16))
     }
 }

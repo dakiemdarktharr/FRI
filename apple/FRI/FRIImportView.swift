@@ -179,7 +179,7 @@ struct FRIImportView: View {
                             state.importQueue[index].settings = settings
                         }
                     }.id(selected.id)
-                    Button("Refresh") { refresh() }.accessibilityIdentifier("fri.import.refresh")
+                    Button("Add ready plans") { refresh() }.accessibilityIdentifier("fri.import.refresh")
                     Button("All sources") { calendar.selectedSource = nil; selectedRow = nil }
                     Button("Remove source", role: .destructive) { removeSource(selected.id) }
                 } else if let archived {
@@ -191,7 +191,13 @@ struct FRIImportView: View {
                     }
                 } else {
                     Section("Add a source") {
+                        #if os(macOS)
+                        TextEditor(text: $text)
+                            .frame(minHeight: 72)
+                            .accessibilityLabel("Paste plans").accessibilityIdentifier("fri.import.text")
+                        #else
                         TextField("Paste plans", text: $text, axis: .vertical).accessibilityIdentifier("fri.import.text")
+                        #endif
                         Button("Read text") {
                             let input = String(text.prefix(60_000))
                             read(label: websiteLink.flatMap { URL(string: $0)?.host } ?? "Pasted text", links: websiteLink.map { [$0] } ?? []) { try FRIImportReader.parse(input, name: "") }
@@ -255,7 +261,7 @@ struct FRIImportView: View {
                             }
                         }
                     }
-                    Button("Refresh prepared plans") { refresh() }.disabled(calendar.state.importQueue.isEmpty)
+                    Button("Add ready plans") { refresh() }.disabled(calendar.state.importQueue.isEmpty)
                 }
                 if calendar.readingSource {
                     ProgressView("Reading source…")

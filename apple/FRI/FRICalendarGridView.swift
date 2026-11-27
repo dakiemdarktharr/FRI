@@ -11,6 +11,7 @@ struct FRICalendarGridView: View {
     let showMonth: (Date) -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
 
+    @FocusState private var focusedDay: String?
     private let clock = CalendarClock.local
 
     var body: some View {
@@ -119,6 +120,29 @@ struct FRICalendarGridView: View {
                         .overlay(RoundedRectangle(cornerRadius: 15).strokeBorder(FRIColors.line))
                     }
                     .buttonStyle(.plain)
+                    #if os(macOS)
+                    .focused($focusedDay, equals: key)
+                    .onKeyPress(phases: [.down, .repeat]) { press in
+                        let component: Calendar.Component
+                        let delta: Int
+                        let weekday = (clock.component(.weekday, from: date) - clock.firstWeekday + 7) % 7
+                        switch press.key {
+                        case .leftArrow: (component, delta) = (.day, -1)
+                        case .rightArrow: (component, delta) = (.day, 1)
+                        case .upArrow: (component, delta) = (.day, -7)
+                        case .downArrow: (component, delta) = (.day, 7)
+                        case .home: (component, delta) = (.day, -weekday)
+                        case .end: (component, delta) = (.day, 6 - weekday)
+                        case .pageUp: (component, delta) = (press.modifiers.contains(.shift) ? .year : .month, -1)
+                        case .pageDown: (component, delta) = (press.modifiers.contains(.shift) ? .year : .month, 1)
+                        default: return .ignored
+                        }
+                        guard let next = clock.date(byAdding: component, value: delta, to: date) else { return .ignored }
+                        cursor = next
+                        focusedDay = CalendarClock.day(next)
+                        return .handled
+                    }
+                    #endif
                     .opacity(clock.isDate(date, equalTo: cursor, toGranularity: .month) ? 1 : 0.48)
                     .accessibilityLabel("\(date.formatted(date: .complete, time: .omitted)), \(items.count) appointments")
                     .accessibilityIdentifier("fri.calendar.day.\(key)")
@@ -154,7 +178,7 @@ struct FRICalendarGridView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                         .padding(15).aspectRatio(1, contentMode: .fit).frame(minHeight: minimumMonthWidth)
                         .foregroundStyle(FRIColors.ink)
-                        .background(FRIColors.cloud.opacity(0.8), in: RoundedRectangle(cornerRadius: 20))
+                        .background(FRIColors.surface, in: RoundedRectangle(cornerRadius: 20))
                         .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(FRIColors.surface.opacity(0.18)))
                     }.buttonStyle(.plain)
                         .accessibilityLabel("\(month.formatted(.dateTime.month(.wide).year())), \(count) appointments")

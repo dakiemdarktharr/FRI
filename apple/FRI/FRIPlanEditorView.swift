@@ -4,6 +4,7 @@ import SwiftUI
 
 struct FRISheetView<Content: View>: View {
     let title: String
+    var onClose: (() -> Void)? = nil
     @ViewBuilder let content: Content
     @Environment(\.dismiss) private var dismiss
 
@@ -16,7 +17,7 @@ struct FRISheetView<Content: View>: View {
                 .foregroundStyle(FRIColors.ink)
                 .textFieldStyle(FRISheetTextFieldStyle())
                 .navigationTitle(title)
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { if let onClose { onClose() } else { dismiss() } } } }
         }
         .tint(FRIColors.accent)
         #if os(macOS)
@@ -34,7 +35,7 @@ struct FRISheetTextFieldStyle: TextFieldStyle {
             .foregroundStyle(FRIColors.ink)
             .tint(FRIColors.accent)
             .background(FRIColors.surface, in: RoundedRectangle(cornerRadius: 8))
-            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(FRIColors.line))
+            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(FRIColors.controlEdge))
     }
 }
 
@@ -293,19 +294,36 @@ struct FRIPlanFields: View {
                 Text("No date was found in the source. Choose a date above or use today.").friFont(.caption).foregroundStyle(.secondary)
                 Button("Use today") { draft.date = CalendarClock.day() }
             }
+            #if os(macOS)
+            LabeledContent("Start time") { FRIMacTimeField(value: $draft.time) }
+            #else
             labeledField("Time (HH:mm)") {
                 TextField("Time (HH:mm)", text: $draft.time).accessibilityIdentifier("fri.editor.time")
             }
+            #endif
             if !draft.isDeadline {
                 labeledField("Duration in minutes") {
                     TextField("Duration in minutes", value: $draft.duration, format: .number)
                         .accessibilityIdentifier("fri.editor.duration")
                 }
             }
-            labeledField("Category") { TextField("Category", text: $draft.category) }
-            labeledField("Location") { TextField("Location", text: $draft.location) }
-            labeledField("Notes") { TextField("Notes", text: $draft.notes, axis: .vertical) }
+            #if os(macOS)
+            DisclosureGroup("Location & more") {
+                extraFields
+                if !draft.isDeadline {
+                    Toggle("Flexible time", isOn: Binding(get: { draft.flexible == true }, set: { draft.flexible = $0 }))
+                }
+            }
+            #else
+            extraFields
+            #endif
         }
+    }
+
+    @ViewBuilder private var extraFields: some View {
+        labeledField("Category") { TextField("Category", text: $draft.category) }
+        labeledField("Location") { TextField("Location", text: $draft.location) }
+        labeledField("Notes") { TextField("Notes", text: $draft.notes, axis: .vertical) }
     }
 
     private func labeledField<Content: View>(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) -> some View {
@@ -324,7 +342,11 @@ struct FRIPlanDetailView: View {
     var body: some View {
         let current = calendar.state.tasks.first { $0.id == item.id } ?? item
         if let editing {
+            #if os(macOS)
+            FRIMacPlanEditor(calendar: calendar, editing: editing)
+            #else
             FRIPlanEditorView(calendar: calendar, editing: editing)
+            #endif
         } else {
             FRISheetView(title: current.title) {
                 Form {

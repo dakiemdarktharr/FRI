@@ -1,6 +1,57 @@
 #if os(macOS)
+import FRICore
 import FRIDesign
 import SwiftUI
+
+struct FRIFirstPlanWelcome: View {
+    let openEditor: (Appointment?) -> Void
+    let explore: () -> Void
+    @State private var preview: Appointment?
+    @State private var failure: String?
+    private let invitation = "Tomorrow at 7 pm, coffee?"
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Image("FirstPlan").resizable().scaledToFit().frame(height: 115).accessibilityHidden(true)
+            Text("Một tin nhắn, một lịch hẹn").friFont(.largeTitle, weight: .semibold)
+            Text(invitation).friFont(.title3)
+            if let preview {
+                Text("MẪU · CHƯA LƯU").friFont(.caption, weight: .semibold)
+                Text(preview.title).friFont(.headline)
+                Text(preview.date + " · " + preview.time)
+                Text("Chọn thời lượng khi xem lại lịch.")
+                Button("Xem lại lịch hẹn") { openEditor(preview) }
+                    .buttonStyle(.borderedProminent).accessibilityIdentifier("fri.welcome.review")
+            } else {
+                Button("Tìm lịch hẹn") { parse() }
+                    .buttonStyle(.borderedProminent).accessibilityIdentifier("fri.welcome.parse")
+            }
+            if let failure { Text(failure).foregroundStyle(.red) }
+            HStack {
+                Button("Tự tạo lịch") { openEditor(nil) }
+                Button("Khám phá FRI", action: explore).keyboardShortcut(.cancelAction)
+                    .accessibilityIdentifier("fri.welcome.skip")
+            }
+        }.padding(32).frame(maxWidth: .infinity, maxHeight: .infinity)
+            .controlSize(.large).background(FRIColors.cloud).foregroundStyle(FRIColors.ink).tint(FRIColors.accent)
+    }
+
+    private func parse() {
+        do {
+            guard let fields = try MeetingRecognition().draft(invitation),
+                  let title = fields["title"], let date = fields["date"], let time = fields["time"] else {
+                throw SourceFailure("Không đọc được lịch hẹn. Bạn có thể tự tạo lịch.")
+            }
+            var item = Appointment()
+            item.title = title
+            item.date = date
+            item.time = time
+            item.duration = 0
+            preview = item
+            failure = nil
+        } catch { failure = error.localizedDescription }
+    }
+}
 
 struct FRIUsageGuide: View {
     static let completionKey = "fri.usageGuideCompleted"
@@ -27,8 +78,8 @@ struct FRIUsageGuide: View {
     private let chapters = [
         Chapter(icon: "calendar.badge.plus", title: "Tạo lịch trình đầu tiên", steps: [
             ("Mở lịch mới", "Trong lịch FRI, vào File → New Schedule hoặc nhấn ⌘N."),
-            ("Điền cuộc hẹn", "Ví dụ, nhập “Cà phê với An” vào Name. Ở Date chọn ngày mai, ở Time nhập 09:00 và ở Duration nhập 30 phút. Bạn có thể thêm quán cà phê vào Location."),
-            ("Lưu và kiểm tra", "Bấm Done. Nếu FRI hỏi thêm giờ hoặc thời lượng, điền thông tin và xác nhận. Mở ngày vừa chọn trong lịch để xem hoặc sửa cuộc hẹn.")
+            ("Điền cuộc hẹn", "Ví dụ, nhập “Cà phê với An” vào Name. Ở Date chọn ngày mai, ở Start time chọn 09:00 và ở Duration nhập 30 phút. Bạn có thể thêm quán cà phê vào Location."),
+            ("Lưu và kiểm tra", "Bấm Confirm. Nếu FRI hỏi thêm giờ hoặc thời lượng, điền thông tin và xác nhận. Mở ngày vừa chọn trong lịch để xem hoặc sửa cuộc hẹn.")
         ]),
         Chapter(icon: "bubble.left.and.bubble.right", title: "Kết nối ứng dụng chat", steps: [
             ("Mở cuộc trò chuyện", "Mở Zalo hoặc Messenger trên Mac, rồi vào File → Thư ký lịch… trong FRI."),

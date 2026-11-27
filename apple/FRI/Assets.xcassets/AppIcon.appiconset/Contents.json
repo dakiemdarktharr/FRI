@@ -4,67 +4,67 @@
       "platform": "ios",
       "idiom": "universal",
       "size": "1024x1024",
-      "filename": "FRI.png"
+      "filename": "FRI-iOS-1024.png"
     },
     {
       "idiom": "mac",
       "size": "16x16",
       "scale": "1x",
-      "filename": "FRI-16.png"
+      "filename": "FRI-mac-16.png"
     },
     {
       "idiom": "mac",
       "size": "16x16",
       "scale": "2x",
-      "filename": "FRI-32.png"
+      "filename": "FRI-mac-32.png"
     },
     {
       "idiom": "mac",
       "size": "32x32",
       "scale": "1x",
-      "filename": "FRI-32.png"
+      "filename": "FRI-mac-32.png"
     },
     {
       "idiom": "mac",
       "size": "32x32",
       "scale": "2x",
-      "filename": "FRI-64.png"
+      "filename": "FRI-mac-64.png"
     },
     {
       "idiom": "mac",
       "size": "128x128",
       "scale": "1x",
-      "filename": "FRI-128.png"
+      "filename": "FRI-mac-128.png"
     },
     {
       "idiom": "mac",
       "size": "128x128",
       "scale": "2x",
-      "filename": "FRI-256.png"
+      "filename": "FRI-mac-256.png"
     },
     {
       "idiom": "mac",
       "size": "256x256",
       "scale": "1x",
-      "filename": "FRI-256.png"
+      "filename": "FRI-mac-256.png"
     },
     {
       "idiom": "mac",
       "size": "256x256",
       "scale": "2x",
-      "filename": "FRI-512.png"
+      "filename": "FRI-mac-512.png"
     },
     {
       "idiom": "mac",
       "size": "512x512",
       "scale": "1x",
-      "filename": "FRI-512.png"
+      "filename": "FRI-mac-512.png"
     },
     {
       "idiom": "mac",
       "size": "512x512",
       "scale": "2x",
-      "filename": "FRI.png"
+      "filename": "FRI-mac-1024.png"
     }
   ],
   "info": {

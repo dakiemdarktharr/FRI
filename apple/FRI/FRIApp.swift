@@ -30,7 +30,7 @@ struct FRIApp: App {
                 if guideCompleted {
                     FRIWorkspaceView(calendar: calendar)
                 } else {
-                    FRIUsageGuide(reviewing: false) { guideCompleted = true }
+                    welcome
                 }
             }
             .frame(minWidth: 540, minHeight: 520)
@@ -63,14 +63,14 @@ struct FRIApp: App {
                         .keyboardShortcut("n", modifiers: [.command, .shift])
                     Divider()
                     Button("Thư ký lịch…") { openWindow(id: "meeting-agent") }
-                    Button("Refresh sources") { calendar.refreshSources() }
+                    Button("Add ready plans") { calendar.refreshSources() }
                     Button("Add a source…") { calendar.show(.importPlans) }
                     Button("Export Backup…") { calendar.requestFile(.exportBackup) }
                     Button("Restore Backup…") { calendar.requestFile(.restoreBackup) }
                     Button("New Desktop Widget") { calendar.addDesktopWidget() }
                     Button("Show Desktop Widgets") { calendar.showDesktopWidgets() }
                     Button("Widget Gallery…") { calendar.show(.widget) }
-                }.disabled(!guideCompleted)
+                }.disabled(!guideCompleted || calendar.panel != nil || calendar.appointment != nil)
             }
             CommandGroup(replacing: .undoRedo) {
                 Button("Undo") { calendar.undo() }.keyboardShortcut("z").disabled(!guideCompleted || !calendar.canUndo)
@@ -81,14 +81,18 @@ struct FRIApp: App {
                     Button("Month") { calendar.revealCalendar?(); calendar.view = .month }.keyboardShortcut("2")
                     Button("Year") { calendar.revealCalendar?(); calendar.view = .year }.keyboardShortcut("3")
                     Button("Search") { calendar.show(.search) }.keyboardShortcut("f")
-                }.disabled(!guideCompleted)
+                    Button("Search appointments…") { calendar.show(.search) }.keyboardShortcut("k")
+                    Button("Toggle sidebar") { calendar.sidebarToggle.toggle() }.keyboardShortcut("b")
+                    Button("Keyboard shortcuts") { calendar.shortcutHelp = true }
+                    Button("Settings…") { calendar.show(.appearance) }.keyboardShortcut(",")
+                }.disabled(!guideCompleted || calendar.panel != nil || calendar.appointment != nil)
             }
         }
         #endif
         #if os(macOS)
         Window("Thư ký lịch", id: "meeting-agent") {
             if guideCompleted { FRIMeetingAgentSettings(agent: meetingAgent) }
-            else { FRIUsageGuide(reviewing: false) { guideCompleted = true } }
+            else { welcome }
         }
         MenuBarExtra("FRI · Thư ký lịch", systemImage: meetingAgent.enabled ? "calendar.badge.clock" : "calendar") {
             Text(meetingAgent.status)
@@ -106,6 +110,16 @@ struct FRIApp: App {
     }
 
     #if os(macOS)
+    private var welcome: some View {
+        FRIFirstPlanWelcome { item in
+            calendar.prepareFirstPlan(item)
+            guideCompleted = true
+            if let window = NSApp.windows.first(where: { $0.identifier?.rawValue.hasPrefix("calendar-") == true }) {
+                window.makeKeyAndOrderFront(nil)
+            } else { openWindow(id: "calendar") }
+        } explore: { guideCompleted = true }
+    }
+
     private func openLink(_ url: URL) {
         if url.scheme == "fri", url.host == "meeting-agent" { openWindow(id: "meeting-agent") }
         else { calendar.open(); calendar.openURL(url) }
@@ -195,6 +209,26 @@ final class FRICalendarSession {
     var view: CalendarView = .day
     var cursor: Date = .now
     var appointment: Appointment?
+    #if os(macOS)
+    var firstPlan: Appointment?
+    var shortcutHelp = false
+    var sidebarToggle = false
+    private var firstEditorPending = false
+
+    func prepareFirstPlan(_ item: Appointment?) {
+        firstPlan = item
+        firstEditorPending = true
+        draftReviewIDs = nil
+        draftStartingID = nil
+        draftDeadline = false
+    }
+
+    func presentFirstPlanIfReady() {
+        guard ready, firstEditorPending, panel == nil else { return }
+        firstEditorPending = false
+        panel = .draft
+    }
+    #endif
     var draftDeadline = false
     var draftReviewIDs: Set<String>?
     var draftStartingID: String?
@@ -264,6 +298,9 @@ final class FRICalendarSession {
             spotifyPlayer.close()
         }
         ready = true
+        #if os(macOS)
+        presentFirstPlanIfReady()
+        #endif
         reconcileReminders()
         refreshWeatherAutomatically()
         #if os(macOS)
@@ -332,6 +369,9 @@ final class FRICalendarSession {
 
     func newDraft(deadline: Bool, startingID: String? = nil) {
         guard ready else { return }
+        #if os(macOS)
+        firstPlan = nil
+        #endif
         draftReviewIDs = nil
         draftStartingID = startingID
         draftDeadline = deadline
@@ -490,6 +530,7 @@ final class FRICalendarSession {
                     if item.kind == base.kind { item.kind = current.kind }
                     if item.category == base.category { item.category = current.category }
                     if item.location == base.location { item.location = current.location }
+                    if item.flexible == base.flexible { item.flexible = current.flexible }
                     if item.notes == base.notes { item.notes = current.notes }
                     item.done = current.done
                     item.sourceKey = current.sourceKey

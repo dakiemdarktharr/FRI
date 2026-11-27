@@ -23,45 +23,118 @@ final class FRIWorkflowTests: XCTestCase {
         app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
         app.launch()
 
-        let next = app.buttons["fri.guide.next"]
-        let finish = app.buttons["fri.guide.finish"]
+        let parse = app.buttons["fri.welcome.parse"]
         let book = app.buttons["fri.guide.open"]
-        XCTAssertTrue(next.waitForExistence(timeout: 12))
-        XCTAssertFalse(book.exists)
-        XCTAssertFalse(finish.exists)
-        app.typeKey("n", modifierFlags: .command)
-        XCTAssertFalse(app.buttons["fri.editor.submit"].exists)
-        next.click()
-        XCTAssertTrue(app.staticTexts["Kết nối ứng dụng chat"].exists)
+        XCTAssertTrue(parse.waitForExistence(timeout: 12))
+        parse.click()
+        XCTAssertTrue(app.buttons["fri.welcome.review"].waitForExistence(timeout: 4))
         app.terminate()
         app.launch()
-        XCTAssertTrue(next.waitForExistence(timeout: 12))
-        XCTAssertTrue(app.staticTexts["Tạo lịch trình đầu tiên"].exists)
-        next.click()
-        next.click()
-        XCTAssertTrue(app.staticTexts["Kết nối trang web"].exists)
-        app.buttons["fri.guide.back"].click()
-        XCTAssertFalse(finish.exists)
-        next.click()
-        finish.click()
+        XCTAssertTrue(parse.waitForExistence(timeout: 12))
+        parse.click()
+        app.buttons["fri.welcome.review"].click()
+        let title = app.textFields["fri.editor.title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 12))
+        XCTAssertEqual(title.value as? String, "Cà phê")
+        let time = app.buttons["fri.editor.time"]
+        XCTAssertEqual(time.value as? String, "19:00")
+        time.click()
+        app.typeKey(.downArrow, modifierFlags: [])
+        app.typeKey(.escape, modifierFlags: [])
+        XCTAssertEqual(time.value as? String, "19:00")
+        app.buttons["Close"].firstMatch.click()
         XCTAssertTrue(book.waitForExistence(timeout: 12))
         app.terminate()
         app.launch()
         XCTAssertTrue(book.waitForExistence(timeout: 12))
-        XCTAssertFalse(next.exists)
+        XCTAssertFalse(parse.exists)
         book.click()
         XCTAssertTrue(app.staticTexts["Tạo lịch trình đầu tiên"].waitForExistence(timeout: 5))
-        app.buttons["fri.guide.close"].click()
-        XCTAssertTrue(book.isHittable)
-        book.click()
-        next.click()
-        next.click()
-        finish.click()
-        XCTAssertTrue(book.isHittable)
+        app.buttons["Thử tạo lịch từ tin nhắn mẫu"].click()
+        parse.click()
+        app.buttons["fri.welcome.review"].click()
+        XCTAssertTrue(title.waitForExistence(timeout: 8))
+        let duration = app.textFields["fri.editor.duration"]
+        duration.click()
+        duration.typeKey("a", modifierFlags: .command)
+        duration.typeText("35")
+        app.typeKey("k", modifierFlags: .command)
+        XCTAssertFalse(app.textFields["fri.search.field"].exists)
+        app.buttons["fri.editor.submit"].click()
+        let coffee = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'fri.card.' AND label CONTAINS 'Cà phê'"))
+        XCTAssertTrue(coffee.firstMatch.waitForExistence(timeout: 8))
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(coffee.firstMatch.waitForExistence(timeout: 12))
+        XCTAssertEqual(coffee.count, 1)
     }
     #endif
 
     #if os(macOS)
+    func testTimeBoundariesAndDiscardedEditor() throws {
+        continueAfterFailure = false
+        let app = calendarApp()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.sources.refresh"].waitForExistence(timeout: 12))
+        app.typeKey("n", modifierFlags: .command)
+        let time = app.buttons["fri.editor.time"]
+        XCTAssertTrue(time.waitForExistence(timeout: 5))
+        for (hour, minute, pm, expected) in [(12, 0, false, "00:00"), (12, 0, true, "12:00"),
+                                             (9, 3, true, "21:03"), (1, 37, false, "01:37"), (11, 59, true, "23:59")] {
+            time.click()
+            XCTAssertTrue(app.buttons["fri.time.confirm"].waitForExistence(timeout: 5))
+            app.typeKey(hour >= 7 ? .end : .home, modifierFlags: [])
+            for _ in 0..<(hour >= 7 ? 12-hour : hour-1) {
+                app.typeKey(hour >= 7 ? .upArrow : .downArrow, modifierFlags: [])
+            }
+            app.typeKey(.rightArrow, modifierFlags: [])
+            app.typeKey(minute >= 30 ? .end : .home, modifierFlags: [])
+            let distance = minute >= 30 ? 59 - minute : minute
+            for _ in 0..<(distance / 5) { app.typeKey(minute >= 30 ? .pageUp : .pageDown, modifierFlags: []) }
+            for _ in 0..<(distance % 5) { app.typeKey(minute >= 30 ? .upArrow : .downArrow, modifierFlags: []) }
+            app.typeKey(.rightArrow, modifierFlags: [])
+            app.typeKey(pm ? "p" : "a", modifierFlags: [])
+            app.buttons["fri.time.confirm"].click()
+            XCTAssertEqual(time.value as? String, expected)
+        }
+        app.buttons["Close"].firstMatch.click()
+        app.buttons["Keep editing"].click()
+        XCTAssertEqual(time.value as? String, "23:59")
+        app.buttons["Close"].firstMatch.click()
+        app.buttons["Discard"].click()
+        app.typeKey("n", modifierFlags: .command)
+        XCTAssertTrue(time.waitForExistence(timeout: 5))
+        XCTAssertNotEqual(time.value as? String, "23:59")
+    }
+
+    func testRemovedDesktopPanelStaysRemovedAfterRelaunch() throws {
+        continueAfterFailure = false
+        let app = calendarApp()
+        app.launchEnvironment["FRI_SYNTHETIC_PREVIEW"] = "1"
+        app.launchEnvironment["FRI_TEST_STORE_ID"] = UUID().uuidString
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.sources.refresh"].waitForExistence(timeout: 12))
+        app.menuBars.menuBarItems["File"].click()
+        app.menuItems["New Desktop Widget"].click()
+        let panel = app.windows["FRI Desktop Widget"]
+        XCTAssertTrue(panel.waitForExistence(timeout: 8))
+        let options = panel.menuButtons["Widget options"]
+        options.click()
+        app.menuItems["Large"].click()
+        XCTAssertGreaterThanOrEqual(panel.frame.height, 350)
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(panel.waitForExistence(timeout: 8))
+        panel.buttons["Close widget"].click()
+        XCTAssertTrue(panel.waitForNonExistence(timeout: 5))
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.buttons["fri.sources.refresh"].waitForExistence(timeout: 12))
+        XCTAssertFalse(panel.exists)
+    }
+
     func testMeetingExampleOpensDraftOnExplicitReview() {
         continueAfterFailure = false
         let app = calendarApp()
@@ -1599,7 +1672,11 @@ final class FRIWorkflowTests: XCTestCase {
         XCTAssertTrue(unrelatedDraft.waitForExistence(timeout: 8))
         unrelatedDraft.tap()
         unrelatedDraft.typeText("Unrelated saved draft")
+        #if os(macOS)
+        app.buttons["Save draft and close"].firstMatch.click()
+        #else
         app.buttons["Close"].firstMatch.tap()
+        #endif
         let name = "Deadline " + UUID().uuidString.prefix(8)
         #if os(macOS)
         app.typeKey("n", modifierFlags: [.command, .shift])
@@ -1613,11 +1690,26 @@ final class FRIWorkflowTests: XCTestCase {
         title.typeText(String(name))
         reveal(app.buttons["fri.editor.submit"], in: app, form: "fri.editor.form")
         app.buttons["fri.editor.submit"].tap()
+        #if os(macOS)
+        XCTAssertTrue(app.staticTexts["fri.editor.error"].waitForExistence(timeout: 5))
+        app.buttons["fri.editor.time"].click()
+        // Start from 9 AM; select 4:20 PM using only the focused wheel columns.
+        app.typeKey(.home, modifierFlags: [])
+        for _ in 0..<3 { app.typeKey(.downArrow, modifierFlags: []) }
+        app.typeKey(.rightArrow, modifierFlags: [])
+        for _ in 0..<4 { app.typeKey(.pageDown, modifierFlags: []) }
+        app.typeKey(.rightArrow, modifierFlags: [])
+        app.typeKey("p", modifierFlags: [])
+        app.buttons["fri.time.confirm"].click()
+        XCTAssertEqual(app.buttons["fri.editor.time"].value as? String, "16:20")
+        app.buttons["fri.editor.submit"].click()
+        #else
         let time = app.textFields["fri.editor.missingTime"]
         XCTAssertTrue(time.waitForExistence(timeout: 8))
         time.tap()
         time.typeText("16:20")
         app.buttons["fri.editor.continue"].tap()
+        #endif
         app.terminate()
         app.launch()
         XCTAssertTrue(canvas.waitForExistence(timeout: 15))
@@ -1755,12 +1847,24 @@ final class FRIWorkflowTests: XCTestCase {
             app.buttons["Import plans"].tap()
             #endif
         }
-        let day = Date.now.addingTimeInterval(86400).formatted(.iso8601.year().month().day().dateSeparator(.dash))
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        let day = formatter.string(from: Calendar.current.date(byAdding: .day, value: 2, to: .now)!)
         XCTAssertTrue(app.buttons["fri.sources.refresh"].waitForExistence(timeout: 20))
         openSources()
         let text = app.descendants(matching: .any)["fri.import.text"].firstMatch
         text.tap()
-        text.typeText("QA Physics \(day) 09:00 60 min\nQA Overlap \(day) 09:30 30 min")
+        let source = "QA Physics \(day) 09:00 60 min\nQA Overlap \(day) 09:30 30 min"
+        #if os(macOS)
+        text.typeText(source.components(separatedBy: "\n")[0])
+        text.typeKey(.return, modifierFlags: [])
+        text.typeText(source.components(separatedBy: "\n")[1])
+        XCTAssertTrue((text.value as? String)?.contains("QA Physics") == true)
+        XCTAssertTrue((text.value as? String)?.contains("QA Overlap") == true)
+        #else
+        text.typeText(source)
+        #endif
         app.buttons["fri.import.reviewText"].tap()
         XCTAssertTrue(app.buttons["fri.import.refresh"].waitForExistence(timeout: 10))
         app.terminate(); app.launch()

@@ -98,6 +98,10 @@ final class FRIDesktopWidgetManager: NSObject, NSWindowDelegate {
         panel.contentView = NSHostingView(rootView: FRIDesktopWidgetView(
             calendar: calendar, day: configuration.day, pinned: configuration.pinned,
             close: { [weak panel] in panel?.close() },
+            resizeBy: { [weak self, weak panel] dx, dy in
+                guard let panel else { return }
+                self?.resize(configuration.id, to: NSSize(width: panel.frame.width + dx, height: panel.frame.height + dy))
+            },
             resize: { [weak self] size in self?.resize(configuration.id, to: size) },
             move: { [weak self, weak panel] dx, dy in
                 guard let self, let panel else { return }
@@ -127,8 +131,10 @@ final class FRIDesktopWidgetManager: NSObject, NSWindowDelegate {
     private func resize(_ id: UUID, to size: NSSize) {
         guard let panel = panels[id] else { return }
         var frame = panel.frame
-        frame.origin.y += frame.height - size.height
-        frame.size = size
+        let bounded = NSSize(width: max(panel.minSize.width, min(size.width, panel.maxSize.width)),
+                             height: max(panel.minSize.height, min(size.height, panel.maxSize.height)))
+        frame.origin.y += frame.height - bounded.height
+        frame.size = bounded
         panel.setFrame(frame, display: true, animate: false)
         constrainToScreen(panel)
     }
@@ -164,6 +170,7 @@ private struct FRIDesktopWidgetView: View {
     let day: String?
     let pinned: Bool
     let close: () -> Void
+    let resizeBy: (CGFloat, CGFloat) -> Void
     let resize: (NSSize) -> Void
     let move: (CGFloat, CGFloat) -> Void
     let pin: () -> Void
@@ -180,7 +187,9 @@ private struct FRIDesktopWidgetView: View {
                             .friFont(.caption, weight: .semibold).padding(.leading, 12).allowsHitTesting(false)
                     }
                     .frame(maxWidth: .infinity, minHeight: 32)
-                    .help("Drag here to move the widget")
+                    .help("Drag or use the arrow keys to move the widget")
+                    .accessibilityLabel("Move widget").accessibilityIdentifier("fri.desktopWidget.move")
+                    .modifier(WidgetArrowControl { dx, dy in move(dx, -dy) })
                 Menu {
                     Button("Small") { resize(NSSize(width: 240, height: 180)) }
                     Button("Medium") { resize(NSSize(width: 360, height: 210)) }
@@ -228,11 +237,31 @@ private struct FRIDesktopWidgetView: View {
         .overlay(alignment: .bottomTrailing) {
             FRIPanelResizeRegion().frame(width: 24, height: 24)
                 .overlay { Image(systemName: "arrow.down.right").friFont(.caption2).foregroundStyle(FRIColors.muted).allowsHitTesting(false) }
-                .help("Drag to resize; content fits automatically")
+                .help("Drag or use the arrow keys to resize the widget")
+                .accessibilityLabel("Resize widget").accessibilityIdentifier("fri.desktopWidget.resize")
+                .modifier(WidgetArrowControl(change: resizeBy))
         }
         .environment(\.dynamicTypeSize, calendar.state.settings["large"]?.bool == true ? .xxxLarge : .large)
-        .environment(\.colorScheme, .light)
+        .environment(\.colorScheme, calendar.state.settings["theme"]?.string == "dark" ? .dark : .light)
         .accessibilityIdentifier("fri.desktopWidget")
+    }
+}
+
+private struct WidgetArrowControl: ViewModifier {
+    let change: (CGFloat, CGFloat) -> Void
+
+    func body(content: Content) -> some View {
+        content.focusable().onKeyPress(phases: [.down, .repeat]) { key in
+            let step: CGFloat = key.modifiers.contains(.shift) ? 40 : 10
+            switch key.key {
+            case .leftArrow: change(-step, 0)
+            case .rightArrow: change(step, 0)
+            case .upArrow: change(0, -step)
+            case .downArrow: change(0, step)
+            default: return .ignored
+            }
+            return .handled
+        }
     }
 }
 

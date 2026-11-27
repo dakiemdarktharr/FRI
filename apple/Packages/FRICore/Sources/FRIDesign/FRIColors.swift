@@ -2,15 +2,17 @@ import SwiftUI
 
 /// Semantic colors shared by the calendar and its widgets (desktop preview/brand.css).
 public enum FRIColors {
-    public static let cloud = pair(0xF4F7FA, 0x111D27)
-    public static let ink = pair(0x172B3A, 0xEAF2F6)
-    public static let accent = pair(0x087F8C, 0x64D4D0)
-    public static let onAccent = pair(0xFFFFFF, 0x111D27)
-    public static let surface = pair(0xFFFFFF, 0x1C2D3B)
-    public static let control = pair(0xEAF0F4, 0x273C4B)
-    public static let muted = pair(0x586D7C, 0xA8BAC6)
-    public static let line = pair(0xDBE4EB, 0x354B5A)
-    public static let tint = pair(0xE0F2F2, 0x193F46)
+    public static let cloud = pair(0xF4F7FA, 0x14181F)
+    public static let ink = pair(0x172B3A, 0xF2F4F8)
+    public static let accent = pair(0x087F8C, 0x75D8CC)
+    public static let onAccent = pair(0xFFFFFF, 0x14181F)
+    public static let surface = pair(0xFFFFFF, 0x222833)
+    public static let control = pair(0xEAF0F4, 0x2C3441)
+    public static let muted = pair(0x586D7C, 0xB3BECE)
+    public static let line = pair(0xDBE4EB, 0x465368)
+    public static let tint = pair(0xE0F2F2, 0x203D3B)
+
+    public static let controlEdge = pair(0x7B8B98, 0x7D8BA1)
 
     private static func pair(_ light: Int, _ dark: Int) -> Color {
         func components(_ hex: Int) -> (CGFloat, CGFloat, CGFloat) {

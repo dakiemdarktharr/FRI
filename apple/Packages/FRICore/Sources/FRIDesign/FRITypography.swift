@@ -1,3 +1,4 @@
+import CoreText
 import SwiftUI
 #if os(macOS)
 import AppKit
@@ -22,16 +23,32 @@ private struct FRIReadingFont: ViewModifier {
     }
 
     private var resolvedFont: Font {
+        let face = weight == .bold || weight == .heavy || weight == .black ? "Bold"
+            : (weight == .semibold || weight == .medium || style == .headline ? "SemiBold" : "Regular")
+        let name = "BeVietnamPro-" + face
         #if os(macOS)
         let preferred = NSFont.preferredFont(forTextStyle: macStyle)
         let size = preferred.pointSize * macScale
-        // Resizing the system descriptor preserves its semantic weight and
-        // language-specific font metrics instead of hard-coding a typeface.
-        let font = Font(NSFont(descriptor: preferred.fontDescriptor, size: size) ?? preferred)
+        if FRITypeface.names.contains(name) { return .custom(name, fixedSize: size) }
+        return .system(size: size, weight: weight ?? .regular)
         #else
-        let font = Font.system(style)
+        if FRITypeface.names.contains(name) {
+            let size: CGFloat = switch style {
+            case .largeTitle: 34
+            case .title: 28
+            case .title2: 22
+            case .title3: 20
+            case .callout: 16
+            case .subheadline: 15
+            case .footnote: 13
+            case .caption: 12
+            case .caption2: 11
+            default: 17
+            }
+            return .custom(name, size: size, relativeTo: style)
+        }
+        return .system(style, weight: weight)
         #endif
-        return weight.map { font.weight($0) } ?? font
     }
 
     #if os(macOS)
@@ -69,4 +86,14 @@ private struct FRIReadingFont: ViewModifier {
         }
     }
     #endif
+}
+
+private enum FRITypeface {
+    // Swift initializes this once in each process, including the widget extension.
+    static let names: Set<String> = Set(["Regular", "SemiBold", "Bold"].compactMap { face in
+        let name = "BeVietnamPro-" + face
+        guard let url = Bundle.module.url(forResource: name, withExtension: "ttf"),
+              CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil) else { return nil }
+        return name
+    })
 }

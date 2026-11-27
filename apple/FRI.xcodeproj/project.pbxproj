@@ -31,6 +31,7 @@
 		32500D9E95542A595839F6DA /* import-text.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 3BD070EA870CAA088C08414C /* import-text.pdf */; };
 		358E25E473CAFD544EB05B1F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DBE9960CECCB9F0CD8E45698 /* Assets.xcassets */; };
 		369F59051619FFFB21ED80B0 /* FRIBackdropArtwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D136FF0073B214ECE0A2A66 /* FRIBackdropArtwork.swift */; };
+		38E2C030C39B9D3175A9C13D /* FRIMacPlanEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05AFE1D0D1E0D228336ADB5D /* FRIMacPlanEditor.swift */; };
 		3CA4C991DE6102A014A15C7B /* FRISourceWebsite.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2290DC99CB6A406D477A1DC /* FRISourceWebsite.swift */; };
 		3F67965DDA7CA97391A3AC2A /* import-scan.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 32CBC5CAE60AC421103982D5 /* import-scan.pdf */; };
 		42EE9DACE386D20320D933D3 /* FRIImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A65C1DBBDD305821ED10600 /* FRIImportView.swift */; };
@@ -74,6 +75,7 @@
 		8C382D764D54E289186EE902 /* FRIDesktopWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C32B74F333674EFA2D3253 /* FRIDesktopWidgets.swift */; };
 		8C6FB527E0CFC09D46400799 /* invalid-zero-duration-backup.json in Resources */ = {isa = PBXBuildFile; fileRef = 5341860BB29790E7F1FB69FD /* invalid-zero-duration-backup.json */; };
 		8CD156D0178C59AD5AF462DC /* FRIGradientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65554F67F867449A09A9947 /* FRIGradientView.swift */; };
+		908DF5151304DD32C32BCAB7 /* FRIMacPlanEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05AFE1D0D1E0D228336ADB5D /* FRIMacPlanEditor.swift */; };
 		9792B50B04950A913CBA201C /* FRIGradientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65554F67F867449A09A9947 /* FRIGradientView.swift */; };
 		9E6BD96D5B4F47B6C11E085C /* FRIBackdropArtwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D136FF0073B214ECE0A2A66 /* FRIBackdropArtwork.swift */; };
 		A10AE46A130D197AEE14133A /* FRIMeetingBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB66839B11EAFC5F526B82C /* FRIMeetingBrowser.swift */; };
@@ -85,6 +87,7 @@
 		ABB9F4BAF7E5C6DC6C4D2AB1 /* desktop-service-cache-backup.json in Resources */ = {isa = PBXBuildFile; fileRef = B77D5E57945576EFCC5261ED /* desktop-service-cache-backup.json */; };
 		AF1407BD84F66176ED76F345 /* import-image.png in Resources */ = {isa = PBXBuildFile; fileRef = E3E7D1075A3D7DD8890D646B /* import-image.png */; };
 		B03195F77438A16509EC2DD7 /* import-text.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 3BD070EA870CAA088C08414C /* import-text.pdf */; };
+		B452D29CFC017BA8B90C7F6B /* FRIMacPlanEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05AFE1D0D1E0D228336ADB5D /* FRIMacPlanEditor.swift */; };
 		BE68BC6E04F786C9CBFFB9B7 /* FRIDesign in Frameworks */ = {isa = PBXBuildFile; productRef = DC236B9ABEEE73234E60EBC9 /* FRIDesign */; };
 		C1C04721D3A964419B0BE71E /* FRICore in Frameworks */ = {isa = PBXBuildFile; productRef = C77DAF069FF4678C20AA1B09 /* FRICore */; };
 		C386C7A1B6CC6C6A5910FFDB /* FRICalendarGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C43C4A035AAA8EB1A0277E6 /* FRICalendarGridView.swift */; };
@@ -183,6 +186,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		05AFE1D0D1E0D228336ADB5D /* FRIMacPlanEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FRIMacPlanEditor.swift; sourceTree = "<group>"; };
 		0A7F06B183D4F9D184E1A4ED /* FRIUsageGuide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FRIUsageGuide.swift; sourceTree = "<group>"; };
 		0AB68307D8DFBC4F216C8E3F /* FRIServiceCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FRIServiceCardsView.swift; sourceTree = "<group>"; };
 		0DFA1E3EA9E7AE5EF17E83A5 /* auto-refresh-weather-backup.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "auto-refresh-weather-backup.json"; sourceTree = "<group>"; };
@@ -348,6 +352,7 @@
 				C64FD6F47362F424583CFCB8 /* FRIGradient.metal */,
 				F65554F67F867449A09A9947 /* FRIGradientView.swift */,
 				4A65C1DBBDD305821ED10600 /* FRIImportView.swift */,
+				05AFE1D0D1E0D228336ADB5D /* FRIMacPlanEditor.swift */,
 				C7E574E9709C2EE8F9361E50 /* FRIMeetingAgent.swift */,
 				1DB66839B11EAFC5F526B82C /* FRIMeetingBrowser.swift */,
 				0F62E156B7FCB8DA9F19ABDE /* FRIPlanEditorView.swift */,
@@ -751,6 +756,7 @@
 				5B96E0236C348B2C446708EE /* FRIGradient.metal in Sources */,
 				8CD156D0178C59AD5AF462DC /* FRIGradientView.swift in Sources */,
 				C7DDB7CB2DCE5C4800C6A132 /* FRIImportView.swift in Sources */,
+				B452D29CFC017BA8B90C7F6B /* FRIMacPlanEditor.swift in Sources */,
 				11E0E33BC6E08DA87E4B45C7 /* FRIMeetingAgent.swift in Sources */,
 				6D542F9FBA896240764E75CC /* FRIMeetingBrowser.swift in Sources */,
 				44F0040B6099BFE51916FB54 /* FRIPlanEditorView.swift in Sources */,
@@ -796,6 +802,7 @@
 				14A672B421266BA1B21CD6DE /* FRIGradient.metal in Sources */,
 				69120A7FF4B2294E3308FDA8 /* FRIGradientView.swift in Sources */,
 				42EE9DACE386D20320D933D3 /* FRIImportView.swift in Sources */,
+				38E2C030C39B9D3175A9C13D /* FRIMacPlanEditor.swift in Sources */,
 				5D986051FB9A681245BCBBAF /* FRIMeetingAgent.swift in Sources */,
 				50DB07106C06F4C9511C2EA4 /* FRIMeetingBrowser.swift in Sources */,
 				EF9F8D14F6E5ECCFEA121312 /* FRIPlanEditorView.swift in Sources */,
@@ -823,6 +830,7 @@
 				F484AB0C8CB1C50EC1341BBB /* FRIGradient.metal in Sources */,
 				9792B50B04950A913CBA201C /* FRIGradientView.swift in Sources */,
 				25AAC40B826FF036C15206BE /* FRIImportView.swift in Sources */,
+				908DF5151304DD32C32BCAB7 /* FRIMacPlanEditor.swift in Sources */,
 				DFA8E35F437B6AFA45EE2BF9 /* FRIMeetingAgent.swift in Sources */,
 				A10AE46A130D197AEE14133A /* FRIMeetingBrowser.swift in Sources */,
 				2C2745A6AB2DDBBFD95982C4 /* FRIPlanEditorView.swift in Sources */,
@@ -958,12 +966,14 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = Config/MacWidget.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 8;
 				INFOPLIST_FILE = "Config/Widget-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
+				MARKETING_VERSION = 0.8.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(FRI_BUNDLE_PREFIX).mac.widgets";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -1028,7 +1038,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "$(FRI_MAC_ENTITLEMENTS)";
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRI_STORAGE_MODE = "$(FRI_MAC_STORAGE_MODE)";
 				INFOPLIST_FILE = "Config/App-Info.plist";
@@ -1036,6 +1046,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MARKETING_VERSION = 0.8.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(FRI_BUNDLE_PREFIX).mac";
 				SDKROOT = macosx;
 			};
@@ -1047,7 +1058,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "$(FRI_MAC_ENTITLEMENTS)";
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRI_STORAGE_MODE = "$(FRI_MAC_STORAGE_MODE)";
 				INFOPLIST_FILE = "Config/App-Info.plist";
@@ -1055,6 +1066,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MARKETING_VERSION = 0.8.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(FRI_BUNDLE_PREFIX).mac";
 				SDKROOT = macosx;
 			};
@@ -1066,12 +1078,14 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = Config/MacWidget.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 8;
 				INFOPLIST_FILE = "Config/Widget-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
+				MARKETING_VERSION = 0.8.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(FRI_BUNDLE_PREFIX).mac.widgets";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -1150,6 +1164,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Config/Mac.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 8;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRI_STORAGE_MODE = shared;
 				INFOPLIST_FILE = "Config/App-Info.plist";
@@ -1157,6 +1172,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MARKETING_VERSION = 0.8.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(FRI_BUNDLE_PREFIX).mac";
 				SDKROOT = macosx;
 			};
@@ -1186,6 +1202,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Config/Mac.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 8;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRI_STORAGE_MODE = shared;
 				INFOPLIST_FILE = "Config/App-Info.plist";
@@ -1193,6 +1210,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MARKETING_VERSION = 0.8.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(FRI_BUNDLE_PREFIX).mac";
 				SDKROOT = macosx;
 			};

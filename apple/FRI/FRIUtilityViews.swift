@@ -38,6 +38,8 @@ struct FRISearchView: View {
     let tasks: [Appointment]
     let select: (Appointment) -> Void
     @State private var query = ""
+    @FocusState private var searchFocus: String?
+    private let input = "search:input"
 
     private var results: [Appointment] {
         tasks.filter(matches).sorted { ($0.date, $0.time, $0.id) < ($1.date, $1.time, $1.id) }
@@ -49,6 +51,11 @@ struct FRISearchView: View {
                 TextField("Search appointments", text: $query)
                     .textFieldStyle(FRISheetTextFieldStyle()).padding()
                     .accessibilityIdentifier("fri.search.field")
+                    .focused($searchFocus, equals: input)
+                    .onKeyPress(.downArrow) {
+                        guard let first = results.first else { return .ignored }
+                        searchFocus = first.id; return .handled
+                    }
                     .submitLabel(.search)
                     .onSubmit { if let first = results.first { select(first) } }
                 if results.isEmpty {
@@ -68,12 +75,23 @@ struct FRISearchView: View {
                                 }
                             }
                             .buttonStyle(.plain)
+                            .focused($searchFocus, equals: task.id)
+                            .onKeyPress(.upArrow) {
+                                guard let i = results.firstIndex(where: { $0.id == task.id }) else { return .ignored }
+                                searchFocus = i == 0 ? input : results[i - 1].id
+                                return .handled
+                            }
+                            .onKeyPress(.downArrow) {
+                                guard let i = results.firstIndex(where: { $0.id == task.id }), i + 1 < results.count else { return .ignored }
+                                searchFocus = results[i + 1].id
+                                return .handled
+                            }
                             .accessibilityIdentifier("fri.search.result.\(task.id)")
                         }
                     }
                 }
             }
-        }
+        }.onAppear { searchFocus = input }
     }
 
     private func matches(_ item: Appointment) -> Bool {
@@ -336,6 +354,9 @@ struct FRIAppearanceView: View {
                         .friFont(.caption).foregroundStyle(.secondary)
                 }
                 Section("Comfort") {
+                    #if os(macOS)
+                    Toggle("Single-key shortcuts", isOn: toggle("singleKeys", initial: true))
+                    #endif
                     Toggle(isOn: toggle("glass", initial: true)) {
                         Text("Liquid glass")
                         Text("Turn off for solid, quieter surfaces.").friFont(.caption).foregroundStyle(.secondary)
